@@ -20,14 +20,20 @@ public final class AgilityEffectsSelfTest {
         assertAgility(10, 11.0D / 26.0D, 1.05D);
         assertAgility(20, 21.0D / 46.0D, 1.10D);
 
-        assertClose(-1.0D, AgilityEffects.calculateMovementSpeedModifier(-1000),
-                "movement multiplier lower bound");
-        assertClose(-0.10D, AgilityEffects.calculateMovementSpeedModifier(-10),
-                "negative agility movement modifier");
+        assertClose(0.0D, AgilityEffects.calculateMovementSpeedModifier(-1000),
+                "agility -1000 movement modifier");
+        assertClose(0.0D, AgilityEffects.calculateMovementSpeedModifier(-10),
+                "agility -10 movement modifier");
+        assertClose(0.0D, AgilityEffects.calculateMovementSpeedModifier(-1),
+                "agility -1 movement modifier");
         assertClose(0.0D, AgilityEffects.calculateMovementSpeedModifier(0),
-                "zero agility movement modifier");
+                "agility 0 movement modifier");
+        assertClose(0.01D, AgilityEffects.calculateMovementSpeedModifier(1),
+                "agility 1 movement modifier");
         assertClose(0.10D, AgilityEffects.calculateMovementSpeedModifier(10),
-                "positive agility movement modifier");
+                "agility 10 movement modifier");
+        assertClose(0.20D, AgilityEffects.calculateMovementSpeedModifier(20),
+                "agility 20 movement modifier");
         assertClose(0.0D, AgilityEffects.calculateBulletDamageMultiplier(-1000),
                 "bullet damage lower bound");
 
@@ -60,14 +66,26 @@ public final class AgilityEffectsSelfTest {
                 movementSpeed,
                 AgilityEffects.MOVEMENT_SPEED_MODIFIER_ID,
                 "test.agility_movement_speed",
-                0.0D,
+                AgilityEffects.calculateMovementSpeedModifier(-10),
                 AttributeModifier.Operation.MULTIPLY_TOTAL,
                 true
         );
-        assertClose(0.1D, movementSpeed.getValue(), "zero agility removes movement modifier");
+        assertClose(0.1D, movementSpeed.getValue(),
+                "changing from positive to negative agility removes movement modifier");
         if (movementSpeed.getModifier(AgilityEffects.MOVEMENT_SPEED_MODIFIER_ID) != null) {
-            throw new AssertionError("zero agility movement modifier was not removed");
+            throw new AssertionError("negative agility movement modifier was not removed");
         }
+
+        AgilityEffects.replaceTransientModifier(
+                movementSpeed,
+                AgilityEffects.MOVEMENT_SPEED_MODIFIER_ID,
+                "test.agility_movement_speed",
+                AgilityEffects.calculateMovementSpeedModifier(20),
+                AttributeModifier.Operation.MULTIPLY_TOTAL,
+                true
+        );
+        assertClose(0.12D, movementSpeed.getValue(),
+                "changing from negative to positive agility restores movement modifier");
 
         AttributeInstance dodgeChance = new AttributeInstance(
                 new RangedAttribute("test.dodge_chance", 0.0D, 0.0D, 1.0D),
