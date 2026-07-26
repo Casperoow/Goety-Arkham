@@ -55,7 +55,6 @@ public final class PlayerStatsProvider implements ICapabilityProvider, INBTSeria
     @Override
     public void deserializeNBT(CompoundTag nbt) {
         stats.deserializeNBT(nbt);
-        PlayerStatsService.refreshEffects(player);
     }
 
     public synchronized void invalidate() {

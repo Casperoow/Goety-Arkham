@@ -4,6 +4,7 @@ import com.casper.goetyarkham.agility.AgilityEffects;
 import com.casper.goetyarkham.attribute.StatAttributeBridge;
 import com.casper.goetyarkham.network.ModNetwork;
 import com.casper.goetyarkham.strength.StrengthEffects;
+import com.casper.goetyarkham.willpower.WillpowerEffects;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Optional;
@@ -58,6 +59,7 @@ public final class PlayerStatsService {
     public static void refreshEffects(ServerPlayer player) {
         StrengthEffects.refreshStrengthEffects(player);
         AgilityEffects.refreshAgilityEffects(player);
+        WillpowerEffects.refreshWillpowerEffects(player);
     }
 
     static Optional<PlayerStats> mutable(ServerPlayer player) {

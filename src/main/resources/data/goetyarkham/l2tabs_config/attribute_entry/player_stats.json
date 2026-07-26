@@ -47,6 +47,18 @@
       "intrinsic": 0.0,
       "order": 18000,
       "usePercent": true
+    },
+    {
+      "id": "goetyarkham:spell_power",
+      "intrinsic": 0.0,
+      "order": 19000,
+      "usePercent": false
+    },
+    {
+      "id": "goetyarkham:soul_energy_max",
+      "intrinsic": 0.0,
+      "order": 20000,
+      "usePercent": false
     }
   ]
 }

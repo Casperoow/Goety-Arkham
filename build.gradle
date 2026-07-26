@@ -77,6 +77,7 @@ minecraft {
             // Remap production SRG refmaps from local Mixin mods in the development runtime.
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            args '--mixin', 'goetyarkham.mixins.json'
 
             mods {
                 "${mod_id}" {
@@ -141,6 +142,14 @@ dependencies {
         runtimeOnly fg.deobf('dev:l2library:2.5.3')
     }
 
+    if (file('devmods/jei-1.20.1-forge-15.20.0.112.jar').exists()) {
+        runtimeOnly fg.deobf('devtest:jei:1.20.1-forge-15.20.0.112')
+    }
+
+    if (file('devmods/jade-1.20.1-forge-11.13.3.jar').exists()) {
+        runtimeOnly fg.deobf('devtest:jade:1.20.1-forge-11.13.3')
+    }
+
     // Local mod dependencies are remapped to the development mappings by ForgeGradle.
     implementation fg.deobf('local:curios-forge:5.14.1+1.20.1')
     implementation fg.deobf('local:geckolib-forge-1.20.1:4.8.4')
@@ -194,7 +203,8 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                'MixinConfigs'             : 'goetyarkham.mixins.json'
         ])
     }
 

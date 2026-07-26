@@ -58,6 +58,10 @@ public final class ModAttributes {
                             0.0D,
                             1024.0D
                     ).setSyncable(true));
+    public static final RegistryObject<Attribute> SPELL_POWER =
+            registerDisplayAttribute("spell_power", 0.0D);
+    public static final RegistryObject<Attribute> SOUL_ENERGY_MAX =
+            registerDisplayAttribute("soul_energy_max", 0.0D);
 
     private ModAttributes() {
     }
@@ -77,11 +81,24 @@ public final class ModAttributes {
         event.add(EntityType.PLAYER, CRITICAL_DAMAGE.get());
         event.add(EntityType.PLAYER, DODGE_CHANCE.get());
         event.add(EntityType.PLAYER, BULLET_DAMAGE.get());
+        event.add(EntityType.PLAYER, SPELL_POWER.get());
+        event.add(EntityType.PLAYER, SOUL_ENERGY_MAX.get());
     }
 
     private static RegistryObject<Attribute> register(String name, String translationKey) {
         return ATTRIBUTES.register(name, () ->
                 new RangedAttribute(translationKey, 0.0D, MIN_VALUE, MAX_VALUE)
                         .setSyncable(true));
+    }
+
+    private static RegistryObject<Attribute> registerDisplayAttribute(
+            String name, double defaultValue) {
+        return ATTRIBUTES.register(name, () ->
+                new RangedAttribute(
+                        "attribute.name.goetyarkham." + name,
+                        defaultValue,
+                        0.0D,
+                        Integer.MAX_VALUE
+                ).setSyncable(true));
     }
 }

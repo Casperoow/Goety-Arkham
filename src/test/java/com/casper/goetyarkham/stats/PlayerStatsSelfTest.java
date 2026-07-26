@@ -2,7 +2,9 @@ package com.casper.goetyarkham.stats;
 
 import com.casper.goetyarkham.agility.AgilityEffectsSelfTest;
 import com.casper.goetyarkham.command.StatsCommandSelfTest;
+import com.casper.goetyarkham.soul.SoulPoolOperationsSelfTest;
 import com.casper.goetyarkham.strength.StrengthEffectsSelfTest;
+import com.casper.goetyarkham.willpower.WillpowerEffectsSelfTest;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -81,6 +83,8 @@ public final class PlayerStatsSelfTest {
         StatsCommandSelfTest.run();
         StrengthEffectsSelfTest.run();
         AgilityEffectsSelfTest.run();
+        WillpowerEffectsSelfTest.run();
+        SoulPoolOperationsSelfTest.run();
 
         System.out.println("PlayerStatsSelfTest: all checks passed");
     }
