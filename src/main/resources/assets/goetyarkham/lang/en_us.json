@@ -3,5 +3,7 @@
   "attribute.name.goetyarkham.strength": "Strength",
   "attribute.name.goetyarkham.agility": "Agility",
   "attribute.name.goetyarkham.willpower": "Willpower",
-  "attribute.name.goetyarkham.intellect": "Intellect"
+  "attribute.name.goetyarkham.intellect": "Intellect",
+  "attribute.name.goetyarkham.critical_chance": "Critical Chance (%)",
+  "attribute.name.goetyarkham.critical_damage": "Critical Damage (%)"
 }

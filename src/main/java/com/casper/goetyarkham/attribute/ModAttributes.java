@@ -26,6 +26,22 @@ public final class ModAttributes {
             register("willpower", "attribute.name.goetyarkham.willpower");
     public static final RegistryObject<Attribute> INTELLECT =
             register("intellect", "attribute.name.goetyarkham.intellect");
+    public static final RegistryObject<Attribute> CRITICAL_CHANCE =
+            ATTRIBUTES.register("critical_chance", () ->
+                    new RangedAttribute(
+                            "attribute.name.goetyarkham.critical_chance",
+                            50.0D,
+                            0.0D,
+                            100.0D
+                    ).setSyncable(true));
+    public static final RegistryObject<Attribute> CRITICAL_DAMAGE =
+            ATTRIBUTES.register("critical_damage", () ->
+                    new RangedAttribute(
+                            "attribute.name.goetyarkham.critical_damage",
+                            100.0D,
+                            100.0D,
+                            102400.0D
+                    ).setSyncable(true));
 
     private ModAttributes() {
     }
@@ -41,6 +57,8 @@ public final class ModAttributes {
         event.add(EntityType.PLAYER, AGILITY.get());
         event.add(EntityType.PLAYER, WILLPOWER.get());
         event.add(EntityType.PLAYER, INTELLECT.get());
+        event.add(EntityType.PLAYER, CRITICAL_CHANCE.get());
+        event.add(EntityType.PLAYER, CRITICAL_DAMAGE.get());
     }
 
     private static RegistryObject<Attribute> register(String name, String translationKey) {

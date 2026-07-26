@@ -11,11 +11,41 @@ public final class StrengthEffectsSelfTest {
     }
 
     public static void run() {
-        assertStrength(0.0D, 0.0D, 50.0D, 1.0D);
-        assertStrength(4.0D, 2.0D, 54.0D, 1.08D);
-        assertStrength(10.0D, 5.0D, 60.0D, 1.20D);
-        assertStrength(50.0D, 25.0D, 100.0D, 2.0D);
-        assertStrength(60.0D, 30.0D, 100.0D, 2.70D);
+        AttributeInstance criticalChance = new AttributeInstance(
+                new RangedAttribute("test.critical_chance", 50.0D, 0.0D, 100.0D),
+                ignored -> {
+                }
+        );
+        AttributeInstance criticalDamage = new AttributeInstance(
+                new RangedAttribute("test.critical_damage", 100.0D, 100.0D, 102400.0D),
+                ignored -> {
+                }
+        );
+
+        assertStrength(criticalChance, criticalDamage, 0.0D, 0.0D, 50.0D, 100.0D, 1.0D);
+        assertStrength(criticalChance, criticalDamage, 4.0D, 2.0D, 54.0D, 108.0D, 1.08D);
+        assertStrength(criticalChance, criticalDamage, 10.0D, 5.0D, 60.0D, 120.0D, 1.20D);
+        assertStrength(criticalChance, criticalDamage, 50.0D, 25.0D, 100.0D, 200.0D, 2.0D);
+        assertStrength(criticalChance, criticalDamage, 60.0D, 30.0D, 100.0D, 270.0D, 2.70D);
+
+        StrengthEffects.updateCriticalDisplayAttributes(criticalChance, criticalDamage, 60.0D);
+        StrengthEffects.updateCriticalDisplayAttributes(criticalChance, criticalDamage, 60.0D);
+        assertClose(100.0D, criticalChance.getBaseValue(),
+                "repeated refresh does not drift critical chance");
+        assertClose(270.0D, criticalDamage.getBaseValue(),
+                "repeated refresh does not drift critical damage");
+
+        StrengthEffects.updateCriticalDisplayAttributes(criticalChance, criticalDamage, 4.0D);
+        assertClose(54.0D, criticalChance.getBaseValue(),
+                "lower strength immediately lowers critical chance");
+        assertClose(108.0D, criticalDamage.getBaseValue(),
+                "lower strength immediately lowers critical damage");
+
+        StrengthEffects.updateCriticalDisplayAttributes(criticalChance, criticalDamage, 0.0D);
+        assertClose(50.0D, criticalChance.getBaseValue(), "reset critical chance display");
+        assertClose(100.0D, criticalDamage.getBaseValue(), "reset critical damage display");
+        assertClose(1.0D, StrengthEffects.getCriticalDamageMultiplier(0.0D),
+                "reset combat critical multiplier remains multiplier-based");
 
         assertClose(0.0D, StrengthEffects.getCriticalChance(-100.0D), "critical chance lower clamp");
         assertClose(10.0D, StrengthEffects.getOverflowCriticalChance(60.0D), "overflow at strength 60");
@@ -50,16 +80,33 @@ public final class StrengthEffectsSelfTest {
     }
 
     private static void assertStrength(
+            AttributeInstance criticalChanceAttribute,
+            AttributeInstance criticalDamageAttribute,
             double strength,
             double attackBonus,
             double criticalChance,
+            double criticalDamageDisplay,
             double criticalMultiplier) {
+        StrengthEffects.updateCriticalDisplayAttributes(
+                criticalChanceAttribute,
+                criticalDamageAttribute,
+                strength
+        );
         assertClose(attackBonus, StrengthEffects.getAttackDamageBonus(strength),
                 "attack bonus at strength " + strength);
         assertClose(criticalChance, StrengthEffects.getCriticalChance(strength),
                 "critical chance at strength " + strength);
+        assertClose(criticalChance, criticalChanceAttribute.getBaseValue(),
+                "critical chance display at strength " + strength);
+        assertClose(criticalDamageDisplay, criticalDamageAttribute.getBaseValue(),
+                "critical damage display at strength " + strength);
         assertClose(criticalMultiplier, StrengthEffects.getCriticalDamageMultiplier(strength),
                 "critical multiplier at strength " + strength);
+        assertClose(
+                criticalMultiplier * 100.0D,
+                criticalDamageAttribute.getBaseValue(),
+                "display conversion does not change combat multiplier at strength " + strength
+        );
     }
 
     private static void assertClose(double expected, double actual, String label) {

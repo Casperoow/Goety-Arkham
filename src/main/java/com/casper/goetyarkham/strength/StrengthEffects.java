@@ -1,6 +1,7 @@
 package com.casper.goetyarkham.strength;
 
 import com.casper.goetyarkham.GoetyArkham;
+import com.casper.goetyarkham.attribute.ModAttributes;
 import com.casper.goetyarkham.stats.IPlayerStats;
 import com.casper.goetyarkham.stats.PlayerStatsService;
 import com.casper.goetyarkham.stats.StatType;
@@ -77,10 +78,29 @@ public final class StrengthEffects {
                     player.getGameProfile().getName(),
                     player.getUUID()
             );
-            return;
+        } else {
+            updateAttackDamageModifier(attackDamage, getAttackDamageBonus(strength));
         }
 
-        updateAttackDamageModifier(attackDamage, getAttackDamageBonus(strength));
+        AttributeInstance criticalChance = player.getAttribute(ModAttributes.CRITICAL_CHANCE.get());
+        if (criticalChance == null) {
+            GoetyArkham.LOGGER.warn(
+                    "[StrengthEffects] Player is missing goetyarkham:critical_chance: player={}, uuid={}",
+                    player.getGameProfile().getName(),
+                    player.getUUID()
+            );
+        }
+
+        AttributeInstance criticalDamage = player.getAttribute(ModAttributes.CRITICAL_DAMAGE.get());
+        if (criticalDamage == null) {
+            GoetyArkham.LOGGER.warn(
+                    "[StrengthEffects] Player is missing goetyarkham:critical_damage: player={}, uuid={}",
+                    player.getGameProfile().getName(),
+                    player.getUUID()
+            );
+        }
+
+        updateCriticalDisplayAttributes(criticalChance, criticalDamage, strength);
     }
 
     static void updateAttackDamageModifier(AttributeInstance attackDamage, double amount) {
@@ -92,6 +112,19 @@ public final class StrengthEffects {
                     amount,
                     AttributeModifier.Operation.ADDITION
             ));
+        }
+    }
+
+    static void updateCriticalDisplayAttributes(
+            AttributeInstance criticalChance,
+            AttributeInstance criticalDamage,
+            double strength) {
+        if (criticalChance != null) {
+            criticalChance.setBaseValue(getCriticalChance(strength));
+        }
+        if (criticalDamage != null) {
+            double criticalDamageDisplayValue = getCriticalDamageMultiplier(strength) * 100.0D;
+            criticalDamage.setBaseValue(criticalDamageDisplayValue);
         }
     }
 }
