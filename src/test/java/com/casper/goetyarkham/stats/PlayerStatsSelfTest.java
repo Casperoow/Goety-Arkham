@@ -1,6 +1,7 @@
 package com.casper.goetyarkham.stats;
 
 import com.casper.goetyarkham.command.StatsCommandSelfTest;
+import com.casper.goetyarkham.strength.StrengthEffectsSelfTest;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -77,6 +78,7 @@ public final class PlayerStatsSelfTest {
                 "reset fails cleanly when capability is missing"
         );
         StatsCommandSelfTest.run();
+        StrengthEffectsSelfTest.run();
 
         System.out.println("PlayerStatsSelfTest: all checks passed");
     }

@@ -1,6 +1,7 @@
 package com.casper.goetyarkham.stats;
 
 import com.casper.goetyarkham.GoetyArkham;
+import com.casper.goetyarkham.strength.StrengthEffects;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -55,6 +56,7 @@ public final class PlayerStatsProvider implements ICapabilityProvider, INBTSeria
     @Override
     public void deserializeNBT(CompoundTag nbt) {
         stats.deserializeNBT(nbt);
+        StrengthEffects.refreshStrengthEffects(player);
     }
 
     public synchronized void invalidate() {
