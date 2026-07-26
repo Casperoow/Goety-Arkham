@@ -217,3 +217,11 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
+
+tasks.register('statsSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the server-authoritative player stats data model self-test.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.stats.PlayerStatsSelfTest'
+}
