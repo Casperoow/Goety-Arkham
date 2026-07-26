@@ -49,10 +49,16 @@
       "usePercent": true
     },
     {
-      "id": "goetyarkham:spell_power",
+      "id": "goety_revelation:spell_power",
       "intrinsic": 0.0,
       "order": 19000,
       "usePercent": false
+    },
+    {
+      "id": "goety_revelation:spell_power_multiplier",
+      "intrinsic": 0.0,
+      "order": 19500,
+      "usePercent": true
     },
     {
       "id": "goetyarkham:soul_energy_max",

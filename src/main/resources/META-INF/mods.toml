@@ -31,6 +31,13 @@ description='''${mod_description}'''
     side="BOTH"
 
 [[dependencies.${mod_id}]]
+    modId="goety_revelation"
+    mandatory=true
+    versionRange="[2.3.3fix,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
     modId="curios"
     mandatory=true
     versionRange="[5.14.1,)"

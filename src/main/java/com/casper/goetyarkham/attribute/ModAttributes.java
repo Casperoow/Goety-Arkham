@@ -58,8 +58,6 @@ public final class ModAttributes {
                             0.0D,
                             1024.0D
                     ).setSyncable(true));
-    public static final RegistryObject<Attribute> SPELL_POWER =
-            registerDisplayAttribute("spell_power", 0.0D);
     public static final RegistryObject<Attribute> SOUL_ENERGY_MAX =
             registerDisplayAttribute("soul_energy_max", 0.0D);
 
@@ -81,7 +79,6 @@ public final class ModAttributes {
         event.add(EntityType.PLAYER, CRITICAL_DAMAGE.get());
         event.add(EntityType.PLAYER, DODGE_CHANCE.get());
         event.add(EntityType.PLAYER, BULLET_DAMAGE.get());
-        event.add(EntityType.PLAYER, SPELL_POWER.get());
         event.add(EntityType.PLAYER, SOUL_ENERGY_MAX.get());
     }
 

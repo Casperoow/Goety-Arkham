@@ -3,6 +3,7 @@ package com.casper.goetyarkham.stats;
 import com.casper.goetyarkham.agility.AgilityEffects;
 import com.casper.goetyarkham.attribute.StatAttributeBridge;
 import com.casper.goetyarkham.network.ModNetwork;
+import com.casper.goetyarkham.revelation.RevelationAttributeBridge;
 import com.casper.goetyarkham.strength.StrengthEffects;
 import com.casper.goetyarkham.willpower.WillpowerEffects;
 import net.minecraft.server.level.ServerPlayer;
@@ -60,6 +61,7 @@ public final class PlayerStatsService {
         StrengthEffects.refreshStrengthEffects(player);
         AgilityEffects.refreshAgilityEffects(player);
         WillpowerEffects.refreshWillpowerEffects(player);
+        RevelationAttributeBridge.refresh(player);
     }
 
     static Optional<PlayerStats> mutable(ServerPlayer player) {

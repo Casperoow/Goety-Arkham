@@ -1,7 +1,6 @@
 package com.casper.goetyarkham.soul;
 
 import com.casper.goetyarkham.GoetyArkham;
-import com.casper.goetyarkham.willpower.WillpowerEffects;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -83,7 +82,6 @@ public final class SoulPoolEvents {
         public static void playerTick(TickEvent.PlayerTickEvent event) {
             if (event.phase == TickEvent.Phase.END
                     && event.player instanceof ServerPlayer player) {
-                WillpowerEffects.refreshSpellPowerMirror(player);
                 SoulEnergyPoolService.refresh(player);
             }
         }

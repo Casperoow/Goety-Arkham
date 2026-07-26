@@ -150,10 +150,18 @@ dependencies {
         runtimeOnly fg.deobf('devtest:jade:1.20.1-forge-11.13.3')
     }
 
+    if (file('devmods/powerful_dummy-20-0.0.6-a.jar').exists()) {
+        runtimeOnly fg.deobf(
+            'devtest:powerful_dummy-20:0.0.6-a'
+        )
+    }
+
     // Local mod dependencies are remapped to the development mappings by ForgeGradle.
     implementation fg.deobf('local:curios-forge:5.14.1+1.20.1')
+    implementation fg.deobf('local:EndingLibrary-1.20.1:2.1.19fix-all')
     implementation fg.deobf('local:geckolib-forge-1.20.1:4.8.4')
     implementation fg.deobf('local:goety:2.5.55.4')
+    implementation fg.deobf('local:GoetyRevelation:2.3.3fix(1)')
     implementation fg.deobf('local:Patchouli-1.20.1:85-FORGE')
     implementation fg.deobf('local:tacz-1.20.1:1.1.8-hotfix')
     implementation fg.deobf('local:The_Graveyard_3.1_(FORGE)_for_1.20.1:3.1')
