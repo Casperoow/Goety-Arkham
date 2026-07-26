@@ -7,18 +7,6 @@
       "usePercent": false
     },
     {
-      "id": "goetyarkham:critical_chance",
-      "intrinsic": 0.0,
-      "order": 11100,
-      "usePercent": false
-    },
-    {
-      "id": "goetyarkham:critical_damage",
-      "intrinsic": 0.0,
-      "order": 11200,
-      "usePercent": false
-    },
-    {
       "id": "goetyarkham:agility",
       "intrinsic": 0.0,
       "order": 12000,
@@ -34,6 +22,18 @@
       "id": "goetyarkham:intellect",
       "intrinsic": 0.0,
       "order": 14000,
+      "usePercent": false
+    },
+    {
+      "id": "goetyarkham:critical_chance",
+      "intrinsic": 0.0,
+      "order": 15000,
+      "usePercent": false
+    },
+    {
+      "id": "goetyarkham:critical_damage",
+      "intrinsic": 0.0,
+      "order": 16000,
       "usePercent": false
     }
   ]
