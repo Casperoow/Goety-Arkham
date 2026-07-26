@@ -42,6 +42,22 @@ public final class ModAttributes {
                             100.0D,
                             102400.0D
                     ).setSyncable(true));
+    public static final RegistryObject<Attribute> DODGE_CHANCE =
+            ATTRIBUTES.register("dodge_chance", () ->
+                    new RangedAttribute(
+                            "attribute.name.goetyarkham.dodge_chance",
+                            0.0D,
+                            0.0D,
+                            1.0D
+                    ).setSyncable(true));
+    public static final RegistryObject<Attribute> BULLET_DAMAGE =
+            ATTRIBUTES.register("bullet_damage", () ->
+                    new RangedAttribute(
+                            "attribute.name.goetyarkham.bullet_damage",
+                            1.0D,
+                            0.0D,
+                            1024.0D
+                    ).setSyncable(true));
 
     private ModAttributes() {
     }
@@ -59,6 +75,8 @@ public final class ModAttributes {
         event.add(EntityType.PLAYER, INTELLECT.get());
         event.add(EntityType.PLAYER, CRITICAL_CHANCE.get());
         event.add(EntityType.PLAYER, CRITICAL_DAMAGE.get());
+        event.add(EntityType.PLAYER, DODGE_CHANCE.get());
+        event.add(EntityType.PLAYER, BULLET_DAMAGE.get());
     }
 
     private static RegistryObject<Attribute> register(String name, String translationKey) {

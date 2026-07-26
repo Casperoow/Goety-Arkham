@@ -1,5 +1,6 @@
 package com.casper.goetyarkham.stats;
 
+import com.casper.goetyarkham.agility.AgilityEffectsSelfTest;
 import com.casper.goetyarkham.command.StatsCommandSelfTest;
 import com.casper.goetyarkham.strength.StrengthEffectsSelfTest;
 
@@ -79,6 +80,7 @@ public final class PlayerStatsSelfTest {
         );
         StatsCommandSelfTest.run();
         StrengthEffectsSelfTest.run();
+        AgilityEffectsSelfTest.run();
 
         System.out.println("PlayerStatsSelfTest: all checks passed");
     }

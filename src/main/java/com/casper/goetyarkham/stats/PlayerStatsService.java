@@ -1,5 +1,6 @@
 package com.casper.goetyarkham.stats;
 
+import com.casper.goetyarkham.agility.AgilityEffects;
 import com.casper.goetyarkham.attribute.StatAttributeBridge;
 import com.casper.goetyarkham.network.ModNetwork;
 import com.casper.goetyarkham.strength.StrengthEffects;
@@ -17,19 +18,19 @@ public final class PlayerStatsService {
 
     public static Optional<StatSnapshot> setBase(ServerPlayer player, StatType stat, int value) {
         Optional<StatSnapshot> result = setBase(mutable(player), stat, value);
-        result.ifPresent(ignored -> StrengthEffects.refreshStrengthEffects(player));
+        result.ifPresent(ignored -> refreshEffects(player));
         return result;
     }
 
     public static Optional<StatSnapshot> addBase(ServerPlayer player, StatType stat, int amount) {
         Optional<StatSnapshot> result = addBase(mutable(player), stat, amount);
-        result.ifPresent(ignored -> StrengthEffects.refreshStrengthEffects(player));
+        result.ifPresent(ignored -> refreshEffects(player));
         return result;
     }
 
     public static Optional<Boolean> reset(ServerPlayer player) {
         Optional<Boolean> result = reset(mutable(player));
-        result.ifPresent(ignored -> StrengthEffects.refreshStrengthEffects(player));
+        result.ifPresent(ignored -> refreshEffects(player));
         return result;
     }
 
@@ -51,7 +52,12 @@ public final class PlayerStatsService {
     public static void sync(ServerPlayer player) {
         mutable(player).ifPresent(data -> ModNetwork.sendStats(player, data.serializeNBT()));
         StatAttributeBridge.syncToAttributes(player);
+        refreshEffects(player);
+    }
+
+    public static void refreshEffects(ServerPlayer player) {
         StrengthEffects.refreshStrengthEffects(player);
+        AgilityEffects.refreshAgilityEffects(player);
     }
 
     static Optional<PlayerStats> mutable(ServerPlayer player) {

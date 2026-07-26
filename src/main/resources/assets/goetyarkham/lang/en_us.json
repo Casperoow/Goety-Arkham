@@ -5,5 +5,7 @@
   "attribute.name.goetyarkham.willpower": "Willpower",
   "attribute.name.goetyarkham.intellect": "Intellect",
   "attribute.name.goetyarkham.critical_chance": "Critical Chance (%)",
-  "attribute.name.goetyarkham.critical_damage": "Critical Damage (%)"
+  "attribute.name.goetyarkham.critical_damage": "Critical Damage (%)",
+  "attribute.name.goetyarkham.dodge_chance": "Dodge Chance",
+  "attribute.name.goetyarkham.bullet_damage": "Bullet Damage"
 }

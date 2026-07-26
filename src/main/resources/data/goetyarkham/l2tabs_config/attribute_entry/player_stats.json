@@ -35,6 +35,18 @@
       "intrinsic": 0.0,
       "order": 16000,
       "usePercent": false
+    },
+    {
+      "id": "goetyarkham:dodge_chance",
+      "intrinsic": 0.0,
+      "order": 17000,
+      "usePercent": true
+    },
+    {
+      "id": "goetyarkham:bullet_damage",
+      "intrinsic": 0.0,
+      "order": 18000,
+      "usePercent": true
     }
   ]
 }
