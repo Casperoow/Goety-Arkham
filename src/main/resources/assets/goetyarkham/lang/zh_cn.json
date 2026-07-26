@@ -1,3 +1,7 @@
 {
-  "mod.goetyarkham.name": "[GAH]诡厄巫法：阿卡姆"
+  "mod.goetyarkham.name": "[GAH]诡厄巫法：阿卡姆",
+  "attribute.name.goetyarkham.strength": "力量",
+  "attribute.name.goetyarkham.agility": "敏捷",
+  "attribute.name.goetyarkham.willpower": "意志",
+  "attribute.name.goetyarkham.intellect": "智慧"
 }

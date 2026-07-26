@@ -124,6 +124,10 @@ repositories {
     flatDir {
         dir 'libs'
     }
+
+    flatDir {
+        dir 'devmods'
+    }
 }
 
 dependencies {
@@ -133,6 +137,9 @@ dependencies {
     // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    if (file('devmods/l2library-2.5.3.jar').exists()) {
+        runtimeOnly fg.deobf('dev:l2library:2.5.3')
+    }
 
     // Local mod dependencies are remapped to the development mappings by ForgeGradle.
     implementation fg.deobf('local:curios-forge:5.14.1+1.20.1')

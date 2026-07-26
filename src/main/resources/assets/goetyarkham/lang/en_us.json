@@ -1,3 +1,7 @@
 {
-  "mod.goetyarkham.name": "Goety: Arkham"
+  "mod.goetyarkham.name": "Goety: Arkham",
+  "attribute.name.goetyarkham.strength": "Strength",
+  "attribute.name.goetyarkham.agility": "Agility",
+  "attribute.name.goetyarkham.willpower": "Willpower",
+  "attribute.name.goetyarkham.intellect": "Intellect"
 }

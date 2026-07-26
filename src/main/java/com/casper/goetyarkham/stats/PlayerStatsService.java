@@ -1,5 +1,6 @@
 package com.casper.goetyarkham.stats;
 
+import com.casper.goetyarkham.attribute.StatAttributeBridge;
 import com.casper.goetyarkham.network.ModNetwork;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -42,6 +43,7 @@ public final class PlayerStatsService {
 
     public static void sync(ServerPlayer player) {
         mutable(player).ifPresent(data -> ModNetwork.sendStats(player, data.serializeNBT()));
+        StatAttributeBridge.syncToAttributes(player);
     }
 
     static Optional<PlayerStats> mutable(ServerPlayer player) {

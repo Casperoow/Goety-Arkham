@@ -1,0 +1,28 @@
+{
+  "list": [
+    {
+      "id": "goetyarkham:strength",
+      "intrinsic": 0.0,
+      "order": 11000,
+      "usePercent": false
+    },
+    {
+      "id": "goetyarkham:agility",
+      "intrinsic": 0.0,
+      "order": 12000,
+      "usePercent": false
+    },
+    {
+      "id": "goetyarkham:willpower",
+      "intrinsic": 0.0,
+      "order": 13000,
+      "usePercent": false
+    },
+    {
+      "id": "goetyarkham:intellect",
+      "intrinsic": 0.0,
+      "order": 14000,
+      "usePercent": false
+    }
+  ]
+}
