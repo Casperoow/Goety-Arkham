@@ -61,6 +61,12 @@
       "usePercent": true
     },
     {
+      "id": "goety_revelation:soul_decrease_reduction",
+      "intrinsic": -1.0,
+      "order": 19750,
+      "usePercent": true
+    },
+    {
       "id": "goetyarkham:soul_energy_max",
       "intrinsic": 0.0,
       "order": 20000,

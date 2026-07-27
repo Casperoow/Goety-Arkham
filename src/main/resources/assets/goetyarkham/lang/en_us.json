@@ -8,5 +8,6 @@
   "attribute.name.goetyarkham.critical_damage": "Critical Damage (%)",
   "attribute.name.goetyarkham.dodge_chance": "Dodge Chance",
   "attribute.name.goetyarkham.bullet_damage": "Bullet Damage",
+  "attribute.name.goety_revelation.soul_decrease_reduction": "Soul Discount",
   "attribute.name.goetyarkham.soul_energy_max": "Maximum Soul Energy"
 }

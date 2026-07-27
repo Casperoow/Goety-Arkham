@@ -54,9 +54,7 @@ public final class AgilityEffects {
     }
 
     public static double calculateMovementSpeedModifier(int agility) {
-        return agility > 0
-                ? agility * 0.01D
-                : 0.0D;
+        return Math.max(0, Math.min(agility, 50)) * 0.01D;
     }
 
     public static double calculateBulletDamageMultiplier(int agility) {
