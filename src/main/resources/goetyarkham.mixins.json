@@ -4,6 +4,7 @@
   "package": "com.casper.goetyarkham.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "CursedCageBlockEntityMixin",
     "SEHelperMixin"
   ],
   "client": [
