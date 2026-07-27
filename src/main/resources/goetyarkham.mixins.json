@@ -5,6 +5,10 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "CursedCageBlockEntityMixin",
+    "GoetyIllagerAssaultMixin",
+    "GoetyRitualCompletionMixin",
+    "RaidCreationMixin",
+    "RaidsCreationContextMixin",
     "SEHelperMixin"
   ],
   "client": [

@@ -250,3 +250,15 @@ tasks.register('statsSelfTest', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.casper.goetyarkham.stats.PlayerStatsSelfTest'
 }
+
+tasks.register('illagerTreacherySelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs deterministic pure-logic tests for illager_treachery.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.illager_treachery.IllagerTreacherySelfTest'
+}
+
+tasks.named('check').configure {
+    dependsOn tasks.named('illagerTreacherySelfTest')
+}
