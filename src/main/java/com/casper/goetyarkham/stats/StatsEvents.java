@@ -54,20 +54,10 @@ public final class StatsEvents {
 
         @SubscribeEvent
         public static void clonePlayer(PlayerEvent.Clone event) {
-            if (!event.isWasDeath()) {
-                GoetyArkham.LOGGER.info(
-                        "[StatsCapability] PlayerEvent.Clone skipped: isWasDeath=false, oldUuid={}, newUuid={}, oldIdentity={}, newIdentity={}",
-                        event.getOriginal().getUUID(),
-                        event.getEntity().getUUID(),
-                        System.identityHashCode(event.getOriginal()),
-                        System.identityHashCode(event.getEntity())
-                );
-                return;
-            }
-
             boolean presentBeforeRevive =
                     event.getOriginal().getCapability(ModCapabilities.PLAYER_STATS).isPresent();
             boolean presentAfterRevive = false;
+            boolean newCapabilityPresent = false;
             boolean copied = false;
             try {
                 event.getOriginal().reviveCaps();
@@ -84,24 +74,34 @@ public final class StatsEvents {
                         .resolve()
                         .filter(PlayerStats.class::isInstance)
                         .map(PlayerStats.class::cast);
+                newCapabilityPresent = newStats.isPresent();
 
-                if (oldStats.isPresent() && newStats.isPresent()) {
-                    newStats.get().copyFrom(oldStats.get());
-                    copied = true;
-                }
+                copied = copyStatsForClone(oldStats, newStats);
             } finally {
                 GoetyArkham.LOGGER.info(
-                        "[StatsCapability] PlayerEvent.Clone: isWasDeath=true, oldUuid={}, newUuid={}, oldIdentity={}, newIdentity={}, presentBeforeRevive={}, presentAfterRevive={}, copied={}",
+                        "[StatsCapability] PlayerEvent.Clone: isWasDeath={}, oldUuid={}, newUuid={}, oldIdentity={}, newIdentity={}, oldCapabilityPresentBeforeRevive={}, oldCapabilityPresentAfterRevive={}, newCapabilityPresent={}, copied={}",
+                        event.isWasDeath(),
                         event.getOriginal().getUUID(),
                         event.getEntity().getUUID(),
                         System.identityHashCode(event.getOriginal()),
                         System.identityHashCode(event.getEntity()),
                         presentBeforeRevive,
                         presentAfterRevive,
+                        newCapabilityPresent,
                         copied
                 );
                 event.getOriginal().invalidateCaps();
             }
+        }
+
+        static boolean copyStatsForClone(
+                Optional<PlayerStats> oldStats,
+                Optional<PlayerStats> newStats) {
+            if (oldStats.isEmpty() || newStats.isEmpty()) {
+                return false;
+            }
+            newStats.get().copyFrom(oldStats.get());
+            return true;
         }
 
         @SubscribeEvent

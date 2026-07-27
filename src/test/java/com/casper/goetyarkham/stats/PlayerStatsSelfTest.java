@@ -58,6 +58,9 @@ public final class PlayerStatsSelfTest {
         cloned.copyFrom(loaded);
         assertEquals(loaded.snapshot(), cloned.snapshot(), "clone copy");
 
+        assertCloneCopiesAllComponents(true);
+        assertCloneCopiesAllComponents(false);
+
         assertTrue(cloned.reset(), "reset reports a change");
         for (StatType type : StatType.values()) {
             assertEquals(0, cloned.get(type).finalValue(), type + " reset final");
@@ -87,6 +90,49 @@ public final class PlayerStatsSelfTest {
         SoulPoolOperationsSelfTest.run();
 
         System.out.println("PlayerStatsSelfTest: all checks passed");
+    }
+
+    private static void assertCloneCopiesAllComponents(boolean wasDeath) {
+        String cloneType = wasDeath ? "death clone" : "non-death clone";
+        PlayerStats original = new PlayerStats();
+        int index = 1;
+        for (StatType type : StatType.values()) {
+            original.setBase(type, index * 10);
+            original.setEquipment(type, index * 3);
+            original.setTemporary(type, -index * 2);
+            original.setDerived(type, index * 5);
+            index++;
+        }
+
+        PlayerStats replacement = new PlayerStats();
+        assertTrue(
+                StatsEvents.ForgeBus.copyStatsForClone(
+                        Optional.of(original), Optional.of(replacement)),
+                cloneType + " reports successful copy"
+        );
+
+        for (StatType type : StatType.values()) {
+            StatSnapshot expected = original.get(type);
+            StatSnapshot actual = replacement.get(type);
+            assertEquals(expected.base(), actual.base(),
+                    cloneType + " " + type + " base");
+            assertEquals(expected.equipment(), actual.equipment(),
+                    cloneType + " " + type + " equipment");
+            assertEquals(expected.temporary(), actual.temporary(),
+                    cloneType + " " + type + " temporary");
+            assertEquals(expected.derived(), actual.derived(),
+                    cloneType + " " + type + " derived");
+        }
+
+        int replacementStrength = replacement.get(StatType.STRENGTH).base();
+        original.setBase(StatType.STRENGTH, replacementStrength + 100);
+        assertEquals(replacementStrength, replacement.get(StatType.STRENGTH).base(),
+                cloneType + " replacement is independent from original mutation");
+
+        int originalAgility = original.get(StatType.AGILITY).equipment();
+        replacement.setEquipment(StatType.AGILITY, originalAgility + 100);
+        assertEquals(originalAgility, original.get(StatType.AGILITY).equipment(),
+                cloneType + " original is independent from replacement mutation");
     }
 
     private static void assertTrue(boolean value, String label) {
