@@ -14,6 +14,8 @@ public final class SoulPoolOperationsSelfTest {
         testConsumptionOrder();
         testCapacityDrop();
         testContainerRequirementAndArca();
+        testMergedTotemAndArcaPool();
+        testMergedTotemAndArcaMutationOrder();
     }
 
     private static void testSnapshots() {
@@ -108,6 +110,57 @@ public final class SoulPoolOperationsSelfTest {
         FakeHandle arca = new FakeHandle("arca", 250, 1000);
         assertPool(List.of(arca), 0, 100, true, 250, 1100,
                 "Arca physical capacity plus willpower");
+    }
+
+    private static void testMergedTotemAndArcaPool() {
+        FakeHandle totem = new FakeHandle("totem", 100, 200);
+        FakeHandle arca = new FakeHandle("arca", 0, 100_000);
+
+        assertPool(List.of(totem, arca), 0, 0, true, 100, 100_200,
+                "empty Arca adds capacity to the Totem pool");
+
+        arca.current = 500;
+        assertPool(List.of(totem, arca), 0, 0, true, 600, 100_200,
+                "Arca and Totem souls are summed");
+
+        assertPool(List.of(totem, arca), 25, 25, true, 625, 100_225,
+                "merged physical stores include the virtual reserve");
+    }
+
+    private static void testMergedTotemAndArcaMutationOrder() {
+        FakeHandle totem = new FakeHandle("totem", 100, 200);
+        FakeHandle arca = new FakeHandle("arca", 0, 100_000);
+
+        SoulPoolOperations.MutationResult result = SoulPoolOperations.remove(
+                List.of(totem, arca), 0, 100_200, 40);
+        assertEquals(0, arca.current,
+                "an empty Arca does not block consumption");
+        assertEquals(60, totem.current,
+                "an empty Arca spills consumption into the Totem");
+        assertEquals(40, result.changedAmount(),
+                "Totem souls remain usable while a valid Arca is empty");
+
+        totem.current = 100;
+        arca.current = 500;
+        result = SoulPoolOperations.remove(
+                List.of(totem, arca), 0, 100_200, 550);
+        assertEquals(0, arca.current,
+                "Arca at the end of the list is consumed first");
+        assertEquals(50, totem.current,
+                "consumption spills from Arca into Totems exactly once");
+        assertEquals(550, result.changedAmount(),
+                "merged consumption removes the requested total exactly once");
+
+        totem.current = 150;
+        arca.current = 0;
+        result = SoulPoolOperations.add(
+                List.of(totem, arca), 0, 0, 100_200, 100);
+        assertEquals(200, totem.current,
+                "restoration fills the Totem before the Arca");
+        assertEquals(50, arca.current,
+                "restoration spills into the Arca after Totems");
+        assertEquals(100, result.changedAmount(),
+                "merged restoration adds the requested total exactly once");
     }
 
     private static void assertPool(

@@ -12,23 +12,28 @@ import net.minecraft.world.level.Level;
 import java.util.Optional;
 
 /**
- * Resolves the active Arca prerequisite used by a cursed cage's soul-transfer
- * gem. This deliberately does not alter Goety's general Arca lifecycle.
+ * Resolves the valid active Arca shared by the unified pool and a cursed
+ * cage's soul-transfer gem. This does not alter Goety's Arca lifecycle.
  */
 public final class SoulTransferArcaValidator {
     private SoulTransferArcaValidator() {
     }
 
     public static Optional<ArcaBlockEntity> findValidArca(ServerPlayer player) {
-        Optional<ISoulEnergy> capability =
-                player.getCapability(SEProvider.CAPABILITY).resolve();
-        if (capability.isEmpty() || !capability.get().getSEActive()) {
+        return player.getCapability(SEProvider.CAPABILITY)
+                .resolve()
+                .flatMap(capability -> findValidArca(player, capability));
+    }
+
+    static Optional<ArcaBlockEntity> findValidArca(
+            ServerPlayer player, ISoulEnergy capability) {
+        if (!capability.getSEActive()) {
             return Optional.empty();
         }
 
-        BlockPos arcaPos = capability.get().getArcaBlock();
+        BlockPos arcaPos = capability.getArcaBlock();
         ResourceKey<Level> arcaDimension =
-                capability.get().getArcaBlockDimension();
+                capability.getArcaBlockDimension();
         if (arcaPos == null || arcaDimension == null) {
             return Optional.empty();
         }

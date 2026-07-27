@@ -214,17 +214,11 @@ public final class SoulEnergyPoolService {
 
     private static PoolContext collect(ServerPlayer player) {
         Optional<ISoulEnergy> arca = player.getCapability(SEProvider.CAPABILITY).resolve();
-        if (arca.isPresent() && arca.get().getSEActive()) {
-            int maximum = Math.max(0, MainConfig.MaxArcaSouls.get());
-            return new PoolContext(
-                    List.of(new ArcaHandle(arca.get(), maximum)),
-                    true,
-                    true
-            );
-        }
-
         List<SoulStorageHandle> handles = new ArrayList<>();
         IdentityHashMap<ItemStack, Boolean> seen = new IdentityHashMap<>();
+
+        // Stable fill order: Curios, offhand, hotbar, then Arca. Removal uses
+        // the reverse physical order in SoulPoolOperations.
         CuriosApi.getCuriosInventory(player).resolve().ifPresent(inventory ->
                 inventory.getCurios().entrySet().stream()
                         .sorted(Map.Entry.comparingByKey(Comparator.naturalOrder()))
@@ -235,7 +229,20 @@ public final class SoulEnergyPoolService {
         for (int slot = 0; slot < 9; slot++) {
             addStack(handles, seen, "hotbar:" + slot, player.getInventory().getItem(slot));
         }
-        return new PoolContext(List.copyOf(handles), !handles.isEmpty(), false);
+
+        boolean arcaMode = arca.isPresent()
+                && SoulTransferArcaValidator
+                .findValidArca(player, arca.get())
+                .isPresent();
+        if (arcaMode) {
+            int maximum = Math.max(0, MainConfig.MaxArcaSouls.get());
+            handles.add(new ArcaHandle(arca.get(), maximum));
+        }
+        return new PoolContext(
+                List.copyOf(handles),
+                !handles.isEmpty(),
+                arcaMode
+        );
     }
 
     private static void addCurioStacks(
