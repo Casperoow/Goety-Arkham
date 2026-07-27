@@ -8,6 +8,7 @@
     "SEHelperMixin"
   ],
   "client": [
+    "client.CursedCageBlockEntityClientMixin",
     "client.SoulEnergyGuiMixin"
   ],
   "injectors": {
