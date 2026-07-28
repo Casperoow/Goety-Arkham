@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "type": "goetyarkham:message",
+  "default_enabled": true,
+  "default_weight": 3,
+  "data": {
+    "translation_key": "message.goetyarkham.illager_treachery.ominous_whispers"
+  }
+}

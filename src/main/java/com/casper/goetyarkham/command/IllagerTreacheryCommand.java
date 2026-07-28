@@ -6,11 +6,10 @@ import com.casper.goetyarkham.illager_treachery.PlayerEligibility;
 import com.casper.goetyarkham.illager_treachery.TriggerRequest;
 import com.casper.goetyarkham.illager_treachery.TriggerSource;
 import com.casper.goetyarkham.illager_treachery.TreacherySettings;
+import com.casper.goetyarkham.illager_treachery.config.EncounterConfigService;
 import com.casper.goetyarkham.illager_treachery.config.IllagerTreacheryConfig;
 import com.casper.goetyarkham.illager_treachery.data.IllagerTreacherySavedData;
 import com.casper.goetyarkham.illager_treachery.encounter.EncounterRegistry;
-import com.casper.goetyarkham.illager_treachery.encounter.EncounterSettings;
-import com.casper.goetyarkham.illager_treachery.encounter.IllagerTreacheryEncounter;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -78,7 +77,19 @@ public final class IllagerTreacheryCommand {
                                                         ResourceLocationArgument.getId(
                                                                 context, "id"),
                                                         LongArgumentType.getLong(
-                                                                context, "weight"))))))));
+                                                                context, "weight"))))))
+                        .then(Commands.literal("reload")
+                                .executes(context -> reloadEncounters(
+                                        context.getSource())))
+                        .then(Commands.literal("reset")
+                                .then(encounterIdArgument()
+                                        .executes(context -> resetEncounter(
+                                                context.getSource(),
+                                                ResourceLocationArgument.getId(
+                                                        context, "id")))))
+                        .then(Commands.literal("sync")
+                                .executes(context -> syncEncounters(
+                                        context.getSource())))));
 
         dispatcher.register(root);
     }
@@ -87,8 +98,8 @@ public final class IllagerTreacheryCommand {
             CommandSourceStack, ResourceLocation> encounterIdArgument() {
         return Commands.argument("id", ResourceLocationArgument.id())
                 .suggests((context, builder) -> {
-                    EncounterRegistry.INSTANCE.values().stream()
-                            .map(encounter -> encounter.id().toString())
+                    encounterConfig(context.getSource()).list().stream()
+                            .map(entry -> entry.id().toString())
                             .forEach(builder::suggest);
                     return builder.buildFuture();
                 });
@@ -164,7 +175,8 @@ public final class IllagerTreacheryCommand {
             return 0;
         }
 
-        if (EncounterRegistry.INSTANCE.snapshot(data::effectiveSettings).isEmpty()) {
+        if (IllagerTreacheryManager.get(server)
+                .drawableEncounterCount(server) == 0) {
             source.sendFailure(Component.literal(
                     "无法触发灾厄诡计：当前没有启用且权重大于0的遭遇。"));
             return 0;
@@ -192,22 +204,29 @@ public final class IllagerTreacheryCommand {
     }
 
     private static int listEncounters(CommandSourceStack source) {
-        Collection<IllagerTreacheryEncounter> encounters =
-                EncounterRegistry.INSTANCE.values();
+        List<EncounterConfigService.ListEntry> encounters =
+                encounterConfig(source).list();
         if (encounters.isEmpty()) {
             source.sendSuccess(() -> Component.literal(
                     "当前没有注册任何灾厄诡计遭遇。"), false);
             return 1;
         }
-        IllagerTreacherySavedData data =
-                IllagerTreacherySavedData.get(source.getServer());
-        for (IllagerTreacheryEncounter encounter : encounters) {
-            EncounterSettings settings = data.effectiveSettings(encounter);
+        for (EncounterConfigService.ListEntry encounter : encounters) {
             source.sendSuccess(() -> Component.literal(
                     encounter.id()
-                            + ": enabled=" + settings.enabled()
-                            + ", weight=" + settings.weight()
-                            + ", drawable=" + settings.drawable()), false);
+                            + ": type=" + (encounter.type() == null
+                            ? "<unavailable>" : encounter.type())
+                            + ", available=" + encounter.available()
+                            + ", enabled=" + encounter.enabled()
+                            + ", weight=" + encounter.weight()
+                            + ", drawable=" + encounter.drawable()
+                            + ", default_enabled="
+                            + (encounter.available()
+                            ? encounter.defaultEnabled() : "<unavailable>")
+                            + ", default_weight="
+                            + (encounter.available()
+                            ? encounter.defaultWeight() : "<unavailable>")),
+                    false);
         }
         return encounters.size();
     }
@@ -216,12 +235,13 @@ public final class IllagerTreacheryCommand {
             CommandSourceStack source,
             ResourceLocation id,
             boolean enabled) {
-        if (EncounterRegistry.INSTANCE.get(id).isEmpty()) {
-            source.sendFailure(Component.literal("未知的灾厄诡计遭遇ID：" + id));
+        EncounterConfigService.Operation operation =
+                encounterConfig(source).setEnabled(id, enabled);
+        if (!operation.success()) {
+            source.sendFailure(Component.literal(
+                    "无法修改灾厄诡计遭遇 " + id + "：" + operation.message()));
             return 0;
         }
-        IllagerTreacherySavedData.get(source.getServer())
-                .setEncounterEnabled(id, enabled);
         source.sendSuccess(() -> Component.literal(
                 "已" + (enabled ? "启用" : "禁用") + "灾厄诡计遭遇 " + id + "。"),
                 true);
@@ -236,15 +256,71 @@ public final class IllagerTreacheryCommand {
             source.sendFailure(Component.literal("遭遇权重不能为负数。"));
             return 0;
         }
-        if (EncounterRegistry.INSTANCE.get(id).isEmpty()) {
-            source.sendFailure(Component.literal("未知的灾厄诡计遭遇ID：" + id));
+        EncounterConfigService.Operation operation =
+                encounterConfig(source).setWeight(id, weight);
+        if (!operation.success()) {
+            source.sendFailure(Component.literal(
+                    "无法修改灾厄诡计遭遇 " + id + "：" + operation.message()));
             return 0;
         }
-        IllagerTreacherySavedData.get(source.getServer())
-                .setEncounterWeight(id, weight);
         source.sendSuccess(() -> Component.literal(
                 "已将灾厄诡计遭遇 " + id + " 的权重设为 " + weight + "。"), true);
         return 1;
+    }
+
+    private static int reloadEncounters(CommandSourceStack source) {
+        IllagerTreacherySavedData savedData =
+                IllagerTreacherySavedData.get(source.getServer());
+        EncounterConfigService.Operation operation =
+                encounterConfig(source).reload(savedData);
+        if (!operation.success()) {
+            source.sendFailure(Component.literal(
+                    "集中遭遇TOML重载失败：" + operation.message()));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal(
+                "已重新读取集中遭遇TOML；数据包JSON未重新加载。"
+                        + "更改从下一轮灾厄诡计开始生效。"), true);
+        return 1;
+    }
+
+    private static int resetEncounter(
+            CommandSourceStack source, ResourceLocation id) {
+        EncounterConfigService.Operation operation =
+                encounterConfig(source).reset(id);
+        if (!operation.success()) {
+            source.sendFailure(Component.literal(
+                    "无法重置灾厄诡计遭遇 " + id + "：" + operation.message()));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal(
+                "已将灾厄诡计遭遇 " + id
+                        + " 恢复为当前定义的默认开关与权重。"), true);
+        return 1;
+    }
+
+    private static int syncEncounters(CommandSourceStack source) {
+        EncounterConfigService.Operation operation =
+                encounterConfig(source).sync();
+        if (!operation.success()) {
+            source.sendFailure(Component.literal(
+                    "集中遭遇TOML同步失败：" + operation.message()));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal(
+                operation.changed()
+                        ? "已把新发现的遭遇补充进集中TOML；已有设置未被覆盖。"
+                        : "集中TOML已包含全部当前发现的遭遇；未改动已有设置。"),
+                true);
+        return 1;
+    }
+
+    private static EncounterConfigService encounterConfig(
+            CommandSourceStack source) {
+        EncounterConfigService service =
+                EncounterConfigService.get(source.getServer());
+        service.initialize(IllagerTreacherySavedData.get(source.getServer()));
+        return service;
     }
 
     static boolean canReset(IllagerTreacheryState state) {

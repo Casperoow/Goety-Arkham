@@ -9,5 +9,11 @@
   "attribute.name.goetyarkham.dodge_chance": "Dodge Chance",
   "attribute.name.goetyarkham.bullet_damage": "Bullet Damage",
   "attribute.name.goety_revelation.soul_decrease_reduction": "Soul Discount",
-  "attribute.name.goetyarkham.soul_energy_max": "Maximum Soul Energy"
+  "attribute.name.goetyarkham.soul_energy_max": "Maximum Soul Energy",
+  "encounter.goetyarkham.illager_treachery.ominous_whispers": "Ominous Whispers",
+  "encounter.goetyarkham.illager_treachery.encroaching_darkness": "Encroaching Darkness",
+  "encounter.goetyarkham.illager_treachery.misfortune_never_comes_alone": "Misfortune Never Comes Alone",
+  "message.goetyarkham.illager_treachery.ominous_whispers": "You hear whispers from no discernible source...",
+  "message.goetyarkham.illager_treachery.encroaching_darkness": "Darkness closes in at the edge of your vision.",
+  "message.goetyarkham.illager_treachery.misfortune_never_comes_alone": "Misfortune follows close behind. Draw another encounter."
 }

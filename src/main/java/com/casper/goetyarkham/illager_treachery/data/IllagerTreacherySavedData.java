@@ -24,6 +24,8 @@ public final class IllagerTreacherySavedData extends SavedData {
     private static final String HAS_ENABLED_OVERRIDE = "has_enabled_override";
     private static final String ENABLED_OVERRIDE = "enabled_override";
     private static final String ENCOUNTER_OVERRIDES = "encounter_overrides";
+    private static final String ENCOUNTER_CONFIG_MIGRATED =
+            "encounter_config_migrated";
     private static final String ENCOUNTER_ID = "id";
     private static final String HAS_ENABLED = "has_enabled";
     private static final String ENABLED = "enabled";
@@ -34,6 +36,7 @@ public final class IllagerTreacherySavedData extends SavedData {
     private long lastProcessedMinecraftDay = DailyProgress.UNINITIALIZED_DAY;
     private long cooldownEndGameTick;
     private Boolean enabledOverride;
+    private boolean encounterConfigMigrated;
     private final Map<ResourceLocation, EncounterOverride> encounterOverrides =
             new LinkedHashMap<>();
 
@@ -55,6 +58,8 @@ public final class IllagerTreacherySavedData extends SavedData {
         if (tag.getBoolean(HAS_ENABLED_OVERRIDE)) {
             data.enabledOverride = tag.getBoolean(ENABLED_OVERRIDE);
         }
+        data.encounterConfigMigrated =
+                tag.getBoolean(ENCOUNTER_CONFIG_MIGRATED);
 
         ListTag overrides = tag.getList(ENCOUNTER_OVERRIDES, Tag.TAG_COMPOUND);
         for (int index = 0; index < overrides.size(); index++) {
@@ -82,25 +87,29 @@ public final class IllagerTreacherySavedData extends SavedData {
         tag.putLong(LAST_PROCESSED_MINECRAFT_DAY, lastProcessedMinecraftDay);
         tag.putLong(COOLDOWN_END_GAME_TICK, cooldownEndGameTick);
         tag.putBoolean(HAS_ENABLED_OVERRIDE, enabledOverride != null);
+        tag.putBoolean(
+                ENCOUNTER_CONFIG_MIGRATED, encounterConfigMigrated);
         if (enabledOverride != null) {
             tag.putBoolean(ENABLED_OVERRIDE, enabledOverride);
         }
 
-        ListTag overrides = new ListTag();
-        encounterOverrides.forEach((id, override) -> {
-            CompoundTag entry = new CompoundTag();
-            entry.putString(ENCOUNTER_ID, id.toString());
-            entry.putBoolean(HAS_ENABLED, override.enabled() != null);
-            if (override.enabled() != null) {
-                entry.putBoolean(ENABLED, override.enabled());
-            }
-            entry.putBoolean(HAS_WEIGHT, override.weight() != null);
-            if (override.weight() != null) {
-                entry.putLong(WEIGHT, override.weight());
-            }
-            overrides.add(entry);
-        });
-        tag.put(ENCOUNTER_OVERRIDES, overrides);
+        if (!encounterConfigMigrated) {
+            ListTag overrides = new ListTag();
+            encounterOverrides.forEach((id, override) -> {
+                CompoundTag entry = new CompoundTag();
+                entry.putString(ENCOUNTER_ID, id.toString());
+                entry.putBoolean(HAS_ENABLED, override.enabled() != null);
+                if (override.enabled() != null) {
+                    entry.putBoolean(ENABLED, override.enabled());
+                }
+                entry.putBoolean(HAS_WEIGHT, override.weight() != null);
+                if (override.weight() != null) {
+                    entry.putLong(WEIGHT, override.weight());
+                }
+                overrides.add(entry);
+            });
+            tag.put(ENCOUNTER_OVERRIDES, overrides);
+        }
         return tag;
     }
 
@@ -203,6 +212,30 @@ public final class IllagerTreacherySavedData extends SavedData {
 
     public synchronized int encounterOverrideCount() {
         return encounterOverrides.size();
+    }
+
+    public synchronized Map<ResourceLocation, LegacyEncounterOverride>
+    legacyEncounterOverrides() {
+        Map<ResourceLocation, LegacyEncounterOverride> copy =
+                new LinkedHashMap<>();
+        encounterOverrides.forEach((id, override) ->
+                copy.put(id, new LegacyEncounterOverride(
+                        override.enabled(), override.weight())));
+        return Map.copyOf(copy);
+    }
+
+    public synchronized boolean encounterConfigMigrated() {
+        return encounterConfigMigrated;
+    }
+
+    public synchronized void markEncounterConfigMigrated() {
+        if (!encounterConfigMigrated) {
+            encounterConfigMigrated = true;
+            setDirty();
+        }
+    }
+
+    public record LegacyEncounterOverride(Boolean enabled, Long weight) {
     }
 
     private record EncounterOverride(Boolean enabled, Long weight) {

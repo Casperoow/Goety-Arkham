@@ -1,6 +1,7 @@
 package com.casper.goetyarkham.illager_treachery;
 
 import com.casper.goetyarkham.GoetyArkham;
+import com.casper.goetyarkham.illager_treachery.config.EncounterConfigService;
 import com.casper.goetyarkham.illager_treachery.config.IllagerTreacheryConfig;
 import com.casper.goetyarkham.illager_treachery.data.IllagerTreacherySavedData;
 import com.casper.goetyarkham.illager_treachery.encounter.EncounterExecutionContext;
@@ -134,7 +135,9 @@ public final class IllagerTreacheryManager {
 
     public int drawableEncounterCount(MinecraftServer server) {
         IllagerTreacherySavedData data = IllagerTreacherySavedData.get(server);
-        return encounters.snapshot(data::effectiveSettings).size();
+        EncounterConfigService config = EncounterConfigService.get(server);
+        config.initialize(data);
+        return encounters.snapshot(config.snapshotSettings()).size();
     }
 
     private void resolve(MinecraftServer server, TriggerAccumulator accumulator) {
@@ -169,7 +172,11 @@ public final class IllagerTreacheryManager {
                 .collect(java.util.stream.Collectors.toMap(
                         ServerPlayer::getUUID, player -> player));
 
-        EncounterSnapshot snapshot = encounters.snapshot(data::effectiveSettings);
+        EncounterConfigService encounterConfig =
+                EncounterConfigService.get(server);
+        encounterConfig.initialize(data);
+        EncounterSnapshot snapshot =
+                encounters.snapshot(encounterConfig.snapshotSettings());
         if (snapshot.isEmpty()) {
             GoetyArkham.LOGGER.error(
                     "[illager_treachery] Cannot start: no enabled encounter has positive weight. "
@@ -369,6 +376,7 @@ public final class IllagerTreacheryManager {
         long[] queuedDraws = {1L};
         boolean[] warnedAtLimit = {false};
         List<ResourceLocation> drawn = new ArrayList<>();
+        Set<ResourceLocation> eventClaims = new LinkedHashSet<>();
         int failures = 0;
 
         while (queuedDraws[0] > 0L) {
@@ -393,7 +401,8 @@ public final class IllagerTreacheryManager {
                                     context.eventId());
                         }
                         return false;
-                    }
+                    },
+                    eventClaims::add
             );
             try {
                 entry.encounter().execute(executionContext);

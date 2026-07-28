@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "type": "goetyarkham:mob_effect",
+  "default_enabled": true,
+  "default_weight": 1,
+  "data": {
+    "effect": "minecraft:darkness",
+    "duration_ticks": 300,
+    "amplifier": 0,
+    "ambient": false,
+    "show_particles": false,
+    "show_icon": true,
+    "translation_key": "message.goetyarkham.illager_treachery.encroaching_darkness"
+  }
+}

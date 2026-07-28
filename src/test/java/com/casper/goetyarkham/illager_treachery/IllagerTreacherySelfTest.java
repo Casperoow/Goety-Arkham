@@ -21,7 +21,7 @@ public final class IllagerTreacherySelfTest {
     private IllagerTreacherySelfTest() {
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         probabilityFormula();
         multiplayerNormalization();
         deterministicProbabilityChecks();
@@ -33,6 +33,7 @@ public final class IllagerTreacherySelfTest {
         encounterRegistryAndSnapshot();
         extraDrawLimit();
         mergingDeduplicationAndLock();
+        EncounterDataSelfTest.run();
         IllagerTreacheryCommandSelfTest.run();
         System.out.println("IllagerTreacherySelfTest: all checks passed");
     }

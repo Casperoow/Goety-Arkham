@@ -1,7 +1,11 @@
 package com.casper.goetyarkham.illager_treachery;
 
 import com.casper.goetyarkham.illager_treachery.encounter.EncounterRegistry;
+import com.casper.goetyarkham.illager_treachery.config.EncounterConfigService;
+import com.casper.goetyarkham.illager_treachery.encounter.EncounterType;
+import com.casper.goetyarkham.illager_treachery.encounter.EncounterTypeRegistry;
 import com.casper.goetyarkham.illager_treachery.encounter.IllagerTreacheryEncounter;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -19,6 +23,16 @@ public final class IllagerTreacheryApi {
 
     public static void registerEncounter(IllagerTreacheryEncounter encounter) {
         EncounterRegistry.INSTANCE.register(encounter);
+        EncounterConfigService.syncAllLoadedServers();
+    }
+
+    /**
+     * Registers a validated JSON encounter executor. DLCs must call this from
+     * normal mod construction, before the first server data-pack reload.
+     */
+    public static void registerEncounterType(
+            ResourceLocation id, EncounterType<?> type) {
+        EncounterTypeRegistry.INSTANCE.register(id, type);
     }
 
     public static IllagerTreacheryManager.SubmitResult submitTrigger(

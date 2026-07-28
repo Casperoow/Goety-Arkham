@@ -2,8 +2,13 @@ package com.casper.goetyarkham.illager_treachery;
 
 import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.IllagerTreacheryCommand;
+import com.casper.goetyarkham.illager_treachery.config.EncounterConfigService;
+import com.casper.goetyarkham.illager_treachery.data.IllagerTreacherySavedData;
+import com.casper.goetyarkham.illager_treachery.encounter.EncounterReloadListener;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -36,7 +41,19 @@ public final class IllagerTreacheryForgeEvents {
     }
 
     @SubscribeEvent
+    public static void addReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(new EncounterReloadListener());
+    }
+
+    @SubscribeEvent
+    public static void serverStarted(ServerStartedEvent event) {
+        EncounterConfigService.get(event.getServer())
+                .initialize(IllagerTreacherySavedData.get(event.getServer()));
+    }
+
+    @SubscribeEvent
     public static void serverStopping(ServerStoppingEvent event) {
         IllagerTreacheryManager.remove(event.getServer());
+        EncounterConfigService.remove(event.getServer());
     }
 }

@@ -2,6 +2,7 @@ package com.casper.goetyarkham;
 
 import com.casper.goetyarkham.attribute.ModAttributes;
 import com.casper.goetyarkham.illager_treachery.config.IllagerTreacheryConfig;
+import com.casper.goetyarkham.illager_treachery.encounter.type.BuiltInEncounterTypes;
 import com.casper.goetyarkham.network.ModNetwork;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -18,6 +19,7 @@ public final class GoetyArkham {
 
     public GoetyArkham() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        BuiltInEncounterTypes.register();
         ModLoadingContext.get().registerConfig(
                 ModConfig.Type.SERVER,
                 IllagerTreacheryConfig.SPEC,
