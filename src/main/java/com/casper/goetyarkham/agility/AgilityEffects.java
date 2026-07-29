@@ -76,7 +76,8 @@ public final class AgilityEffects {
             return;
         }
 
-        int agility = capability.get().get(StatType.AGILITY).finalValue();
+        int agility =
+                PlayerStatsService.getFinalValue(player, StatType.AGILITY);
         updateModifier(
                 player,
                 player.getAttribute(Attributes.MOVEMENT_SPEED),
@@ -118,7 +119,8 @@ public final class AgilityEffects {
         }
 
         PlayerStatsService.get(player).ifPresent(stats -> {
-            int agility = stats.get(StatType.AGILITY).finalValue();
+            int agility =
+                    PlayerStatsService.getFinalValue(player, StatType.AGILITY);
             if (player.getRandom().nextDouble() < calculateDodgeChance(agility)) {
                 event.setCanceled(true);
             }
@@ -134,7 +136,8 @@ public final class AgilityEffects {
         if (event.getHurtEntity() instanceof ServerPlayer hurtPlayer) {
             Optional<IPlayerStats> hurtStats = PlayerStatsService.get(hurtPlayer);
             if (hurtStats.isPresent()) {
-                int agility = hurtStats.get().get(StatType.AGILITY).finalValue();
+                int agility = PlayerStatsService.getFinalValue(
+                        hurtPlayer, StatType.AGILITY);
                 if (hurtPlayer.getRandom().nextDouble() < calculateDodgeChance(agility)) {
                     event.setCanceled(true);
                     return;
@@ -144,7 +147,8 @@ public final class AgilityEffects {
 
         if (event.getAttacker() instanceof ServerPlayer attacker) {
             PlayerStatsService.get(attacker).ifPresent(stats -> {
-                int agility = stats.get(StatType.AGILITY).finalValue();
+                int agility = PlayerStatsService.getFinalValue(
+                        attacker, StatType.AGILITY);
                 double multiplier = calculateBulletDamageMultiplier(agility);
                 event.setBaseAmount((float) (event.getBaseAmount() * multiplier));
             });

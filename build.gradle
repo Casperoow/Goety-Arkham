@@ -259,6 +259,26 @@ tasks.register('illagerTreacherySelfTest', JavaExec) {
     mainClass = 'com.casper.goetyarkham.illager_treachery.IllagerTreacherySelfTest'
 }
 
+tasks.register('chaosBagSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs deterministic pure-logic tests for the chaos bag and formal encounters.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.chaosbag.ChaosBagSelfTest'
+}
+
+tasks.register('prepareGameTestStructures', Copy) {
+    group = 'verification'
+    description = 'Copies source-controlled SNBT templates into the Forge GameTest directory.'
+    from 'src/test/resources/gameteststructures'
+    into 'run/gameteststructures'
+}
+
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+    dependsOn tasks.named('prepareGameTestStructures')
+}
+
 tasks.named('check').configure {
     dependsOn tasks.named('illagerTreacherySelfTest')
+    dependsOn tasks.named('chaosBagSelfTest')
 }

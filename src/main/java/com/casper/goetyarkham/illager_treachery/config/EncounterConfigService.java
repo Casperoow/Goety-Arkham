@@ -280,6 +280,12 @@ public final class EncounterConfigService {
             result.add(new ListEntry(
                     id,
                     available ? definition.typeId() : null,
+                    available
+                            ? definition.encounterGroup().orElse(null)
+                            : null,
+                    available
+                            ? definition.encounterTags()
+                            : java.util.Set.of(),
                     available,
                     value != null && value.enabled(),
                     value == null ? 0L : value.weight(),
@@ -397,12 +403,17 @@ public final class EncounterConfigService {
     public record ListEntry(
             ResourceLocation id,
             ResourceLocation type,
+            ResourceLocation group,
+            java.util.Set<ResourceLocation> tags,
             boolean available,
             boolean enabled,
             long weight,
             boolean drawable,
             boolean defaultEnabled,
             long defaultWeight) {
+        public ListEntry {
+            tags = java.util.Set.copyOf(tags);
+        }
     }
 
     public record Operation(boolean success, boolean changed, String message) {

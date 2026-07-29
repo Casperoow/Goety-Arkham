@@ -216,6 +216,9 @@ public final class IllagerTreacheryCommand {
                     encounter.id()
                             + ": type=" + (encounter.type() == null
                             ? "<unavailable>" : encounter.type())
+                            + ", group=" + (encounter.group() == null
+                            ? "<none>" : encounter.group())
+                            + ", tags=" + encounter.tags()
                             + ", available=" + encounter.available()
                             + ", enabled=" + encounter.enabled()
                             + ", weight=" + encounter.weight()

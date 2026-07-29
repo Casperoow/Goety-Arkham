@@ -2,6 +2,7 @@ package com.casper.goetyarkham.illager_treachery;
 
 import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.IllagerTreacheryCommand;
+import com.casper.goetyarkham.command.ChaosBagCommand;
 import com.casper.goetyarkham.illager_treachery.config.EncounterConfigService;
 import com.casper.goetyarkham.illager_treachery.data.IllagerTreacherySavedData;
 import com.casper.goetyarkham.illager_treachery.encounter.EncounterReloadListener;
@@ -38,6 +39,7 @@ public final class IllagerTreacheryForgeEvents {
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
         IllagerTreacheryCommand.register(event.getDispatcher());
+        ChaosBagCommand.register(event.getDispatcher());
     }
 
     @SubscribeEvent

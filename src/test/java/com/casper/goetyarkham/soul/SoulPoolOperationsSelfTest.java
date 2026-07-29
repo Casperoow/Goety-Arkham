@@ -13,6 +13,7 @@ public final class SoulPoolOperationsSelfTest {
         testGainOrderAndClamping();
         testConsumptionOrder();
         testCapacityDrop();
+        testDirectCapacityPenaltyAndTruncation();
         testContainerRequirementAndArca();
         testMergedTotemAndArcaPool();
         testMergedTotemAndArcaMutationOrder();
@@ -98,6 +99,27 @@ public final class SoulPoolOperationsSelfTest {
         assertEquals(1000, a.current, "available physical room is filled");
         assertEquals(0, result.virtualReserve(), "virtual reserve is removed");
         assertEquals(80, result.remainder(), "unmigrated overflow is discarded");
+    }
+
+    private static void testDirectCapacityPenaltyAndTruncation() {
+        FakeHandle a = new FakeHandle("a", 900, 1000);
+        FakeHandle b = new FakeHandle("b", 600, 1000);
+        int maximum = SoulPoolOperations.maximum(
+                true, 2000, 40, -1000);
+        assertEquals(1040, maximum, "direct capacity penalty");
+
+        SoulPoolOperations.MutationResult result =
+                SoulPoolOperations.truncateToMaximum(
+                        List.of(a, b), 100, maximum);
+        assertEquals(0, result.virtualReserve(), "truncation consumes virtual first");
+        assertEquals(140, b.current, "truncation consumes reverse physical order");
+        assertEquals(900, a.current, "truncation preserves earlier store");
+        assertEquals(560, result.changedAmount(), "truncated amount");
+
+        result = SoulPoolOperations.remove(
+                List.of(a, b), result.virtualReserve(), maximum, 5000);
+        assertEquals(0, a.current, "soul removal lower bound A");
+        assertEquals(0, b.current, "soul removal lower bound B");
     }
 
     private static void testContainerRequirementAndArca() {

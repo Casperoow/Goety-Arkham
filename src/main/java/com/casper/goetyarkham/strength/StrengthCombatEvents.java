@@ -27,7 +27,8 @@ public final class StrengthCombatEvents {
         }
 
         PlayerStatsService.get(player).ifPresent(stats -> {
-            double strength = stats.get(StatType.STRENGTH).finalValue();
+            double strength = PlayerStatsService.getFinalValue(
+                    player, StatType.STRENGTH);
             boolean critical = StrengthEffects.isCriticalHit(
                     strength,
                     player.getRandom().nextDouble()

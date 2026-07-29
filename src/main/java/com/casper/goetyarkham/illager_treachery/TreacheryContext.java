@@ -1,5 +1,7 @@
 package com.casper.goetyarkham.illager_treachery;
 
+import com.casper.goetyarkham.chaosbag.ChaosBagSnapshot;
+
 import java.util.Map;
 import java.util.EnumMap;
 import java.util.Set;
@@ -12,9 +14,11 @@ public record TreacheryContext(
         Map<TriggerSource, Set<UUID>> submittedPlayers,
         Set<UUID> qualifyingTriggerPlayers,
         Set<UUID> probabilitySuccessfulPlayers,
-        boolean guaranteed) {
+        boolean guaranteed,
+        ChaosBagSnapshot chaosBagSnapshot) {
 
     public TreacheryContext {
+        java.util.Objects.requireNonNull(chaosBagSnapshot, "chaosBagSnapshot");
         sources = Set.copyOf(sources);
         EnumMap<TriggerSource, Set<UUID>> submittedCopy =
                 new EnumMap<>(TriggerSource.class);

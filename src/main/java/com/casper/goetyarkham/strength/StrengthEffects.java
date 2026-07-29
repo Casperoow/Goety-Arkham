@@ -70,7 +70,8 @@ public final class StrengthEffects {
             return;
         }
 
-        double strength = capability.get().get(StatType.STRENGTH).finalValue();
+        double strength =
+                PlayerStatsService.getFinalValue(player, StatType.STRENGTH);
         AttributeInstance attackDamage = player.getAttribute(Attributes.ATTACK_DAMAGE);
         if (attackDamage == null) {
             GoetyArkham.LOGGER.warn(

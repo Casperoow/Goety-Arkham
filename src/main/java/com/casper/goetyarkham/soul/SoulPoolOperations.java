@@ -24,10 +24,21 @@ final class SoulPoolOperations {
 
     static int maximum(
             boolean hasContainer, int physicalMaximum, int willpowerContribution) {
+        return maximum(
+                hasContainer, physicalMaximum, willpowerContribution, 0);
+    }
+
+    static int maximum(
+            boolean hasContainer,
+            int physicalMaximum,
+            int willpowerContribution,
+            int directCapacityModifier) {
         if (!hasContainer) {
             return 0;
         }
-        long maximum = (long) physicalMaximum + willpowerContribution;
+        long maximum = (long) physicalMaximum
+                + willpowerContribution
+                + directCapacityModifier;
         return saturatingInt(Math.max(0L, maximum));
     }
 
@@ -61,6 +72,41 @@ final class SoulPoolOperations {
             }
         }
         return new MutationResult(updatedVirtual, normalized - updatedVirtual, overflow);
+    }
+
+    /**
+     * Permanently discards soul above an effective maximum. This is distinct
+     * from snapshot clamping: discarded soul must not reappear when capacity
+     * later recovers.
+     */
+    static MutationResult truncateToMaximum(
+            List<? extends SoulStorageHandle> handles,
+            int virtualReserve,
+            int maximum) {
+        long rawBefore = (long) physicalCurrent(handles)
+                + Math.max(0, virtualReserve);
+        int excess = saturatingInt(Math.max(0L, rawBefore - Math.max(0, maximum)));
+        int remaining = excess;
+        int updatedVirtual = Math.max(0, virtualReserve);
+
+        int fromVirtual = Math.min(updatedVirtual, remaining);
+        updatedVirtual -= fromVirtual;
+        remaining -= fromVirtual;
+
+        for (int index = handles.size() - 1;
+             index >= 0 && remaining > 0;
+             index--) {
+            SoulStorageHandle handle = handles.get(index);
+            int current = clamp(
+                    handle.getCurrentSoul(), 0, handle.getMaximumSoul());
+            int removed = Math.min(current, remaining);
+            if (removed > 0) {
+                handle.setCurrentSoul(current - removed);
+                remaining -= removed;
+            }
+        }
+        return new MutationResult(
+                updatedVirtual, excess - remaining, remaining);
     }
 
     static MutationResult add(

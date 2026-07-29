@@ -91,7 +91,8 @@ public final class StatsCommand {
         IPlayerStats data = capability.orElse(null);
         source.sendSuccess(() -> Component.literal("玩家 " + player.getGameProfile().getName() + " 的属性："), false);
         for (StatType type : StatType.values()) {
-            source.sendSuccess(() -> describe(type, data.get(type)), false);
+            source.sendSuccess(
+                    () -> describe(player, type, data.get(type)), false);
         }
         return StatType.values().length;
     }
@@ -103,7 +104,7 @@ public final class StatsCommand {
         }
         IPlayerStats data = capability.orElse(null);
         source.sendSuccess(() -> Component.literal(player.getGameProfile().getName() + " - ")
-                .append(describe(stat, data.get(stat))), false);
+                .append(describe(player, stat, data.get(stat))), false);
         return 1;
     }
 
@@ -158,12 +159,14 @@ public final class StatsCommand {
         return capability.isPresent();
     }
 
-    private static Component describe(StatType type, StatSnapshot value) {
+    private static Component describe(
+            ServerPlayer player, StatType type, StatSnapshot value) {
         return Component.literal(type.serializedName()
                 + ": base=" + value.base()
                 + ", equipment=" + value.equipment()
                 + ", temporary=" + value.temporary()
                 + ", derived=" + value.derived()
-                + ", final=" + value.finalValue());
+                + ", final="
+                + PlayerStatsService.getFinalValue(player, type));
     }
 }

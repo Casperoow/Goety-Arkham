@@ -224,7 +224,8 @@ public final class IllagerTreacheryManager {
                 accumulator.playersBySource(),
                 qualifyingSubmitted,
                 probabilitySuccesses,
-                guaranteed
+                guaranteed,
+                com.casper.goetyarkham.chaosbag.ChaosBagApi.snapshot(server)
         );
         startGlobalEvent(server, settings, data, snapshot, context);
     }

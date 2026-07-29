@@ -72,9 +72,10 @@ public final class RevelationAttributeBridge {
             return;
         }
 
-        IPlayerStats stats = capability.get();
-        int willpower = stats.get(StatType.WILLPOWER).finalValue();
-        int intellect = stats.get(StatType.INTELLECT).finalValue();
+        int willpower =
+                PlayerStatsService.getFinalValue(player, StatType.WILLPOWER);
+        int intellect =
+                PlayerStatsService.getFinalValue(player, StatType.INTELLECT);
 
         AttributeInstance spellPower = getAttributeInstance(player, SPELL_POWER_ID);
         if (spellPower != null) {

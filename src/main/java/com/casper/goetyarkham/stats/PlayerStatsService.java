@@ -18,6 +18,23 @@ public final class PlayerStatsService {
         return player.getCapability(ModCapabilities.PLAYER_STATS).resolve();
     }
 
+    /**
+     * The authoritative final-value read path. Permanent values remain in the
+     * capability; transient effects are composed here and never written back.
+     */
+    public static int getFinalValue(ServerPlayer player, StatType stat) {
+        int storedFinal = get(player)
+                .map(values -> values.get(stat).finalValue())
+                .orElse(0);
+        if (stat == StatType.WILLPOWER) {
+            return saturatingAdd(
+                    storedFinal,
+                    com.casper.goetyarkham.effect.DreamsOfRlyehEffectService
+                            .willpowerModifier(player));
+        }
+        return storedFinal;
+    }
+
     public static Optional<StatSnapshot> setBase(ServerPlayer player, StatType stat, int value) {
         Optional<StatSnapshot> result = setBase(mutable(player), stat, value);
         result.ifPresent(ignored -> refreshEffects(player));
@@ -89,5 +106,12 @@ public final class PlayerStatsService {
 
     static Optional<Boolean> reset(Optional<PlayerStats> data) {
         return data.map(PlayerStats::reset);
+    }
+
+    private static int saturatingAdd(int left, int right) {
+        long result = (long) left + right;
+        return (int) Math.max(
+                Integer.MIN_VALUE,
+                Math.min(Integer.MAX_VALUE, result));
     }
 }

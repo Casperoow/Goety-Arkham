@@ -163,6 +163,10 @@ public final class SoulEnergyPoolService {
                             context.handles(), reserve, values.virtualCapacity());
             reserve = reconciled.virtualReserve();
         }
+        SoulPoolOperations.MutationResult truncated =
+                SoulPoolOperations.truncateToMaximum(
+                        context.handles(), reserve, values.maximum());
+        reserve = truncated.virtualReserve();
         poolData.setVirtualSoulReserve(reserve);
 
         int physicalCurrent = SoulPoolOperations.physicalCurrent(context.handles());
@@ -172,7 +176,11 @@ public final class SoulEnergyPoolService {
                 context.hasContainer(),
                 context.arcaMode()
         );
-        long signature = signature(context, reserve, values.willpowerContribution());
+        long signature = signature(
+                context,
+                reserve,
+                values.willpowerContribution(),
+                values.directCapacityModifier());
         boolean changed = signature != poolData.getLastContainerSignature()
                 || !snapshot.equals(poolData.getLastSnapshot());
 
@@ -202,14 +210,23 @@ public final class SoulEnergyPoolService {
 
     private static PoolValues values(ServerPlayer player, PoolContext context) {
         int physicalMaximum = SoulPoolOperations.physicalMaximum(context.handles());
-        int willpower = PlayerStatsService.get(player)
-                .map(stats -> stats.get(StatType.WILLPOWER).finalValue())
-                .orElse(0);
+        int willpower =
+                PlayerStatsService.getFinalValue(player, StatType.WILLPOWER);
         int contribution = WillpowerEffects.calculateSoulCapacityContribution(willpower);
+        int directCapacityModifier =
+                com.casper.goetyarkham.effect.DreamsOfRlyehEffectService
+                        .soulCapacityModifier(player);
         int maximum = SoulPoolOperations.maximum(
-                context.hasContainer(), physicalMaximum, contribution);
+                context.hasContainer(),
+                physicalMaximum,
+                contribution,
+                directCapacityModifier);
         int virtualCapacity = SoulPoolOperations.virtualCapacity(physicalMaximum, maximum);
-        return new PoolValues(maximum, virtualCapacity, contribution);
+        return new PoolValues(
+                maximum,
+                virtualCapacity,
+                contribution,
+                directCapacityModifier);
     }
 
     private static PoolContext collect(ServerPlayer player) {
@@ -275,11 +292,15 @@ public final class SoulEnergyPoolService {
     }
 
     private static long signature(
-            PoolContext context, int virtualReserve, int willpowerContribution) {
+            PoolContext context,
+            int virtualReserve,
+            int willpowerContribution,
+            int directCapacityModifier) {
         long hash = 1125899906842597L;
         hash = 31L * hash + Boolean.hashCode(context.arcaMode());
         hash = 31L * hash + virtualReserve;
         hash = 31L * hash + willpowerContribution;
+        hash = 31L * hash + directCapacityModifier;
         for (SoulStorageHandle handle : context.handles()) {
             hash = 31L * hash + handle.storageIdentity().hashCode();
             hash = 31L * hash + handle.getCurrentSoul();
@@ -301,7 +322,8 @@ public final class SoulEnergyPoolService {
     private record PoolValues(
             int maximum,
             int virtualCapacity,
-            int willpowerContribution) {
+            int willpowerContribution,
+            int directCapacityModifier) {
     }
 
     private record TotemHandle(String slotId, ItemStack stack)

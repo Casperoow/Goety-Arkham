@@ -30,15 +30,14 @@ public final class StatAttributeBridge {
             return;
         }
 
-        IPlayerStats stats = capability.get();
         mirror(player, ModAttributes.STRENGTH, StatType.STRENGTH,
-                stats.get(StatType.STRENGTH).finalValue());
+                PlayerStatsService.getFinalValue(player, StatType.STRENGTH));
         mirror(player, ModAttributes.AGILITY, StatType.AGILITY,
-                stats.get(StatType.AGILITY).finalValue());
+                PlayerStatsService.getFinalValue(player, StatType.AGILITY));
         mirror(player, ModAttributes.WILLPOWER, StatType.WILLPOWER,
-                stats.get(StatType.WILLPOWER).finalValue());
+                PlayerStatsService.getFinalValue(player, StatType.WILLPOWER));
         mirror(player, ModAttributes.INTELLECT, StatType.INTELLECT,
-                stats.get(StatType.INTELLECT).finalValue());
+                PlayerStatsService.getFinalValue(player, StatType.INTELLECT));
     }
 
     private static void mirror(
