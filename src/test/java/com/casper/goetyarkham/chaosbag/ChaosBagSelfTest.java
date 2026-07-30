@@ -37,6 +37,7 @@ public final class ChaosBagSelfTest {
         orderedMutationsAndPersistence();
         snapshotIsolation();
         ghoulAndTabletRules();
+        GhoulSpawnPositionSearchSelfTest.run();
         effectAndFormalEncounterDefinitions();
         languageAndGhoulTagData();
         System.out.println("ChaosBagSelfTest: all checks passed");
