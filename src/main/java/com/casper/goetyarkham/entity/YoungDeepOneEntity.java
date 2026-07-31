@@ -11,7 +11,11 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.level.Level;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -25,10 +29,19 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity {
     public static final float EYE_HEIGHT = 0.62F;
 
+    private static final String ATTACK_CONTROLLER = "attack";
+    private static final String SWIPE_TRIGGER = "swipe";
+    private static final EntityDataAccessor<Boolean> SWIPE_ATTACKING =
+            SynchedEntityData.defineId(
+                    YoungDeepOneEntity.class,
+                    EntityDataSerializers.BOOLEAN
+            );
     private static final RawAnimation IDLE_ANIMATION =
             RawAnimation.begin().thenLoop("animation.young_deep_one.idle");
     private static final RawAnimation CRAWL_ANIMATION =
             RawAnimation.begin().thenLoop("animation.young_deep_one.crawl");
+    private static final RawAnimation SWIPE_ANIMATION =
+            RawAnimation.begin().thenPlay("animation.young_deep_one.swipe");
     private static final double CRAWL_START_SPEED_SQUARED = 0.0004D;
     private static final double CRAWL_STOP_SPEED_SQUARED = 0.0001D;
 
@@ -51,9 +64,20 @@ public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(2, new YoungDeepOneMeleeAttackGoal(this));
         this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.75D));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+        this.targetSelector.addGoal(
+                2,
+                new NearestAttackableTargetGoal<>(this, Player.class, true)
+        );
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(SWIPE_ATTACKING, false);
     }
 
     @Override
@@ -69,6 +93,12 @@ public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity
                 6,
                 this::selectMovementAnimation
         ));
+        controllers.add(new AnimationController<>(
+                this,
+                ATTACK_CONTROLLER,
+                0,
+                animationState -> PlayState.STOP
+        ).triggerableAnim(SWIPE_TRIGGER, SWIPE_ANIMATION));
     }
 
     @Override
@@ -79,7 +109,7 @@ public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity
     private PlayState selectMovementAnimation(
             AnimationState<YoungDeepOneEntity> animationState
     ) {
-        if (!this.isAlive()) {
+        if (!this.isAlive() || this.isSwipeAttacking()) {
             this.crawlAnimationActive = false;
             return PlayState.STOP;
         }
@@ -97,5 +127,27 @@ public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity
         return animationState.setAndContinue(
                 this.crawlAnimationActive ? CRAWL_ANIMATION : IDLE_ANIMATION
         );
+    }
+
+    boolean isSwipeAttacking() {
+        return this.entityData.get(SWIPE_ATTACKING);
+    }
+
+    void beginSwipeAttack() {
+        this.entityData.set(SWIPE_ATTACKING, true);
+        if (!this.level().isClientSide) {
+            this.triggerAnim(ATTACK_CONTROLLER, SWIPE_TRIGGER);
+        }
+    }
+
+    void finishSwipeAttack() {
+        this.entityData.set(SWIPE_ATTACKING, false);
+    }
+
+    void cancelSwipeAttack() {
+        this.entityData.set(SWIPE_ATTACKING, false);
+        if (!this.level().isClientSide) {
+            this.stopTriggeredAnimation(ATTACK_CONTROLLER, SWIPE_TRIGGER);
+        }
     }
 }

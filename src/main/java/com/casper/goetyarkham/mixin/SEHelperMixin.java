@@ -1,7 +1,6 @@
 package com.casper.goetyarkham.mixin;
 
 import com.Polarice3.Goety.utils.SEHelper;
-import com.casper.goetyarkham.client.ClientSoulPool;
 import com.casper.goetyarkham.soul.SoulEnergyPoolService;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -18,8 +17,6 @@ public abstract class SEHelperMixin {
             Player player, CallbackInfoReturnable<Boolean> callback) {
         if (player instanceof ServerPlayer) {
             callback.setReturnValue(SoulEnergyPoolService.hasContainer(player));
-        } else if (player.level().isClientSide) {
-            callback.setReturnValue(ClientSoulPool.snapshot().hasContainer());
         }
     }
 
@@ -28,11 +25,6 @@ public abstract class SEHelperMixin {
             Player player, int amount, CallbackInfoReturnable<Boolean> callback) {
         if (player instanceof ServerPlayer) {
             callback.setReturnValue(SoulEnergyPoolService.hasSoul(player, amount));
-        } else if (player.level().isClientSide) {
-            callback.setReturnValue(
-                    ClientSoulPool.snapshot().hasContainer()
-                            && ClientSoulPool.snapshot().currentSoul() >= amount
-            );
         }
     }
 
@@ -41,8 +33,6 @@ public abstract class SEHelperMixin {
             Player player, CallbackInfoReturnable<Integer> callback) {
         if (player instanceof ServerPlayer) {
             callback.setReturnValue(SoulEnergyPoolService.getCurrentSoul(player));
-        } else if (player.level().isClientSide) {
-            callback.setReturnValue(ClientSoulPool.snapshot().currentSoul());
         }
     }
 

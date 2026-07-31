@@ -267,6 +267,14 @@ tasks.register('chaosBagSelfTest', JavaExec) {
     mainClass = 'com.casper.goetyarkham.chaosbag.ChaosBagSelfTest'
 }
 
+tasks.register('youngDeepOneAttackSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs deterministic timing and reach tests for the young deep one swipe.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.entity.YoungDeepOneAttackSelfTest'
+}
+
 tasks.register('prepareGameTestStructures', Copy) {
     group = 'verification'
     description = 'Copies source-controlled SNBT templates into the Forge GameTest directory.'
@@ -281,4 +289,5 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
 tasks.named('check').configure {
     dependsOn tasks.named('illagerTreacherySelfTest')
     dependsOn tasks.named('chaosBagSelfTest')
+    dependsOn tasks.named('youngDeepOneAttackSelfTest')
 }

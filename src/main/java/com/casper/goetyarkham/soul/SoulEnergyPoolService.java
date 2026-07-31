@@ -6,7 +6,6 @@ import com.Polarice3.Goety.common.capabilities.soulenergy.SEProvider;
 import com.Polarice3.Goety.config.MainConfig;
 import com.Polarice3.Goety.common.events.spell.GoetyEventFactory;
 import com.casper.goetyarkham.attribute.ModAttributes;
-import com.casper.goetyarkham.client.ClientSoulPool;
 import com.casper.goetyarkham.network.ModNetwork;
 import com.casper.goetyarkham.stats.PlayerStatsService;
 import com.casper.goetyarkham.stats.StatType;
@@ -121,9 +120,6 @@ public final class SoulEnergyPoolService {
     public static SoulPoolSnapshot getSnapshot(Player player) {
         if (player instanceof ServerPlayer serverPlayer) {
             return update(serverPlayer);
-        }
-        if (player.level().isClientSide) {
-            return ClientSoulPool.snapshot();
         }
         return SoulPoolSnapshot.EMPTY;
     }
