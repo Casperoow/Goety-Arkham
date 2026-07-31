@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
+import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 
 public final class YoungDeepOneRenderer extends GeoEntityRenderer<YoungDeepOneEntity> {
     private static final float MODEL_BACKWARD_OFFSET = -0.3F;
@@ -15,6 +16,7 @@ public final class YoungDeepOneRenderer extends GeoEntityRenderer<YoungDeepOneEn
     public YoungDeepOneRenderer(EntityRendererProvider.Context context) {
         super(context, new YoungDeepOneModel());
         this.shadowRadius = 0.6F;
+        this.addRenderLayer(new AutoGlowingGeoLayer<>(this));
     }
 
     @Override

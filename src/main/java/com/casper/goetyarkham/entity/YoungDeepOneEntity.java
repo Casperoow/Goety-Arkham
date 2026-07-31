@@ -2,21 +2,26 @@ package com.casper.goetyarkham.entity;
 
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.control.SmoothSwimmingLookControl;
+import net.minecraft.world.entity.ai.control.SmoothSwimmingMoveControl;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimationController;
@@ -26,7 +31,7 @@ import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity {
+public final class YoungDeepOneEntity extends Monster implements GeoEntity {
     public static final float EYE_HEIGHT = 0.62F;
 
     private static final String ATTACK_CONTROLLER = "attack";
@@ -44,6 +49,8 @@ public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity
             RawAnimation.begin().thenPlay("animation.young_deep_one.swipe");
     private static final double CRAWL_START_SPEED_SQUARED = 0.0004D;
     private static final double CRAWL_STOP_SPEED_SQUARED = 0.0001D;
+    private static final float WATER_SPEED_MODIFIER = 0.5F;
+    private static final float LAND_SPEED_MODIFIER = 1.0F;
 
     private final AnimatableInstanceCache animationCache =
             GeckoLibUtil.createInstanceCache(this);
@@ -51,19 +58,28 @@ public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity
 
     public YoungDeepOneEntity(EntityType<? extends YoungDeepOneEntity> entityType, Level level) {
         super(entityType, level);
+        this.setPathfindingMalus(BlockPathTypes.WATER, 0.0F);
+        this.moveControl = new SmoothSwimmingMoveControl(
+                this,
+                85,
+                10,
+                WATER_SPEED_MODIFIER,
+                LAND_SPEED_MODIFIER,
+                false
+        );
+        this.lookControl = new SmoothSwimmingLookControl(this, 20);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Mob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0D)
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH, 30.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.20D)
                 .add(Attributes.FOLLOW_RANGE, 16.0D)
-                .add(Attributes.ATTACK_DAMAGE, 1.0D);
+                .add(Attributes.ATTACK_DAMAGE, 5.0D);
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new YoungDeepOneMeleeAttackGoal(this));
         this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.75D));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -72,6 +88,28 @@ public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity
                 2,
                 new NearestAttackableTargetGoal<>(this, Player.class, true)
         );
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new AmphibiousPathNavigation(this, level);
+    }
+
+    @Override
+    public boolean canBreatheUnderwater() {
+        return true;
+    }
+
+    @Override
+    public void travel(Vec3 travelVector) {
+        if (this.isControlledByLocalInstance() && this.isInWater()) {
+            this.moveRelative(this.getSpeed(), travelVector);
+            this.move(MoverType.SELF, this.getDeltaMovement());
+            this.setDeltaMovement(this.getDeltaMovement().scale(0.9D));
+            return;
+        }
+
+        super.travel(travelVector);
     }
 
     @Override
@@ -114,14 +152,15 @@ public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity
             return PlayState.STOP;
         }
 
-        double horizontalSpeedSquared =
-                this.getDeltaMovement().horizontalDistanceSqr();
+        double movementSpeedSquared = this.isInWater()
+                ? this.getDeltaMovement().lengthSqr()
+                : this.getDeltaMovement().horizontalDistanceSqr();
         if (this.crawlAnimationActive) {
             this.crawlAnimationActive =
-                    horizontalSpeedSquared > CRAWL_STOP_SPEED_SQUARED;
+                    movementSpeedSquared > CRAWL_STOP_SPEED_SQUARED;
         } else {
             this.crawlAnimationActive =
-                    horizontalSpeedSquared > CRAWL_START_SPEED_SQUARED;
+                    movementSpeedSquared > CRAWL_START_SPEED_SQUARED;
         }
 
         return animationState.setAndContinue(

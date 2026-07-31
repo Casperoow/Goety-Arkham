@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -18,27 +19,27 @@ import java.util.UUID;
 @PrefixGameTestTemplate(false)
 public final class YoungDeepOneAttackGameTests {
     private static final double TEST_Z = 2.5D;
-    private static final float EXPECTED_DAMAGE = 1.0F;
+    private static final float EXPECTED_DAMAGE = 5.0F;
 
     private YoungDeepOneAttackGameTests() {
     }
 
-    @GameTest(template = "empty")
+    @GameTest(template = "young_deep_one_arena")
     public static void swipeDamagesOnceAtHitFrameAndRespectsCooldown(
             GameTestHelper helper) {
         AttackFixture fixture = createFixture(helper, 1.375D, 3.175D);
-        float initialHealth = fixture.player().getHealth();
-
         startSwipe(fixture);
         tickGoal(fixture.goal(), SwipeAttackSequence.HIT_TICK - 1);
         helper.assertTrue(
-                fixture.player().getHealth() == initialHealth,
+                fixture.player().damageCalls() == 0,
                 "Swipe caused damage before its configured hit tick"
         );
 
         fixture.goal().tick();
         helper.assertTrue(
-                fixture.player().getHealth() == initialHealth - EXPECTED_DAMAGE,
+                fixture.player().damageCalls() == 1
+                        && fixture.player().lastIncomingDamage()
+                        == EXPECTED_DAMAGE,
                 "Swipe did not apply the current attack-damage attribute at the hit tick"
         );
 
@@ -48,7 +49,7 @@ public final class YoungDeepOneAttackGameTests {
                         - SwipeAttackSequence.HIT_TICK
         );
         helper.assertTrue(
-                fixture.player().getHealth() == initialHealth - EXPECTED_DAMAGE,
+                fixture.player().damageCalls() == 1,
                 "One swipe applied damage more than once"
         );
         helper.assertTrue(
@@ -79,12 +80,10 @@ public final class YoungDeepOneAttackGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
+    @GameTest(template = "young_deep_one_arena")
     public static void swipeMissesWhenTargetLeavesReach(
             GameTestHelper helper) {
         AttackFixture fixture = createFixture(helper, 1.375D, 3.175D);
-        float initialHealth = fixture.player().getHealth();
-
         startSwipe(fixture);
         tickGoal(fixture.goal(), SwipeAttackSequence.HIT_TICK - 1);
         moveTestPlayer(helper, fixture.player(), 6.0D);
@@ -96,14 +95,14 @@ public final class YoungDeepOneAttackGameTests {
         );
 
         helper.assertTrue(
-                fixture.player().getHealth() == initialHealth,
+                fixture.player().damageCalls() == 0,
                 "Swipe damaged a target that left melee reach before the hit tick"
         );
         cleanupFixture(fixture);
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
+    @GameTest(template = "young_deep_one_arena")
     public static void swipeCannotDamageThroughSolidWall(
             GameTestHelper helper) {
         AttackFixture fixture = createFixture(helper, 1.375D, 3.3D);
@@ -119,14 +118,44 @@ public final class YoungDeepOneAttackGameTests {
                 Blocks.STONE.defaultBlockState(),
                 3
         );
-        float initialHealth = fixture.player().getHealth();
-
         startSwipe(fixture);
         tickGoal(fixture.goal(), SwipeAttackSequence.HIT_TICK);
 
         helper.assertTrue(
-                fixture.player().getHealth() == initialHealth,
+                fixture.player().damageCalls() == 0,
                 "Swipe damaged its target through a solid wall"
+        );
+        cleanupFixture(fixture);
+        helper.succeed();
+    }
+
+    @GameTest(template = "young_deep_one_arena")
+    public static void swipeStillDamagesOnceUnderwater(
+            GameTestHelper helper) {
+        AttackFixture fixture = createFixture(helper, 1.375D, 3.175D);
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        for (int x = 1; x <= 4; x++) {
+            for (int y = 1; y <= 2; y++) {
+                helper.getLevel().setBlock(
+                        origin.offset(x, y, 2),
+                        Blocks.WATER.defaultBlockState(),
+                        3
+                );
+            }
+        }
+        fixture.deepOne().tick();
+        helper.assertTrue(
+                fixture.deepOne().isInWater(),
+                "Young deep one was not submerged for the water attack test"
+        );
+        startSwipe(fixture);
+        tickGoal(fixture.goal(), SwipeAttackSequence.ANIMATION_TICKS);
+
+        helper.assertTrue(
+                fixture.player().damageCalls() == 1
+                        && fixture.player().lastIncomingDamage()
+                        == EXPECTED_DAMAGE,
+                "Underwater swipe did not apply exactly one attack-damage hit"
         );
         cleanupFixture(fixture);
         helper.succeed();
@@ -159,7 +188,7 @@ public final class YoungDeepOneAttackGameTests {
                 "Failed to add young deep one to the GameTest level"
         );
 
-        Player player = new SurvivalTestPlayer(level);
+        SurvivalTestPlayer player = new SurvivalTestPlayer(level);
         moveTestPlayer(helper, player, playerRelativeX);
         player.setHealth(player.getMaxHealth());
         deepOne.setTarget(player);
@@ -234,12 +263,15 @@ public final class YoungDeepOneAttackGameTests {
 
     private record AttackFixture(
             YoungDeepOneEntity deepOne,
-            Player player,
+            SurvivalTestPlayer player,
             YoungDeepOneMeleeAttackGoal goal
     ) {
     }
 
     private static final class SurvivalTestPlayer extends Player {
+        private int damageCalls;
+        private float lastIncomingDamage;
+
         private SurvivalTestPlayer(ServerLevel level) {
             super(
                     level,
@@ -260,6 +292,21 @@ public final class YoungDeepOneAttackGameTests {
         @Override
         public boolean isCreative() {
             return false;
+        }
+
+        @Override
+        public boolean hurt(DamageSource source, float amount) {
+            this.damageCalls++;
+            this.lastIncomingDamage = amount;
+            return super.hurt(source, amount);
+        }
+
+        private int damageCalls() {
+            return this.damageCalls;
+        }
+
+        private float lastIncomingDamage() {
+            return this.lastIncomingDamage;
         }
     }
 }
