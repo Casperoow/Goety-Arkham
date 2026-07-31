@@ -628,15 +628,15 @@
         "left_upper_arm": {
           "rotation": {
             "0.0": {
-              "vector": [6.0, 0, -0.5],
+              "vector": [11.0, 0, -0.5],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [-5.0, 0, 0.5],
+              "vector": [-10.0, 0, 0.5],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [6.0, 0, -0.5],
+              "vector": [11.0, 0, -0.5],
               "easing": "easeInOutSine"
             }
           }
@@ -644,15 +644,15 @@
         "left_forearm": {
           "rotation": {
             "0.0": {
-              "vector": [-5.0, 0, 0.35],
+              "vector": [-9.0, 0, 0.35],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [4.5, 0, -0.35],
+              "vector": [8.0, 0, -0.35],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [-5.0, 0, 0.35],
+              "vector": [-9.0, 0, 0.35],
               "easing": "easeInOutSine"
             }
           }
@@ -660,15 +660,15 @@
         "left_hand": {
           "rotation": {
             "0.0": {
-              "vector": [-1.0, 0, 0],
+              "vector": [-2.5, 0, 0],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [0.5, 0, 0],
+              "vector": [2.5, 0, 0],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [-1.0, 0, 0],
+              "vector": [-2.5, 0, 0],
               "easing": "easeInOutSine"
             }
           }
@@ -676,15 +676,15 @@
         "right_upper_arm": {
           "rotation": {
             "0.0": {
-              "vector": [-5.0, 0, -0.5],
+              "vector": [-10.0, 0, -0.5],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [6.0, 0, 0.5],
+              "vector": [11.0, 0, 0.5],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [-5.0, 0, -0.5],
+              "vector": [-10.0, 0, -0.5],
               "easing": "easeInOutSine"
             }
           }
@@ -692,15 +692,15 @@
         "right_forearm": {
           "rotation": {
             "0.0": {
-              "vector": [4.5, 0, 0.35],
+              "vector": [8.0, 0, 0.35],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [-5.0, 0, -0.35],
+              "vector": [-9.0, 0, -0.35],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [4.5, 0, 0.35],
+              "vector": [8.0, 0, 0.35],
               "easing": "easeInOutSine"
             }
           }
@@ -708,15 +708,15 @@
         "right_hand": {
           "rotation": {
             "0.0": {
-              "vector": [0.5, 0, 0],
+              "vector": [2.5, 0, 0],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [-1.0, 0, 0],
+              "vector": [-2.5, 0, 0],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [0.5, 0, 0],
+              "vector": [2.5, 0, 0],
               "easing": "easeInOutSine"
             }
           }
@@ -724,15 +724,15 @@
         "left_upper_leg": {
           "rotation": {
             "0.0": {
-              "vector": [-4.5, 0, -0.35],
+              "vector": [-9.0, 0, -0.35],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [5.5, 0, 0.35],
+              "vector": [10.0, 0, 0.35],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [-4.5, 0, -0.35],
+              "vector": [-9.0, 0, -0.35],
               "easing": "easeInOutSine"
             }
           }
@@ -740,15 +740,15 @@
         "left_lower_leg": {
           "rotation": {
             "0.0": {
-              "vector": [4.0, 0, 0.25],
+              "vector": [8.0, 0, 0.25],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [-5.0, 0, -0.25],
+              "vector": [-9.0, 0, -0.25],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [4.0, 0, 0.25],
+              "vector": [8.0, 0, 0.25],
               "easing": "easeInOutSine"
             }
           }
@@ -756,15 +756,15 @@
         "left_foot": {
           "rotation": {
             "0.0": {
-              "vector": [0.5, 0, 0],
+              "vector": [2.5, 0, 0],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [-0.5, 0, 0],
+              "vector": [-2.5, 0, 0],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [0.5, 0, 0],
+              "vector": [2.5, 0, 0],
               "easing": "easeInOutSine"
             }
           }
@@ -772,15 +772,15 @@
         "right_upper_leg": {
           "rotation": {
             "0.0": {
-              "vector": [5.5, 0, 0.35],
+              "vector": [10.0, 0, 0.35],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [-4.5, 0, -0.35],
+              "vector": [-9.0, 0, -0.35],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [5.5, 0, 0.35],
+              "vector": [10.0, 0, 0.35],
               "easing": "easeInOutSine"
             }
           }
@@ -788,15 +788,15 @@
         "right_lower_leg": {
           "rotation": {
             "0.0": {
-              "vector": [-5.0, 0, -0.25],
+              "vector": [-9.0, 0, -0.25],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [4.0, 0, 0.25],
+              "vector": [8.0, 0, 0.25],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [-5.0, 0, -0.25],
+              "vector": [-9.0, 0, -0.25],
               "easing": "easeInOutSine"
             }
           }
@@ -804,15 +804,15 @@
         "right_foot": {
           "rotation": {
             "0.0": {
-              "vector": [-0.5, 0, 0],
+              "vector": [-2.5, 0, 0],
               "easing": "easeInOutSine"
             },
             "0.5": {
-              "vector": [0.5, 0, 0],
+              "vector": [2.5, 0, 0],
               "easing": "easeInOutSine"
             },
             "1.0": {
-              "vector": [-0.5, 0, 0],
+              "vector": [-2.5, 0, 0],
               "easing": "easeInOutSine"
             }
           }
