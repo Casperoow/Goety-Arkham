@@ -14,6 +14,7 @@ public final class BuiltInFormalEncounters {
         }
         IllagerTreacheryApi.registerEncounter(new DreamsOfRlyehEncounter());
         IllagerTreacheryApi.registerEncounter(new TheYellowSignEncounter());
+        IllagerTreacheryApi.registerEncounter(new YoungDeepOneEncounter());
         registered = true;
     }
 }

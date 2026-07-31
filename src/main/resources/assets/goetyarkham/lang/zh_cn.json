@@ -69,6 +69,12 @@
   "command.goetyarkham.chaos_bag.empty_forced_sequence": "强制标记序列不能为空。",
   "command.goetyarkham.chaos_bag.invalid_formal_encounter": "这不是已注册的正式测试遭遇：%s",
   "command.goetyarkham.chaos_bag.encounter_complete": "已对%2$s名玩家执行正式遭遇%1$s。",
+  "encounter.goetyarkham.young_deep_one.name": "年幼的深潜者",
+  "encounter.goetyarkham.young_deep_one.description": "你吸引了年幼的深潜者......",
+  "encounter_tag.goetyarkham.enemy": "敌人",
+  "encounter_tag.goetyarkham.humanoid": "类人",
+  "encounter_tag.goetyarkham.monster": "怪物",
+  "encounter_tag.goetyarkham.deep_one": "深潜者",
   "entity.goetyarkham.young_deep_one": "年幼的深潜者",
   "item.goetyarkham.young_deep_one_spawn_egg": "年幼的深潜者刷怪蛋"
 }

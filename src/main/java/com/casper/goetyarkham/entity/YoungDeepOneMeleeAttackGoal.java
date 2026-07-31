@@ -1,7 +1,6 @@
 package com.casper.goetyarkham.entity;
 
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -109,10 +108,7 @@ public final class YoungDeepOneMeleeAttackGoal extends Goal {
         boolean shouldDamage = this.sequence.tick(() ->
                 this.canDamageTargetAtHitFrame(target));
         if (shouldDamage && !this.deepOne.level().isClientSide) {
-            float damage = (float) this.deepOne.getAttributeValue(
-                    Attributes.ATTACK_DAMAGE
-            );
-            target.hurt(this.deepOne.damageSources().mobAttack(this.deepOne), damage);
+            this.deepOne.doHurtTarget(target);
         }
 
         if (!this.sequence.isAttacking()) {

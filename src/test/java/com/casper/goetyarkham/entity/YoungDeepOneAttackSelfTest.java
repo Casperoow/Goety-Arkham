@@ -2,6 +2,8 @@ package com.casper.goetyarkham.entity;
 
 import net.minecraft.world.phys.AABB;
 
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class YoungDeepOneAttackSelfTest {
@@ -13,6 +15,7 @@ public final class YoungDeepOneAttackSelfTest {
         failedHitIsNotRetriedDuringTheSameSwing();
         cooldownPreventsImmediateRestart();
         boundingBoxReachUsesEdgeDistance();
+        targetRankingUsesStrengthDistanceAndUuid();
         System.out.println("YoungDeepOneAttackSelfTest: all checks passed");
     }
 
@@ -120,6 +123,62 @@ public final class YoungDeepOneAttackSelfTest {
         );
     }
 
+    private static void targetRankingUsesStrengthDistanceAndUuid() {
+        Candidate highStrength = new Candidate(
+                "high",
+                8,
+                1.0D,
+                UUID.fromString("00000000-0000-0000-0000-000000000003")
+        );
+        Candidate lowStrength = new Candidate(
+                "low",
+                2,
+                20.0D,
+                UUID.fromString("00000000-0000-0000-0000-000000000004")
+        );
+        Candidate selected = select(List.of(highStrength, lowStrength));
+        assertEquals("low", selected.name(), "lowest final strength");
+
+        Candidate farther = new Candidate(
+                "farther",
+                5,
+                9.0D,
+                UUID.fromString("00000000-0000-0000-0000-000000000002")
+        );
+        Candidate nearer = new Candidate(
+                "nearer",
+                5,
+                4.0D,
+                UUID.fromString("00000000-0000-0000-0000-000000000003")
+        );
+        selected = select(List.of(farther, nearer));
+        assertEquals("nearer", selected.name(), "nearest strength tie");
+
+        Candidate laterUuid = new Candidate(
+                "laterUuid",
+                5,
+                4.0D,
+                UUID.fromString("00000000-0000-0000-0000-000000000002")
+        );
+        Candidate earlierUuid = new Candidate(
+                "earlierUuid",
+                5,
+                4.0D,
+                UUID.fromString("00000000-0000-0000-0000-000000000001")
+        );
+        selected = select(List.of(laterUuid, earlierUuid));
+        assertEquals("earlierUuid", selected.name(), "stable UUID tie");
+    }
+
+    private static Candidate select(List<Candidate> candidates) {
+        return LowestStrengthPlayerTargetGoal.selectBest(
+                candidates,
+                Candidate::finalStrength,
+                Candidate::distanceSquared,
+                Candidate::uuid
+        ).orElseThrow();
+    }
+
     private static void assertTrue(boolean condition, String message) {
         if (!condition) {
             throw new AssertionError(message);
@@ -136,5 +195,25 @@ public final class YoungDeepOneAttackSelfTest {
                     message + ": expected " + expected + ", got " + actual
             );
         }
+    }
+
+    private static void assertEquals(
+            Object expected,
+            Object actual,
+            String message
+    ) {
+        if (!java.util.Objects.equals(expected, actual)) {
+            throw new AssertionError(
+                    message + ": expected " + expected + ", got " + actual
+            );
+        }
+    }
+
+    private record Candidate(
+            String name,
+            int finalStrength,
+            double distanceSquared,
+            UUID uuid
+    ) {
     }
 }

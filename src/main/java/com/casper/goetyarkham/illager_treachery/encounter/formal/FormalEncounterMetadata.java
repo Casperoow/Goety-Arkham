@@ -6,6 +6,10 @@ import net.minecraft.resources.ResourceLocation;
 public final class FormalEncounterMetadata {
     public static final ResourceLocation TREACHERY = id("treachery");
     public static final ResourceLocation OMEN = id("omen");
+    public static final ResourceLocation ENEMY = id("enemy");
+    public static final ResourceLocation HUMANOID = id("humanoid");
+    public static final ResourceLocation MONSTER = id("monster");
+    public static final ResourceLocation DEEP_ONE = id("deep_one");
     public static final ResourceLocation APOSTLES_OF_CTHULHU =
             id("apostles_of_cthulhu");
     public static final ResourceLocation APOSTLES_OF_HASTUR =

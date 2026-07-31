@@ -1,7 +1,14 @@
 package com.casper.goetyarkham.entity;
 
+import com.casper.goetyarkham.soul.SoulEnergyPoolService;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -11,7 +18,6 @@ import net.minecraft.world.entity.ai.control.SmoothSwimmingMoveControl;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
@@ -21,6 +27,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -51,10 +58,25 @@ public final class YoungDeepOneEntity extends Monster implements GeoEntity {
     private static final double CRAWL_STOP_SPEED_SQUARED = 0.0001D;
     private static final float WATER_SPEED_MODIFIER = 0.5F;
     private static final float LAND_SPEED_MODIFIER = 1.0F;
+    private static final double SHORE_LOOK_AHEAD_DISTANCE = 0.4D;
+    private static final double SHORE_OBSTRUCTION_CHECK_DISTANCE = 0.2D;
+    private static final double SHORE_STEP_HEIGHT = 1.0D;
+    private static final double SHORE_SUPPORT_PROBE_DEPTH = 0.125D;
+    private static final double SHORE_ASCENT_SPEED = 0.12D;
+    private static final double SHORE_SURFACE_ALLOWANCE = 0.55D;
+    private static final double MINIMUM_SHORE_DIRECTION_SQUARED = 1.0E-4D;
+    static final int SOUL_EROSION_INTERVAL_TICKS = 20;
+    static final int SOUL_EROSION_AMOUNT = 10;
+    static final double SOUL_EROSION_RADIUS = 8.0D;
+    static final double SOUL_EROSION_RADIUS_SQUARED =
+            SOUL_EROSION_RADIUS * SOUL_EROSION_RADIUS;
+    static final int SOUL_EROSION_WITHER_TICKS = 20;
+    static final int SOUL_EROSION_WITHER_AMPLIFIER = 0;
 
     private final AnimatableInstanceCache animationCache =
             GeckoLibUtil.createInstanceCache(this);
     private boolean crawlAnimationActive;
+    private int soulErosionCooldown = SOUL_EROSION_INTERVAL_TICKS;
 
     public YoungDeepOneEntity(EntityType<? extends YoungDeepOneEntity> entityType, Level level) {
         super(entityType, level);
@@ -73,9 +95,10 @@ public final class YoungDeepOneEntity extends Monster implements GeoEntity {
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.20D)
+                .add(Attributes.MOVEMENT_SPEED, 0.23D)
                 .add(Attributes.FOLLOW_RANGE, 16.0D)
-                .add(Attributes.ATTACK_DAMAGE, 5.0D);
+                .add(Attributes.ATTACK_DAMAGE, 5.0D)
+                .add(Attributes.ATTACK_KNOCKBACK, 1.0D);
     }
 
     @Override
@@ -86,8 +109,53 @@ public final class YoungDeepOneEntity extends Monster implements GeoEntity {
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(
                 2,
-                new NearestAttackableTargetGoal<>(this, Player.class, true)
+                new LowestStrengthPlayerTargetGoal(this)
         );
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        this.tickSoulErosionAura();
+    }
+
+    void tickSoulErosionAura() {
+        if (!(this.level() instanceof ServerLevel serverLevel)
+                || !this.isAlive()) {
+            return;
+        }
+        if (--this.soulErosionCooldown > 0) {
+            return;
+        }
+        this.soulErosionCooldown = SOUL_EROSION_INTERVAL_TICKS;
+
+        for (ServerPlayer player : serverLevel.getPlayers(
+                this::canErodeSoul)) {
+            if (!SoulEnergyPoolService.hasContainer(player)) {
+                continue;
+            }
+            SoulEnergyPoolService.removeSoul(player, SOUL_EROSION_AMOUNT);
+            if (SoulEnergyPoolService.getCurrentSoul(player) == 0) {
+                player.addEffect(new MobEffectInstance(
+                        MobEffects.WITHER,
+                        SOUL_EROSION_WITHER_TICKS,
+                        SOUL_EROSION_WITHER_AMPLIFIER,
+                        false,
+                        false,
+                        true
+                ));
+            }
+        }
+    }
+
+    private boolean canErodeSoul(ServerPlayer player) {
+        return player.serverLevel() == this.level()
+                && !player.isRemoved()
+                && player.isAlive()
+                && !player.isCreative()
+                && !player.isSpectator()
+                && this.distanceToSqr(player)
+                <= SOUL_EROSION_RADIUS_SQUARED;
     }
 
     @Override
@@ -105,11 +173,71 @@ public final class YoungDeepOneEntity extends Monster implements GeoEntity {
         if (this.isControlledByLocalInstance() && this.isInWater()) {
             this.moveRelative(this.getSpeed(), travelVector);
             this.move(MoverType.SELF, this.getDeltaMovement());
-            this.setDeltaMovement(this.getDeltaMovement().scale(0.9D));
+            Vec3 movement = this.getDeltaMovement().scale(0.9D);
+            if (this.shouldAssistShoreExit()) {
+                this.getJumpControl().jump();
+                movement = new Vec3(
+                        movement.x,
+                        Math.max(movement.y, SHORE_ASCENT_SPEED),
+                        movement.z
+                );
+            }
+            this.setDeltaMovement(movement);
             return;
         }
 
         super.travel(travelVector);
+    }
+
+    private boolean shouldAssistShoreExit() {
+        LivingEntity target = this.getTarget();
+        if (target == null
+                || !target.isAlive()
+                || target.isInWater()
+                || this.getFluidHeight(FluidTags.WATER)
+                > this.getBbHeight() + SHORE_SURFACE_ALLOWANCE) {
+            return false;
+        }
+
+        Vec3 towardTarget = new Vec3(
+                target.getX() - this.getX(),
+                0.0D,
+                target.getZ() - this.getZ()
+        );
+        if (towardTarget.lengthSqr() < MINIMUM_SHORE_DIRECTION_SQUARED) {
+            return false;
+        }
+
+        Vec3 direction = towardTarget.normalize();
+        AABB currentBox = this.getBoundingBox();
+        boolean blockedAhead = this.horizontalCollision
+                || !this.level().noCollision(
+                        this,
+                        currentBox.move(
+                                direction.x * SHORE_OBSTRUCTION_CHECK_DISTANCE,
+                                0.0D,
+                                direction.z * SHORE_OBSTRUCTION_CHECK_DISTANCE
+                        )
+                );
+        if (!blockedAhead) {
+            return false;
+        }
+
+        AABB steppedBox = currentBox.move(
+                direction.x * SHORE_LOOK_AHEAD_DISTANCE,
+                SHORE_STEP_HEIGHT,
+                direction.z * SHORE_LOOK_AHEAD_DISTANCE
+        ).deflate(1.0E-4D);
+        if (!this.level().noCollision(this, steppedBox)) {
+            return false;
+        }
+
+        AABB supportProbe = steppedBox.move(
+                0.0D,
+                -SHORE_SUPPORT_PROBE_DEPTH,
+                0.0D
+        );
+        return !this.level().noCollision(this, supportProbe);
     }
 
     @Override

@@ -3,8 +3,12 @@ package com.casper.goetyarkham.chaosbag;
 import com.casper.goetyarkham.effect.DreamsOfRlyehEffect;
 import com.casper.goetyarkham.effect.DreamsOfRlyehEffectService;
 import com.casper.goetyarkham.illager_treachery.encounter.formal.DreamsOfRlyehEncounter;
+import com.casper.goetyarkham.illager_treachery.encounter.formal.BuiltInFormalEncounters;
 import com.casper.goetyarkham.illager_treachery.encounter.formal.FormalEncounterMetadata;
 import com.casper.goetyarkham.illager_treachery.encounter.formal.TheYellowSignEncounter;
+import com.casper.goetyarkham.illager_treachery.encounter.formal.YoungDeepOneEncounter;
+import com.casper.goetyarkham.illager_treachery.encounter.formal.YoungDeepOneSpawnPositionSearchSelfTest;
+import com.casper.goetyarkham.illager_treachery.encounter.EncounterRegistry;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.nbt.CompoundTag;
@@ -38,6 +42,7 @@ public final class ChaosBagSelfTest {
         snapshotIsolation();
         ghoulAndTabletRules();
         GhoulSpawnPositionSearchSelfTest.run();
+        YoungDeepOneSpawnPositionSearchSelfTest.run();
         effectAndFormalEncounterDefinitions();
         languageAndGhoulTagData();
         System.out.println("ChaosBagSelfTest: all checks passed");
@@ -350,11 +355,15 @@ public final class ChaosBagSelfTest {
 
         DreamsOfRlyehEncounter dreams = new DreamsOfRlyehEncounter();
         TheYellowSignEncounter yellow = new TheYellowSignEncounter();
+        YoungDeepOneEncounter deepOne = new YoungDeepOneEncounter();
         assertEquals(id("dreams_of_rlyeh"), dreams.id(), "dreams id");
         assertEquals(id("the_yellow_sign"), yellow.id(), "yellow sign id");
         assertTrue(dreams.defaultEnabled() && yellow.defaultEnabled(), "formal enabled defaults");
         assertEquals(1L, dreams.defaultWeight(), "dreams weight");
         assertEquals(1L, yellow.defaultWeight(), "yellow weight");
+        assertEquals(id("young_deep_one"), deepOne.id(), "young deep one id");
+        assertTrue(deepOne.defaultEnabled(), "young deep one enabled default");
+        assertEquals(1L, deepOne.defaultWeight(), "young deep one weight");
         assertEquals(
                 Set.of(
                         FormalEncounterMetadata.TREACHERY,
@@ -369,6 +378,38 @@ public final class ChaosBagSelfTest {
                 FormalEncounterMetadata.APOSTLES_OF_HASTUR,
                 yellow.encounterGroup().orElseThrow(),
                 "yellow group");
+        assertEquals(
+                Set.of(
+                        FormalEncounterMetadata.ENEMY,
+                        FormalEncounterMetadata.HUMANOID,
+                        FormalEncounterMetadata.MONSTER,
+                        FormalEncounterMetadata.DEEP_ONE),
+                deepOne.encounterTags(),
+                "young deep one tags");
+        assertEquals(
+                FormalEncounterMetadata.APOSTLES_OF_CTHULHU,
+                deepOne.encounterGroup().orElseThrow(),
+                "young deep one group");
+        assertEquals(
+                "encounter.goetyarkham.young_deep_one.name",
+                deepOne.nameTranslationKey().orElseThrow(),
+                "young deep one name key");
+        assertEquals(
+                "encounter.goetyarkham.young_deep_one.description",
+                deepOne.descriptionTranslationKey().orElseThrow(),
+                "young deep one description key");
+
+        BuiltInFormalEncounters.register();
+        int registeredCount = EncounterRegistry.INSTANCE.size();
+        BuiltInFormalEncounters.register();
+        assertEquals(
+                registeredCount,
+                EncounterRegistry.INSTANCE.size(),
+                "built-in formal encounters registered twice");
+        assertTrue(
+                EncounterRegistry.INSTANCE.get(YoungDeepOneEncounter.ID)
+                        .isPresent(),
+                "young deep one formal encounter not registered");
     }
 
     private static void languageAndGhoulTagData() throws IOException {
@@ -388,6 +429,12 @@ public final class ChaosBagSelfTest {
                 "encounter.goetyarkham.dreams_of_rlyeh.description",
                 "encounter.goetyarkham.the_yellow_sign.name",
                 "encounter.goetyarkham.the_yellow_sign.description",
+                "encounter.goetyarkham.young_deep_one.name",
+                "encounter.goetyarkham.young_deep_one.description",
+                "encounter_tag.goetyarkham.enemy",
+                "encounter_tag.goetyarkham.humanoid",
+                "encounter_tag.goetyarkham.monster",
+                "encounter_tag.goetyarkham.deep_one",
                 "message.goetyarkham.chaos_check",
                 "chaos_check.override.goetyarkham.auto_fail",
                 "chaos_check.override.goetyarkham.elder_sign",

@@ -7,6 +7,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -42,6 +43,17 @@ public final class YoungDeepOneAttackGameTests {
                         == EXPECTED_DAMAGE,
                 "Swipe did not apply the current attack-damage attribute at the hit tick"
         );
+        Vec3 firstKnockback = fixture.player().getDeltaMovement();
+        Vec3 awayFromAttacker = fixture.player().position()
+                .subtract(fixture.deepOne().position())
+                .multiply(1.0D, 0.0D, 1.0D)
+                .normalize();
+        helper.assertTrue(
+                firstKnockback.horizontalDistanceSqr() > 1.0E-4D
+                        && firstKnockback.dot(awayFromAttacker) > 0.0D,
+                "Swipe did not apply one standard knockback impulse away from "
+                        + "the attacker; movement=" + firstKnockback
+        );
 
         tickGoal(
                 fixture.goal(),
@@ -51,6 +63,10 @@ public final class YoungDeepOneAttackGameTests {
         helper.assertTrue(
                 fixture.player().damageCalls() == 1,
                 "One swipe applied damage more than once"
+        );
+        helper.assertTrue(
+                fixture.player().getDeltaMovement().equals(firstKnockback),
+                "One swipe applied knockback more than once"
         );
         helper.assertTrue(
                 !fixture.deepOne().isSwipeAttacking(),
@@ -98,6 +114,11 @@ public final class YoungDeepOneAttackGameTests {
                 fixture.player().damageCalls() == 0,
                 "Swipe damaged a target that left melee reach before the hit tick"
         );
+        assertNoHorizontalKnockback(
+                helper,
+                fixture.player(),
+                "Out-of-range swipe applied knockback"
+        );
         cleanupFixture(fixture);
         helper.succeed();
     }
@@ -124,6 +145,36 @@ public final class YoungDeepOneAttackGameTests {
         helper.assertTrue(
                 fixture.player().damageCalls() == 0,
                 "Swipe damaged its target through a solid wall"
+        );
+        assertNoHorizontalKnockback(
+                helper,
+                fixture.player(),
+                "Blocked swipe applied knockback"
+        );
+        cleanupFixture(fixture);
+        helper.succeed();
+    }
+
+    @GameTest(template = "young_deep_one_arena")
+    public static void swipeRespectsTargetKnockbackResistance(
+            GameTestHelper helper
+    ) {
+        AttackFixture fixture = createFixture(helper, 1.375D, 3.175D);
+        fixture.player().getAttribute(Attributes.KNOCKBACK_RESISTANCE)
+                .setBaseValue(1.0D);
+        startSwipe(fixture);
+        tickGoal(fixture.goal(), SwipeAttackSequence.HIT_TICK);
+
+        helper.assertTrue(
+                fixture.player().damageCalls() == 1
+                        && fixture.player().lastIncomingDamage()
+                        == EXPECTED_DAMAGE,
+                "Knockback resistance incorrectly prevented swipe damage"
+        );
+        assertNoHorizontalKnockback(
+                helper,
+                fixture.player(),
+                "Knockback resistance was not applied by standard melee logic"
         );
         cleanupFixture(fixture);
         helper.succeed();
@@ -259,6 +310,17 @@ public final class YoungDeepOneAttackGameTests {
 
     private static void cleanupFixture(AttackFixture fixture) {
         fixture.deepOne().discard();
+    }
+
+    private static void assertNoHorizontalKnockback(
+            GameTestHelper helper,
+            Player player,
+            String message
+    ) {
+        helper.assertTrue(
+                player.getDeltaMovement().horizontalDistanceSqr() < 1.0E-8D,
+                message
+        );
     }
 
     private record AttackFixture(
