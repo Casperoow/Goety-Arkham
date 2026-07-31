@@ -2,6 +2,8 @@ package com.casper.goetyarkham;
 
 import com.casper.goetyarkham.attribute.ModAttributes;
 import com.casper.goetyarkham.effect.ModEffects;
+import com.casper.goetyarkham.entity.ModEntities;
+import com.casper.goetyarkham.entity.ModEntityAttributes;
 import com.casper.goetyarkham.illager_treachery.config.IllagerTreacheryConfig;
 import com.casper.goetyarkham.illager_treachery.encounter.formal.BuiltInFormalEncounters;
 import com.casper.goetyarkham.illager_treachery.encounter.type.BuiltInEncounterTypes;
@@ -30,6 +32,8 @@ public final class GoetyArkham {
         );
         ModAttributes.register(modEventBus);
         ModEffects.register(modEventBus);
+        ModEntities.register(modEventBus);
+        ModEntityAttributes.register(modEventBus);
         ModNetwork.register();
     }
 }

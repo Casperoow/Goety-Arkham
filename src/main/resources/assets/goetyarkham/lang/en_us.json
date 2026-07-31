@@ -68,5 +68,6 @@
   "command.goetyarkham.chaos_bag.test_complete": "Completed a test chaos check for %s.",
   "command.goetyarkham.chaos_bag.empty_forced_sequence": "The forced token sequence cannot be empty.",
   "command.goetyarkham.chaos_bag.invalid_formal_encounter": "This is not a registered formal test encounter: %s",
-  "command.goetyarkham.chaos_bag.encounter_complete": "Executed formal encounter %1$s for %2$s player(s)."
+  "command.goetyarkham.chaos_bag.encounter_complete": "Executed formal encounter %1$s for %2$s player(s).",
+  "entity.goetyarkham.young_deep_one": "Young Deep One"
 }
