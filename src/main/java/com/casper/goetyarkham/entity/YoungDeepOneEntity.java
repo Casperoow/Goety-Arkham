@@ -14,7 +14,7 @@ import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public final class YoungDeepOneEntity extends PathfinderMob implements GeoEntity {
-    public static final float EYE_HEIGHT = 1.3F;
+    public static final float EYE_HEIGHT = 0.62F;
 
     private final AnimatableInstanceCache animationCache =
             GeckoLibUtil.createInstanceCache(this);

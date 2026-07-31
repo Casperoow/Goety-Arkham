@@ -15,7 +15,7 @@ public final class ModEntities {
     public static final RegistryObject<EntityType<YoungDeepOneEntity>> YOUNG_DEEP_ONE =
             ENTITY_TYPES.register("young_deep_one", () ->
                     EntityType.Builder.of(YoungDeepOneEntity::new, MobCategory.CREATURE)
-                            .sized(1.0F, 1.5F)
+                            .sized(1.25F, 0.9F)
                             .clientTrackingRange(8)
                             .build(GoetyArkham.MOD_ID + ":young_deep_one"));
 
