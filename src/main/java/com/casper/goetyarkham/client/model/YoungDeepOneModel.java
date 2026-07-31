@@ -10,6 +10,11 @@ public final class YoungDeepOneModel extends GeoModel<YoungDeepOneEntity> {
             new ResourceLocation(GoetyArkham.MOD_ID, "geo/young_deep_one.geo.json");
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(GoetyArkham.MOD_ID, "textures/entity/young_deep_one.png");
+    private static final ResourceLocation ANIMATION =
+            new ResourceLocation(
+                    GoetyArkham.MOD_ID,
+                    "animations/young_deep_one.animation.json"
+            );
 
     @Override
     public ResourceLocation getModelResource(YoungDeepOneEntity animatable) {
@@ -23,6 +28,6 @@ public final class YoungDeepOneModel extends GeoModel<YoungDeepOneEntity> {
 
     @Override
     public ResourceLocation getAnimationResource(YoungDeepOneEntity animatable) {
-        return null;
+        return ANIMATION;
     }
 }
