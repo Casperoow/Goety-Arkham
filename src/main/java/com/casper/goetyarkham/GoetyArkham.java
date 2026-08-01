@@ -9,6 +9,7 @@ import com.casper.goetyarkham.illager_treachery.config.IllagerTreacheryConfig;
 import com.casper.goetyarkham.illager_treachery.encounter.formal.BuiltInFormalEncounters;
 import com.casper.goetyarkham.illager_treachery.encounter.type.BuiltInEncounterTypes;
 import com.casper.goetyarkham.network.ModNetwork;
+import com.casper.goetyarkham.sanity.config.SanityClientConfig;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -30,6 +31,11 @@ public final class GoetyArkham {
                 ModConfig.Type.SERVER,
                 IllagerTreacheryConfig.SPEC,
                 "goetyarkham-illager_treachery.toml"
+        );
+        ModLoadingContext.get().registerConfig(
+                ModConfig.Type.CLIENT,
+                SanityClientConfig.SPEC,
+                "goetyarkham-client.toml"
         );
         ModAttributes.register(modEventBus);
         ModEffects.register(modEventBus);

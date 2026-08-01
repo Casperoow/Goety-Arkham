@@ -269,6 +269,14 @@ tasks.register('statsSelfTest', JavaExec) {
     mainClass = 'com.casper.goetyarkham.stats.PlayerStatsSelfTest'
 }
 
+tasks.register('sanitySelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs deterministic tests for the sanity data model, rules, clone settlement, and packet codec.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.sanity.SanitySelfTest'
+}
+
 tasks.register('illagerTreacherySelfTest', JavaExec) {
     group = 'verification'
     description = 'Runs deterministic pure-logic tests for illager_treachery.'
@@ -313,6 +321,7 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
 }
 
 tasks.named('check').configure {
+    dependsOn tasks.named('sanitySelfTest')
     dependsOn tasks.named('illagerTreacherySelfTest')
     dependsOn tasks.named('chaosBagSelfTest')
     dependsOn tasks.named('youngDeepOneAttackSelfTest')

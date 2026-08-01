@@ -1,6 +1,7 @@
 package com.casper.goetyarkham.network;
 
 import com.casper.goetyarkham.GoetyArkham;
+import com.casper.goetyarkham.sanity.SanitySnapshot;
 import com.casper.goetyarkham.soul.SoulPoolSnapshot;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -44,6 +45,14 @@ public final class ModNetwork {
                 ClientboundSoulPoolPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT)
         );
+        CHANNEL.registerMessage(
+                messageId++,
+                ClientboundSanityPacket.class,
+                ClientboundSanityPacket::encode,
+                ClientboundSanityPacket::decode,
+                ClientboundSanityPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+        );
     }
 
     public static boolean sendStats(
@@ -63,6 +72,18 @@ public final class ModNetwork {
         CHANNEL.send(
                 PacketDistributor.PLAYER.with(() -> player),
                 new ClientboundSoulPoolPacket(snapshot)
+        );
+        return true;
+    }
+
+    public static boolean sendSanity(
+            @Nullable ServerPlayer player, @Nullable SanitySnapshot snapshot) {
+        if (!canSendTo(player) || snapshot == null) {
+            return false;
+        }
+        CHANNEL.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new ClientboundSanityPacket(snapshot)
         );
         return true;
     }

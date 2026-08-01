@@ -5,6 +5,8 @@ import com.casper.goetyarkham.client.renderer.YoungDeepOneRenderer;
 import com.casper.goetyarkham.entity.ModEntities;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -23,5 +25,13 @@ public final class ClientModEvents {
                 ModEntities.YOUNG_DEEP_ONE.get(),
                 YoungDeepOneRenderer::new
         );
+    }
+
+    @SubscribeEvent
+    public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
+        event.registerAbove(
+                VanillaGuiOverlay.ARMOR_LEVEL.id(),
+                "sanity",
+                SanityHud::render);
     }
 }

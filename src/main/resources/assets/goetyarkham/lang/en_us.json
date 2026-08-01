@@ -10,6 +10,7 @@
   "attribute.name.goetyarkham.bullet_damage": "Bullet Damage",
   "attribute.name.goety_revelation.soul_decrease_reduction": "Soul Discount",
   "attribute.name.goetyarkham.soul_energy_max": "Maximum Soul Energy",
+  "attribute.name.goetyarkham.max_sanity": "Max Sanity",
   "encounter.goetyarkham.illager_treachery.ominous_whispers": "Ominous Whispers",
   "encounter.goetyarkham.illager_treachery.encroaching_darkness": "Encroaching Darkness",
   "encounter.goetyarkham.illager_treachery.misfortune_never_comes_alone": "Misfortune Never Comes Alone",
@@ -82,5 +83,15 @@
   "curios.identifier.tarot": "Tarot Card",
   "curios.identifier.asset": "Asset",
   "curios.identifier.talent": "Talent",
+  "command.goetyarkham.sanity.missing": "Unable to read sanity data for %s.",
+  "command.goetyarkham.sanity.status": "%1$s: Sanity %2$s/%3$s | MAX_SANITY base %4$s, final %5$s | permanent maximum loss %6$s/9 | collapse active %7$s | ticks to next soul drain %8$s",
+  "command.goetyarkham.sanity.inactive": "inactive",
+  "command.goetyarkham.sanity.yes": "yes",
+  "command.goetyarkham.sanity.no": "no",
+  "command.goetyarkham.sanity.set": "%1$s: requested sanity %2$s, actual signed change %3$s; now %4$s/%5$s, permanent loss %6$s/9.",
+  "command.goetyarkham.sanity.add": "%1$s: requested sanity restoration %2$s, actually restored %3$s; now %4$s/%5$s, permanent loss %6$s/9.",
+  "command.goetyarkham.sanity.damage": "%1$s: requested sanity damage %2$s, actually damaged %3$s; now %4$s/%5$s, permanent loss %6$s/9.",
+  "command.goetyarkham.sanity.permanent_damage": "%1$s: requested permanent maximum damage %2$s, actually added %3$s; now %4$s/%5$s, permanent loss %6$s/9.",
+  "command.goetyarkham.sanity.restore_max": "%1$s: requested permanent-loss restoration %2$s, actually restored %3$s; now %4$s/%5$s, permanent loss %6$s/9.",
   "curios.identifier.weakness": "Weakness"
 }

@@ -10,6 +10,7 @@
   "attribute.name.goetyarkham.bullet_damage": "子弹伤害",
   "attribute.name.goety_revelation.soul_decrease_reduction": "灵魂折扣",
   "attribute.name.goetyarkham.soul_energy_max": "灵魂能量上限",
+  "attribute.name.goetyarkham.max_sanity": "理智上限",
   "encounter.goetyarkham.illager_treachery.ominous_whispers": "不祥低语",
   "encounter.goetyarkham.illager_treachery.encroaching_darkness": "迫近的黑暗",
   "encounter.goetyarkham.illager_treachery.misfortune_never_comes_alone": "祸不单行",
@@ -82,5 +83,15 @@
   "curios.identifier.tarot": "塔罗牌",
   "curios.identifier.asset": "资产",
   "curios.identifier.talent": "天赋",
+  "command.goetyarkham.sanity.missing": "无法读取%s的理智数据。",
+  "command.goetyarkham.sanity.status": "%1$s：理智%2$s/%3$s｜MAX_SANITY基础值%4$s、最终值%5$s｜永久上限损伤%6$s/9｜零理智状态%7$s｜距下次灵魂扣除%8$s tick",
+  "command.goetyarkham.sanity.inactive": "未激活",
+  "command.goetyarkham.sanity.yes": "是",
+  "command.goetyarkham.sanity.no": "否",
+  "command.goetyarkham.sanity.set": "%1$s：请求设置为%2$s，实际有符号变化%3$s；当前%4$s/%5$s，永久损伤%6$s/9。",
+  "command.goetyarkham.sanity.add": "%1$s：请求恢复%2$s点理智，实际恢复%3$s点；当前%4$s/%5$s，永久损伤%6$s/9。",
+  "command.goetyarkham.sanity.damage": "%1$s：请求造成%2$s点理智伤害，实际造成%3$s点；当前%4$s/%5$s，永久损伤%6$s/9。",
+  "command.goetyarkham.sanity.permanent_damage": "%1$s：请求增加%2$s点永久上限损伤，实际增加%3$s点；当前%4$s/%5$s，永久损伤%6$s/9。",
+  "command.goetyarkham.sanity.restore_max": "%1$s：请求恢复%2$s点永久上限损伤，实际恢复%3$s点；当前%4$s/%5$s，永久损伤%6$s/9。",
   "curios.identifier.weakness": "弱点"
 }
