@@ -76,5 +76,11 @@
   "encounter_tag.goetyarkham.monster": "Monster",
   "encounter_tag.goetyarkham.deep_one": "Deep One",
   "entity.goetyarkham.young_deep_one": "Young Deep One",
-  "item.goetyarkham.young_deep_one_spawn_egg": "Young Deep One Spawn Egg"
+  "item.goetyarkham.young_deep_one_spawn_egg": "Young Deep One Spawn Egg",
+  "curios.identifier.token": "Token",
+  "curios.identifier.focus": "Focus",
+  "curios.identifier.tarot": "Tarot Card",
+  "curios.identifier.asset": "Asset",
+  "curios.identifier.talent": "Talent",
+  "curios.identifier.weakness": "Weakness"
 }

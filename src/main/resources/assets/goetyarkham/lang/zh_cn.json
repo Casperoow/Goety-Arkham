@@ -76,5 +76,11 @@
   "encounter_tag.goetyarkham.monster": "怪物",
   "encounter_tag.goetyarkham.deep_one": "深潜者",
   "entity.goetyarkham.young_deep_one": "年幼的深潜者",
-  "item.goetyarkham.young_deep_one_spawn_egg": "年幼的深潜者刷怪蛋"
+  "item.goetyarkham.young_deep_one_spawn_egg": "年幼的深潜者刷怪蛋",
+  "curios.identifier.token": "信物",
+  "curios.identifier.focus": "聚晶",
+  "curios.identifier.tarot": "塔罗牌",
+  "curios.identifier.asset": "资产",
+  "curios.identifier.talent": "天赋",
+  "curios.identifier.weakness": "弱点"
 }

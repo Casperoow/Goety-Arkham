@@ -156,6 +156,24 @@ dependencies {
         )
     }
 
+    if (file('devmods/kotlinforforge-4.12.0-all.jar').exists()) {
+        runtimeOnly fg.deobf(
+            'devtest:kotlinforforge:4.12.0-all'
+        )
+    }
+
+    if (file('devmods/fzzy_config-0.7.6+1.20.1+forge.jar').exists()) {
+        runtimeOnly fg.deobf(
+            'devtest:fzzy_config:0.7.6+1.20.1+forge'
+        )
+    }
+
+    if (file('devmods/tarotcards-2.3.5-forge-1.20.1.jar').exists()) {
+        runtimeOnly fg.deobf(
+            'devtest:tarotcards:2.3.5-forge-1.20.1'
+        )
+    }
+
     // Local mod dependencies are remapped to the development mappings by ForgeGradle.
     implementation fg.deobf('local:curios-forge:5.14.1+1.20.1')
     implementation fg.deobf('local:EndingLibrary-1.20.1:2.1.19fix-all')
@@ -275,6 +293,14 @@ tasks.register('youngDeepOneAttackSelfTest', JavaExec) {
     mainClass = 'com.casper.goetyarkham.entity.YoungDeepOneAttackSelfTest'
 }
 
+tasks.register('curioSlotsSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Validates Curios slot definitions, player binding, and translations.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.curios.CurioSlotDefinitionsSelfTest'
+}
+
 tasks.register('prepareGameTestStructures', Copy) {
     group = 'verification'
     description = 'Copies source-controlled SNBT templates into the Forge GameTest directory.'
@@ -290,4 +316,5 @@ tasks.named('check').configure {
     dependsOn tasks.named('illagerTreacherySelfTest')
     dependsOn tasks.named('chaosBagSelfTest')
     dependsOn tasks.named('youngDeepOneAttackSelfTest')
+    dependsOn tasks.named('curioSlotsSelfTest')
 }
