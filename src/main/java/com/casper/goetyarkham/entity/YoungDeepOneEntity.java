@@ -70,8 +70,10 @@ public final class YoungDeepOneEntity extends Monster implements GeoEntity {
     static final double SOUL_EROSION_RADIUS = 8.0D;
     static final double SOUL_EROSION_RADIUS_SQUARED =
             SOUL_EROSION_RADIUS * SOUL_EROSION_RADIUS;
-    static final int SOUL_EROSION_WITHER_TICKS = 20;
+    static final int SOUL_EROSION_WITHER_TICKS = 100;
     static final int SOUL_EROSION_WITHER_AMPLIFIER = 0;
+    static final int SOUL_EROSION_WITHER_REFRESH_THRESHOLD_TICKS =
+            SOUL_EROSION_INTERVAL_TICKS;
 
     private final AnimatableInstanceCache animationCache =
             GeckoLibUtil.createInstanceCache(this);
@@ -131,21 +133,37 @@ public final class YoungDeepOneEntity extends Monster implements GeoEntity {
 
         for (ServerPlayer player : serverLevel.getPlayers(
                 this::canErodeSoul)) {
-            if (!SoulEnergyPoolService.hasContainer(player)) {
-                continue;
+            boolean hasContainer = SoulEnergyPoolService.hasContainer(player);
+            if (hasContainer) {
+                SoulEnergyPoolService.removeSoul(
+                        player,
+                        SOUL_EROSION_AMOUNT
+                );
             }
-            SoulEnergyPoolService.removeSoul(player, SOUL_EROSION_AMOUNT);
-            if (SoulEnergyPoolService.getCurrentSoul(player) == 0) {
-                player.addEffect(new MobEffectInstance(
-                        MobEffects.WITHER,
-                        SOUL_EROSION_WITHER_TICKS,
-                        SOUL_EROSION_WITHER_AMPLIFIER,
-                        false,
-                        false,
-                        true
-                ));
+            if (!hasContainer
+                    || SoulEnergyPoolService.getCurrentSoul(player) == 0) {
+                applySoulErosionWither(player);
             }
         }
+    }
+
+    private static void applySoulErosionWither(ServerPlayer player) {
+        MobEffectInstance current = player.getEffect(MobEffects.WITHER);
+        if (current != null
+                && (current.getAmplifier()
+                != SOUL_EROSION_WITHER_AMPLIFIER
+                || current.getDuration()
+                > SOUL_EROSION_WITHER_REFRESH_THRESHOLD_TICKS)) {
+            return;
+        }
+        player.addEffect(new MobEffectInstance(
+                MobEffects.WITHER,
+                SOUL_EROSION_WITHER_TICKS,
+                SOUL_EROSION_WITHER_AMPLIFIER,
+                false,
+                false,
+                true
+        ));
     }
 
     private boolean canErodeSoul(ServerPlayer player) {

@@ -11,6 +11,9 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
@@ -20,6 +23,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +31,8 @@ import java.util.UUID;
 @GameTestHolder(GoetyArkham.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class YoungDeepOneBehaviorGameTests {
+    private static final Field SPAWN_INVULNERABLE_TIME_FIELD =
+            findSpawnInvulnerableTimeField();
     private static final UUID UUID_ONE =
             UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID UUID_TWO =
@@ -35,6 +41,18 @@ public final class YoungDeepOneBehaviorGameTests {
             UUID.fromString("00000000-0000-0000-0000-000000000003");
 
     private YoungDeepOneBehaviorGameTests() {
+    }
+
+    private static Field findSpawnInvulnerableTimeField() {
+        try {
+            Field field = ServerPlayer.class.getDeclaredField(
+                    "spawnInvulnerableTime"
+            );
+            field.setAccessible(true);
+            return field;
+        } catch (ReflectiveOperationException exception) {
+            throw new ExceptionInInitializerError(exception);
+        }
     }
 
     @GameTest(template = "young_deep_one_arena")
@@ -329,6 +347,10 @@ public final class YoungDeepOneBehaviorGameTests {
         fixture.pulse(1);
         fixture.assertSoul(boundary, 30, "exactly eight blocks");
         fixture.assertSoul(outside, 40, "outside eight blocks");
+        helper.assertTrue(
+                outside.getEffect(MobEffects.WITHER) == null,
+                "Out-of-range player received Wither"
+        );
         fixture.assertSoul(vertical, 30, "vertical sphere distance");
         fixture.assertSoul(behindWall, 30, "wall-independent erosion");
         fixture.pulse(1);
@@ -351,6 +373,10 @@ public final class YoungDeepOneBehaviorGameTests {
         fixture.pulse(fixture.deepOne, 20);
         fixture.pulse(second, 20);
         fixture.assertSoul(twoSources, 30, "two independent sources");
+        helper.assertTrue(
+                twoSources.getEffect(MobEffects.WITHER) == null,
+                "Positive soul remaining after erosion received Wither"
+        );
 
         SoulEnergyPoolService.setSoul(twoSources, 30);
         YoungDeepOneEntity third = fixture.addSource();
@@ -365,7 +391,16 @@ public final class YoungDeepOneBehaviorGameTests {
                         == YoungDeepOneEntity.SOUL_EROSION_WITHER_AMPLIFIER
                         && wither.getDuration()
                         == YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS,
-                "Zero soul did not receive exactly one second of Wither I"
+                "Zero soul did not receive exactly five seconds of Wither I"
+        );
+        twoSources.tickTestEffects(10);
+        fixture.pulse(fixture.deepOne, 20);
+        fixture.pulse(second, 20);
+        fixture.pulse(third, 20);
+        fixture.assertWitherI(
+                twoSources,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS - 10,
+                "multiple sources must not reset active Wither I"
         );
 
         TestServerPlayer partialSoul = fixture.soulPlayer(
@@ -376,16 +411,17 @@ public final class YoungDeepOneBehaviorGameTests {
         YoungDeepOneEntity partialSource = fixture.addSource();
         fixture.pulse(partialSource, 20);
         fixture.assertSoul(partialSoul, 0, "one-to-nine soul clamp");
-        helper.assertTrue(
-                partialSoul.getEffect(MobEffects.WITHER) != null,
-                "Partial soul reaching zero did not immediately receive Wither"
+        fixture.assertWitherI(
+                partialSoul,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS,
+                "partial soul reaching zero"
         );
         fixture.close();
         helper.succeed();
     }
 
     @GameTest(template = "young_deep_one_arena")
-    public static void soulErosionRequiresContainerAndValidSurvivalPlayer(
+    public static void soulErosionHandlesMissingContainerAndRefreshesWither(
             GameTestHelper helper
     ) {
         AuraFixture fixture = new AuraFixture(helper);
@@ -410,24 +446,109 @@ public final class YoungDeepOneBehaviorGameTests {
                 fixture.origin.add(4.0D, 0.0D, 0.0D),
                 0
         );
+        int noContainerSoulBefore =
+                SoulEnergyPoolService.getCurrentSoul(noContainer);
+        int noContainerMaximumBefore =
+                SoulEnergyPoolService.getMaximumSoul(noContainer);
 
         fixture.pulse(20);
+        fixture.assertWitherI(
+                noContainer,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS,
+                "player without a soul container"
+        );
         helper.assertTrue(
-                noContainer.getEffect(MobEffects.WITHER) == null,
-                "Player without a soul container received Wither"
+                !SoulEnergyPoolService.hasContainer(noContainer)
+                        && SoulEnergyPoolService.getCurrentSoul(noContainer)
+                        == noContainerSoulBefore
+                        && SoulEnergyPoolService.getMaximumSoul(noContainer)
+                        == noContainerMaximumBefore,
+                "Missing-container erosion created or changed soul storage"
         );
         fixture.assertSoul(creative, 20, "creative player");
         fixture.assertSoul(spectator, 20, "spectator player");
         helper.assertTrue(
-                recovery.getEffect(MobEffects.WITHER) != null,
-                "Player already at zero soul did not receive Wither"
+                creative.getEffect(MobEffects.WITHER) == null
+                        && spectator.getEffect(MobEffects.WITHER) == null,
+                "Creative or spectator player received Wither"
+        );
+        fixture.assertWitherI(
+                recovery,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS,
+                "player already at zero soul"
         );
 
-        recovery.removeEffect(MobEffects.WITHER);
-        fixture.pulse(20);
+        noContainer.tickTestEffects(10);
+        YoungDeepOneEntity secondSource = fixture.addSource();
+        fixture.pulse(secondSource, 20);
+        fixture.assertWitherI(
+                noContainer,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS - 10,
+                "multiple sources affecting a missing-container player"
+        );
+
+        TestServerPlayer strongerWither = fixture.player(
+                "stronger-wither",
+                fixture.origin.add(5.0D, 0.0D, 0.0D)
+        );
+        strongerWither.addEffect(new MobEffectInstance(
+                MobEffects.WITHER,
+                60,
+                1,
+                false,
+                false,
+                true
+        ));
+        fixture.pulse(secondSource, 20);
+        MobEffectInstance stronger = strongerWither.getEffect(
+                MobEffects.WITHER
+        );
         helper.assertTrue(
-                recovery.getEffect(MobEffects.WITHER) != null,
-                "Zero soul in range was not refreshed after twenty ticks"
+                stronger != null
+                        && stronger.getDuration() == 60
+                        && stronger.getAmplifier() == 1,
+                "Soul erosion replaced or reduced a stronger Wither effect"
+        );
+
+        recovery.tickTestEffects(20);
+        fixture.assertWitherI(
+                recovery,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS - 20,
+                "zero-soul countdown before refresh"
+        );
+        fixture.pulse(20);
+        fixture.assertWitherI(
+                recovery,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS - 20,
+                "active Wither above the threshold must not refresh"
+        );
+
+        recovery.tickTestEffects(59);
+        fixture.assertWitherI(
+                recovery,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_REFRESH_THRESHOLD_TICKS
+                        + 1,
+                "Wither countdown immediately above refresh threshold"
+        );
+        fixture.pulse(20);
+        fixture.assertWitherI(
+                recovery,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_REFRESH_THRESHOLD_TICKS
+                        + 1,
+                "Wither immediately above threshold must not refresh"
+        );
+
+        recovery.tickTestEffects(1);
+        fixture.assertWitherI(
+                recovery,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_REFRESH_THRESHOLD_TICKS,
+                "Wither at refresh threshold"
+        );
+        fixture.pulse(20);
+        fixture.assertWitherI(
+                recovery,
+                YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS,
+                "Wither at threshold must refresh without an interruption"
         );
 
         recovery.removeEffect(MobEffects.WITHER);
@@ -439,13 +560,101 @@ public final class YoungDeepOneBehaviorGameTests {
                 "Positive remaining soul incorrectly refreshed Wither"
         );
 
-        SoulEnergyPoolService.setSoul(recovery, 0);
-        recovery.setPos(fixture.origin.add(9.0D, 0.0D, 0.0D));
+        noContainer.setPos(fixture.origin.add(9.0D, 0.0D, 0.0D));
+        noContainer.tickTestEffects(20);
+        int remainingDuration = noContainer.getEffect(MobEffects.WITHER)
+                .getDuration();
         fixture.pulse(20);
         helper.assertTrue(
-                recovery.getEffect(MobEffects.WITHER) == null,
-                "Out-of-range zero-soul player received Wither"
+                remainingDuration
+                        == YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS - 30
+                        && noContainer.getEffect(MobEffects.WITHER)
+                        .getDuration() == remainingDuration,
+                "Out-of-range Wither was refreshed instead of counting down"
         );
+        noContainer.tickTestEffects(remainingDuration);
+        helper.assertTrue(
+                noContainer.getEffect(MobEffects.WITHER) == null,
+                "Out-of-range Wither did not expire naturally"
+        );
+        fixture.close();
+        helper.succeed();
+    }
+
+    @GameTest(template = "young_deep_one_arena")
+    public static void soulErosionWitherDealsOnlyVanillaEffectDamage(
+            GameTestHelper helper
+    ) {
+        AuraFixture fixture = new AuraFixture(helper);
+        TestServerPlayer noContainer = fixture.player(
+                "vanilla-wither-damage",
+                fixture.origin.add(1.0D, 0.0D, 0.0D)
+        );
+        TestServerPlayer zeroSoul = fixture.soulPlayer(
+                "zero-soul-wither-damage",
+                fixture.origin.add(2.0D, 0.0D, 0.0D),
+                0
+        );
+        TestServerPlayer depletedSoul = fixture.soulPlayer(
+                "depleted-soul-wither-damage",
+                fixture.origin.add(3.0D, 0.0D, 0.0D),
+                5
+        );
+        List<TestServerPlayer> affectedPlayers = List.of(
+                noContainer,
+                zeroSoul,
+                depletedSoul
+        );
+        List<Float> startingHealth = affectedPlayers.stream()
+                .map(TestServerPlayer::getHealth)
+                .toList();
+
+        fixture.pulse(20);
+        fixture.assertSoul(depletedSoul, 0, "positive soul depleted to zero");
+        for (int index = 0; index < affectedPlayers.size(); index++) {
+            TestServerPlayer player = affectedPlayers.get(index);
+            fixture.assertWitherI(
+                    player,
+                    YoungDeepOneEntity.SOUL_EROSION_WITHER_TICKS,
+                    "vanilla damage setup for " + player.getGameProfile()
+                            .getName()
+            );
+            helper.assertTrue(
+                    player.getHealth() == startingHealth.get(index)
+                            && player.damageCalls == 0,
+                    "Aura application dealt manual damage to "
+                            + player.getGameProfile().getName()
+            );
+        }
+
+        for (int cycle = 0; cycle < 3; cycle++) {
+            for (TestServerPlayer player : affectedPlayers) {
+                player.tickTestEffects(20);
+            }
+            fixture.pulse(20);
+        }
+
+        for (int index = 0; index < affectedPlayers.size(); index++) {
+            TestServerPlayer player = affectedPlayers.get(index);
+            fixture.detachFromAura(player);
+            fixture.assertWitherI(
+                    player,
+                    40,
+                    "active Wither countdown for "
+                            + player.getGameProfile().getName()
+            );
+            helper.assertTrue(
+                    player.damageCalls > 0
+                            && player.damageCalls == player.witherDamageCalls,
+                    "Life loss came from a non-Wither or manual source for "
+                            + player.getGameProfile().getName()
+            );
+            helper.assertTrue(
+                    player.getHealth() < startingHealth.get(index),
+                    "Continuously exposed player took no vanilla Wither "
+                            + "damage: " + player.getGameProfile().getName()
+            );
+        }
         fixture.close();
         helper.succeed();
     }
@@ -607,6 +816,27 @@ public final class YoungDeepOneBehaviorGameTests {
             );
         }
 
+        private void assertWitherI(
+                TestServerPlayer player,
+                int expectedDuration,
+                String label
+        ) {
+            MobEffectInstance wither = player.getEffect(MobEffects.WITHER);
+            this.helper.assertTrue(
+                    wither != null
+                            && wither.getDuration() == expectedDuration
+                            && wither.getAmplifier()
+                            == YoungDeepOneEntity
+                            .SOUL_EROSION_WITHER_AMPLIFIER,
+                    label + ": expected Wither I for " + expectedDuration
+                            + " ticks"
+            );
+        }
+
+        private void detachFromAura(TestServerPlayer player) {
+            this.level.players().remove(player);
+        }
+
         private void close() {
             for (TestServerPlayer player : this.players) {
                 this.level.players().remove(player);
@@ -621,6 +851,8 @@ public final class YoungDeepOneBehaviorGameTests {
     private static final class TestServerPlayer extends ServerPlayer {
         private boolean creative;
         private boolean spectator;
+        private int damageCalls;
+        private int witherDamageCalls;
 
         private TestServerPlayer(
                 ServerLevel level,
@@ -628,6 +860,14 @@ public final class YoungDeepOneBehaviorGameTests {
                 String name
         ) {
             super(level.getServer(), level, new GameProfile(uuid, name));
+            try {
+                SPAWN_INVULNERABLE_TIME_FIELD.setInt(this, 0);
+            } catch (IllegalAccessException exception) {
+                throw new IllegalStateException(
+                        "Failed to disable test-player spawn protection",
+                        exception
+                );
+            }
         }
 
         @Override
@@ -638,6 +878,36 @@ public final class YoungDeepOneBehaviorGameTests {
         @Override
         public boolean isSpectator() {
             return this.spectator;
+        }
+
+        @Override
+        public boolean hurt(DamageSource source, float amount) {
+            this.damageCalls++;
+            if (source.is(DamageTypes.WITHER)) {
+                this.witherDamageCalls++;
+                try {
+                    SPAWN_INVULNERABLE_TIME_FIELD.setInt(this, 0);
+                } catch (IllegalAccessException exception) {
+                    throw new IllegalStateException(
+                            "Failed to clear test-player spawn protection",
+                            exception
+                    );
+                }
+                this.getAbilities().invulnerable = false;
+                this.invulnerableTime = 0;
+            }
+            return super.hurt(source, amount);
+        }
+
+        private void tickTestEffects(int ticks) {
+            for (int tick = 0; tick < ticks; tick++) {
+                this.tickEffects();
+            }
+        }
+
+        @Override
+        public void sendSystemMessage(Component message) {
+            // GameTest players intentionally have no network connection.
         }
 
         @Override
