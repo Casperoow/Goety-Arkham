@@ -15,11 +15,13 @@ public final class SanityHud {
     private static final ResourceLocation ICONS = new ResourceLocation(
             GoetyArkham.MOD_ID, "textures/gui/sanity_icons.png");
     private static final int ICON_SIZE = 9;
+    private static final int SOURCE_ICON_SIZE = 18;
+    private static final int ICON_STEP = 8;
     private static final int ICONS_PER_ROW = 10;
-    private static final int TEXTURE_WIDTH = 18;
-    private static final int TEXTURE_HEIGHT = 9;
+    private static final int TEXTURE_WIDTH = 36;
+    private static final int TEXTURE_HEIGHT = 18;
     private static final int FULL_U = 0;
-    private static final int EMPTY_U = 9;
+    private static final int EMPTY_U = 18;
 
     private SanityHud() {
     }
@@ -64,14 +66,17 @@ public final class SanityHud {
             GuiGraphics graphics, int originX, int bottomY, int index, int u) {
         int column = index % ICONS_PER_ROW;
         int row = index / ICONS_PER_ROW;
+
         graphics.blit(
                 ICONS,
-                originX + column * ICON_SIZE,
+                originX + column * ICON_STEP,
                 bottomY - row * ICON_SIZE,
-                u,
-                0,
                 ICON_SIZE,
                 ICON_SIZE,
+                (float) u,
+                0.0F,
+                SOURCE_ICON_SIZE,
+                SOURCE_ICON_SIZE,
                 TEXTURE_WIDTH,
                 TEXTURE_HEIGHT);
     }

@@ -174,6 +174,24 @@ dependencies {
         )
     }
 
+    if (file('devmods/PuzzlesLib-v8.1.33-1.20.1-Forge.jar').exists()) {
+        runtimeOnly fg.deobf(
+            'devtest:PuzzlesLib:v8.1.33-1.20.1-Forge'
+        )
+    }
+
+    if (file('devmods/OverflowingBars-v8.0.1-1.20.1-Forge.jar').exists()) {
+        runtimeOnly fg.deobf(
+            'devtest:OverflowingBars:v8.0.1-1.20.1-Forge'
+        )
+    }
+
+    if (file('devmods/colorfulhearts-forge-1.20.1-4.3.16.jar').exists()) {
+        runtimeOnly fg.deobf(
+            'devtest:colorfulhearts-forge:1.20.1-4.3.16'
+        )
+    }
+
     // Local mod dependencies are remapped to the development mappings by ForgeGradle.
     implementation fg.deobf('local:curios-forge:5.14.1+1.20.1')
     implementation fg.deobf('local:EndingLibrary-1.20.1:2.1.19fix-all')
