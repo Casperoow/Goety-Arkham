@@ -13,6 +13,7 @@
     "SEHelperMixin"
   ],
   "client": [
+    "client.ChatComponentMixin",
     "client.CursedCageBlockEntityClientMixin",
     "client.SEHelperClientMixin",
     "client.SoulEnergyGuiMixin"

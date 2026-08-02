@@ -7,6 +7,7 @@ import com.casper.goetyarkham.sanity.config.SanityClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
@@ -36,10 +37,7 @@ public final class SanityHud {
             int screenWidth,
             int screenHeight) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null
-                || minecraft.options.hideGui
-                || minecraft.player.isSpectator()
-                || !gui.shouldDrawSurvivalElements()) {
+        if (!shouldRender(minecraft, gui)) {
             return;
         }
 
@@ -52,7 +50,7 @@ public final class SanityHud {
                 snapshot.permanentMaxLoss());
         int displayedSlots = maximum + permanentLoss;
         int current = Math.max(0, Math.min(maximum, snapshot.currentSanity()));
-        int rows = (displayedSlots + ICONS_PER_ROW - 1) / ICONS_PER_ROW;
+        int rows = rowCount(displayedSlots);
         int rightEdgeX = screenWidth / 2 + 91
                 + SanityClientConfig.hudOffsetX();
         int bottomY = screenHeight - gui.rightHeight
@@ -91,8 +89,61 @@ public final class SanityHud {
             }
         }
 
-        int occupiedHeight = ICON_SIZE + (rows - 1) * ROW_STEP;
-        gui.rightHeight += occupiedHeight;
+        gui.rightHeight += occupiedHeight(displayedSlots);
+    }
+
+    /**
+     * Returns the GUI-pixel offset used by both chat rendering and chat mouse
+     * coordinate conversion. Keeping this calculation in one place prevents
+     * clickable chat text from becoming misaligned after the panel moves.
+     */
+    public static int chatOffsetY() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (!shouldRender(minecraft)) {
+            return 0;
+        }
+
+        SanitySnapshot snapshot = ClientSanity.snapshot();
+        if (snapshot.maximumSanity() <= 0) {
+            return 0;
+        }
+
+        int permanentLoss = SanityMath.clampPermanentLoss(
+                snapshot.permanentMaxLoss());
+        int displayedSlots = snapshot.maximumSanity() + permanentLoss;
+
+        // A positive HUD Y offset moves sanity downward, so less chat
+        // displacement is needed. A negative value moves sanity upward and
+        // requires the same additional chat displacement.
+        return Math.max(
+                0,
+                occupiedHeight(displayedSlots)
+                        - SanityClientConfig.hudOffsetY());
+    }
+
+    static int occupiedHeight(int displayedSlots) {
+        int rows = rowCount(displayedSlots);
+        return rows == 0 ? 0 : ICON_SIZE + (rows - 1) * ROW_STEP;
+    }
+
+    private static int rowCount(int displayedSlots) {
+        if (displayedSlots <= 0) {
+            return 0;
+        }
+        return (displayedSlots + ICONS_PER_ROW - 1) / ICONS_PER_ROW;
+    }
+
+    private static boolean shouldRender(Minecraft minecraft, ForgeGui gui) {
+        return shouldRender(minecraft) && gui.shouldDrawSurvivalElements();
+    }
+
+    private static boolean shouldRender(Minecraft minecraft) {
+        return minecraft.player != null
+                && minecraft.gameMode != null
+                && !minecraft.options.hideGui
+                && !minecraft.player.isSpectator()
+                && minecraft.gameMode.canHurtPlayer()
+                && minecraft.getCameraEntity() instanceof Player;
     }
 
     private static void blitIcon(GuiGraphics graphics, int x, int y, int u) {
