@@ -1,4 +1,6 @@
 {
   "size": 4,
-  "operation": "SET"
+  "operation": "SET",
+  "order": 160,
+  "icon": "goetyarkham:slot/empty_asset_slot"
 }

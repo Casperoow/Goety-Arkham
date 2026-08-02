@@ -1,4 +1,6 @@
 {
   "size": 2,
-  "operation": "SET"
+  "operation": "SET",
+  "order": 170,
+  "icon": "goetyarkham:slot/empty_talent_slot"
 }
