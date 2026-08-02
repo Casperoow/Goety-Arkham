@@ -18,12 +18,13 @@ public final class SanityHud {
     private static final int ICON_SIZE = 9;
     private static final int SOURCE_ICON_SIZE = 18;
     private static final int ICON_STEP = 8;
+    private static final int ROW_STEP = 5;
     private static final int ICONS_PER_ROW = 10;
     private static final int TEXTURE_WIDTH = 54;
     private static final int TEXTURE_HEIGHT = 18;
     private static final int FULL_U = 0;
     private static final int EMPTY_U = 18;
-    private static final int DAMAGED_U = 36;
+    private static final int PERMANENT_DAMAGE_U = 36;
 
     private SanityHud() {
     }
@@ -52,35 +53,53 @@ public final class SanityHud {
         int displayedSlots = maximum + permanentLoss;
         int current = Math.max(0, Math.min(maximum, snapshot.currentSanity()));
         int rows = (displayedSlots + ICONS_PER_ROW - 1) / ICONS_PER_ROW;
-        int originX = screenWidth / 2 - 91 + SanityClientConfig.hudOffsetX();
-        int bottomY = screenHeight - gui.leftHeight - ICON_SIZE
+        int rightEdgeX = screenWidth / 2 + 91
+                + SanityClientConfig.hudOffsetX();
+        int bottomY = screenHeight - gui.rightHeight - ICON_SIZE
                 + SanityClientConfig.hudOffsetY();
 
-        // Usable sanity slots are drawn empty first, then current sanity is
-        // overlaid as full. Permanently lost slots remain visible after them.
-        for (int index = 0; index < maximum; index++) {
-            blitIcon(graphics, originX, bottomY, index, EMPTY_U);
-        }
-        for (int index = 0; index < current; index++) {
-            blitIcon(graphics, originX, bottomY, index, FULL_U);
-        }
-        for (int index = maximum; index < displayedSlots; index++) {
-            blitIcon(graphics, originX, bottomY, index, DAMAGED_U);
+        for (int row = 0; row < rows; row++) {
+            int rowStart = row * ICONS_PER_ROW;
+            int rowIconCount = Math.min(
+                    ICONS_PER_ROW, displayedSlots - rowStart);
+            int rowWidth = ICON_SIZE + (rowIconCount - 1) * ICON_STEP;
+            int rowOriginX = rightEdgeX - rowWidth;
+            int iconY = bottomY - row * ROW_STEP;
+
+            if (row > 0) {
+                graphics.enableScissor(
+                        rowOriginX, iconY, rightEdgeX, iconY + ROW_STEP);
+            }
+            try {
+                for (int column = 0; column < rowIconCount; column++) {
+                    int index = rowStart + column;
+                    int u = index < current
+                            ? FULL_U
+                            : index < maximum
+                                    ? EMPTY_U
+                                    : PERMANENT_DAMAGE_U;
+                    blitIcon(
+                            graphics,
+                            rowOriginX + column * ICON_STEP,
+                            iconY,
+                            u);
+                }
+            } finally {
+                if (row > 0) {
+                    graphics.disableScissor();
+                }
+            }
         }
 
-        // Reserve the occupied left-HUD height for overlays rendered later.
-        gui.leftHeight += rows * ICON_SIZE;
+        int occupiedHeight = ICON_SIZE + (rows - 1) * ROW_STEP;
+        gui.rightHeight += occupiedHeight;
     }
 
-    private static void blitIcon(
-            GuiGraphics graphics, int originX, int bottomY, int index, int u) {
-        int column = index % ICONS_PER_ROW;
-        int row = index / ICONS_PER_ROW;
-
+    private static void blitIcon(GuiGraphics graphics, int x, int y, int u) {
         graphics.blit(
                 ICONS,
-                originX + column * ICON_STEP,
-                bottomY - row * ICON_SIZE,
+                x,
+                y,
                 ICON_SIZE,
                 ICON_SIZE,
                 (float) u,
