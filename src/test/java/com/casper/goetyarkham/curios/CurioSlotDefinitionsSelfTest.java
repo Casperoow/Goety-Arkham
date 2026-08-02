@@ -41,6 +41,7 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyCatalog();
         verifySlotDefinitions();
         verifyPlayerBinding();
+        verifyGrotesqueStatueTag();
         verifyLanguage("en_us", ENGLISH_NAMES);
         verifyLanguage("zh_cn", CHINESE_NAMES);
         System.out.println("CurioSlotDefinitionsSelfTest: all checks passed");
@@ -77,6 +78,16 @@ public final class CurioSlotDefinitionsSelfTest {
         slots.forEach(element -> uniqueSlots.add(element.getAsString()));
         assertEquals(slots.size(), uniqueSlots.size(), "player binding has no duplicate slot IDs");
         assertEquals(new HashSet<>(CurioSlotIds.ALL), uniqueSlots, "player binding covers the slot catalog");
+    }
+
+    private static void verifyGrotesqueStatueTag() throws IOException {
+        JsonObject necklace = readJson("/data/curios/tags/items/necklace.json");
+        assertFalse(necklace.get("replace").getAsBoolean(),
+                "necklace item tag must merge without replace");
+        JsonArray values = necklace.getAsJsonArray("values");
+        assertEquals(1, values.size(), "Grotesque Statue Curios tag entry count");
+        assertEquals("goetyarkham:grotesque_statue", values.get(0).getAsString(),
+                "Grotesque Statue is tagged only for necklace");
     }
 
     private static void verifyLanguage(String language, Map<String, String> expectedNames)

@@ -304,6 +304,8 @@ public final class IllagerTreacheryManager {
             eventLock.beginResolving();
 
             List<PlayerTreacheryResolution> resolutions = new ArrayList<>();
+            GrotesqueStatueProtectionService.EventSession statueProtection =
+                    GrotesqueStatueProtectionService.beginEvent();
             for (UUID playerId : onlineAtLock) {
                 if (!participants.contains(playerId)) {
                     PlayerTreacheryResolution excluded =
@@ -319,7 +321,8 @@ public final class IllagerTreacheryManager {
             }
             for (UUID playerId : participants) {
                 resolutions.add(resolvePlayer(
-                        server, settings, snapshot, context, playerId));
+                        server, settings, snapshot, context, playerId,
+                        statueProtection));
             }
             safePost(new IllagerTreacheryEvents.GlobalResolved(
                     context, participants, resolutions));
@@ -337,7 +340,8 @@ public final class IllagerTreacheryManager {
             TreacherySettings settings,
             EncounterSnapshot snapshot,
             TreacheryContext context,
-            UUID playerId) {
+            UUID playerId,
+            GrotesqueStatueProtectionService.EventSession statueProtection) {
         ServerPlayer player = server.getPlayerList().getPlayer(playerId);
         if (player == null || !PlayerEligibility.isParticipant(player)) {
             PlayerTreacheryResolution resolution = new PlayerTreacheryResolution(
@@ -363,6 +367,15 @@ public final class IllagerTreacheryManager {
                 new IllagerTreacheryEvents.PlayerImmunity(context, player);
         safePost(immunity);
         if (immunity.isImmune()) {
+            PlayerTreacheryResolution resolution = new PlayerTreacheryResolution(
+                    playerId,
+                    PlayerResolutionPolicy.choose(true, true),
+                    List.of(),
+                    0);
+            safePost(new IllagerTreacheryEvents.PlayerResolved(context, resolution));
+            return resolution;
+        }
+        if (statueProtection.tryProtect(player)) {
             PlayerTreacheryResolution resolution = new PlayerTreacheryResolution(
                     playerId,
                     PlayerResolutionPolicy.choose(true, true),

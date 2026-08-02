@@ -93,5 +93,10 @@
   "command.goetyarkham.sanity.damage": "%1$s: requested sanity damage %2$s, actually damaged %3$s; now %4$s/%5$s, permanent loss %6$s/9.",
   "command.goetyarkham.sanity.permanent_damage": "%1$s: requested permanent maximum damage %2$s, actually added %3$s; now %4$s/%5$s, permanent loss %6$s/9.",
   "command.goetyarkham.sanity.restore_max": "%1$s: requested permanent-loss restoration %2$s, actually restored %3$s; now %4$s/%5$s, permanent loss %6$s/9.",
-  "curios.identifier.weakness": "Weakness"
+  "curios.identifier.weakness": "Weakness",
+  "item.goetyarkham.grotesque_statue": "Grotesque Statue",
+  "tooltip.goetyarkham.grotesque_statue.souls": "Soul Energy: %1$s/%2$s",
+  "tooltip.goetyarkham.grotesque_statue.when_equipped": "When equipped:",
+  "tooltip.goetyarkham.grotesque_statue.effect": "When you would suffer an Illager Treachery, consume 1,000 Soul Energy to become immune to that treachery.",
+  "message.goetyarkham.grotesque_statue.protected": "The Grotesque Statue consumed 1,000 Soul Energy and protected you from this Illager Treachery."
 }

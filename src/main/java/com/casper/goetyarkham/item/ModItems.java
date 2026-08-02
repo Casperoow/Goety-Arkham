@@ -7,6 +7,7 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -24,12 +25,21 @@ public final class ModItems {
                             new Item.Properties()
                     ));
 
+    public static final RegistryObject<GrotesqueStatueItem> GROTESQUE_STATUE =
+            ITEMS.register("grotesque_statue", GrotesqueStatueItem::new);
+
     private ModItems() {
     }
 
     public static void register(IEventBus modEventBus) {
         ITEMS.register(modEventBus);
+        modEventBus.addListener(ModItems::commonSetup);
         modEventBus.addListener(ModItems::addCreativeTabItems);
+    }
+
+    private static void commonSetup(FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> top.theillusivec4.curios.api.CuriosApi.registerCurio(
+                GROTESQUE_STATUE.get(), GROTESQUE_STATUE.get()));
     }
 
     private static void addCreativeTabItems(
@@ -37,6 +47,9 @@ public final class ModItems {
     ) {
         if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
             event.accept(YOUNG_DEEP_ONE_SPAWN_EGG);
+        }
+        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            event.accept(GROTESQUE_STATUE);
         }
     }
 }

@@ -93,5 +93,10 @@
   "command.goetyarkham.sanity.damage": "%1$s：请求造成%2$s点理智伤害，实际造成%3$s点；当前%4$s/%5$s，永久损伤%6$s/9。",
   "command.goetyarkham.sanity.permanent_damage": "%1$s：请求增加%2$s点永久上限损伤，实际增加%3$s点；当前%4$s/%5$s，永久损伤%6$s/9。",
   "command.goetyarkham.sanity.restore_max": "%1$s：请求恢复%2$s点永久上限损伤，实际恢复%3$s点；当前%4$s/%5$s，永久损伤%6$s/9。",
-  "curios.identifier.weakness": "弱点"
+  "curios.identifier.weakness": "弱点",
+  "item.goetyarkham.grotesque_statue": "诡秘石像",
+  "tooltip.goetyarkham.grotesque_statue.souls": "灵魂能量：%1$s/%2$s",
+  "tooltip.goetyarkham.grotesque_statue.when_equipped": "佩戴时：",
+  "tooltip.goetyarkham.grotesque_statue.effect": "当你将要发生灾厄诡计时，消耗1000灵魂能量，免疫该次诡计。",
+  "message.goetyarkham.grotesque_statue.protected": "诡秘石像消耗了1000灵魂能量，免疫了本次灾厄诡计。"
 }
