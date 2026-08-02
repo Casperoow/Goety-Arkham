@@ -30,7 +30,6 @@ public final class IllagerTreacherySelfTest {
         cooldownAndPersistence();
         playerEligibility();
         playerResolutionPolicy();
-        grotesqueStatuePaymentPolicy();
         encounterRegistryAndSnapshot();
         extraDrawLimit();
         mergingDeduplicationAndLock();
@@ -290,25 +289,6 @@ public final class IllagerTreacherySelfTest {
         assertTrue(PlayerResolutionPolicy.choose(true, false)
                         == PlayerTreacheryResult.DRAWN,
                 "one player's immunity leaked to another player");
-    }
-
-    private static void grotesqueStatuePaymentPolicy() {
-        int cost = 1_000;
-        assertTrue(GrotesqueStatuePaymentPolicy.firstAffordableIndex(
-                        java.util.List.of(5_000), cost) == 0,
-                "charged statue was not selected");
-        assertTrue(GrotesqueStatuePaymentPolicy.firstAffordableIndex(
-                        java.util.List.of(999), cost) == -1,
-                "999 souls incorrectly paid a 1000-soul cost");
-        assertTrue(GrotesqueStatuePaymentPolicy.firstAffordableIndex(
-                        java.util.List.of(999, 1_000), cost) == 1,
-                "slot order did not skip the first underfunded statue");
-        assertTrue(GrotesqueStatuePaymentPolicy.firstAffordableIndex(
-                        java.util.List.of(1_000, 5_000), cost) == 0,
-                "slot order did not select the first affordable statue");
-        assertTrue(GrotesqueStatuePaymentPolicy.firstAffordableIndex(
-                        java.util.List.of(500, 500), cost) == -1,
-                "multiple statues were incorrectly combined for payment");
     }
 
     private static void extraDrawLimit() {

@@ -48,7 +48,8 @@ public final class SoulEnergyPoolService {
     }
 
     public static boolean hasSoul(Player player, int amount) {
-        return hasContainer(player) && getCurrentSoul(player) >= amount;
+        SoulPoolSnapshot snapshot = getSnapshot(player);
+        return snapshot.hasContainer() && snapshot.currentSoul() >= amount;
     }
 
     public static void setSoul(Player player, int amount) {
@@ -115,6 +116,43 @@ public final class SoulEnergyPoolService {
         poolData.setVirtualSoulReserve(result.virtualReserve());
         update(serverPlayer);
         return result.changedAmount();
+    }
+
+    /**
+     * Pays an undiscounted fixed cost from the unified pool, all-or-nothing.
+     * This deliberately bypasses Goety's soul discount and loss event path.
+     */
+    public static boolean tryRemoveSoul(Player player, int amount) {
+        if (!(player instanceof ServerPlayer serverPlayer) || amount <= 0) {
+            return false;
+        }
+
+        SoulPoolSnapshot snapshot = update(serverPlayer);
+        if (!snapshot.hasContainer() || snapshot.currentSoul() < amount) {
+            return false;
+        }
+
+        Optional<PlayerSoulPoolData> optional = data(serverPlayer);
+        if (optional.isEmpty()) {
+            return false;
+        }
+
+        PlayerSoulPoolData poolData = optional.get();
+        PoolContext context = collect(serverPlayer);
+        PoolValues values = values(serverPlayer, context);
+        SoulPoolOperations.MutationResult result =
+                SoulPoolOperations.removeExact(
+                        context.handles(),
+                        poolData.getVirtualSoulReserve(),
+                        values.maximum(),
+                        amount);
+        if (result.changedAmount() != amount) {
+            return false;
+        }
+
+        poolData.setVirtualSoulReserve(result.virtualReserve());
+        update(serverPlayer);
+        return true;
     }
 
     public static SoulPoolSnapshot getSnapshot(Player player) {

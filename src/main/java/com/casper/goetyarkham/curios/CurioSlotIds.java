@@ -10,6 +10,8 @@ import java.util.Map;
  * future slot lookups from introducing divergent string literals.</p>
  */
 public final class CurioSlotIds {
+    /** Goety-provided charm slot. Goety: Arkham does not register or resize it. */
+    public static final String CHARM = "charm";
     public static final String NECKLACE = "necklace";
     public static final String BODY = "body";
     public static final String TOKEN = "token";

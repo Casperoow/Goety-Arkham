@@ -1,6 +1,5 @@
 package com.casper.goetyarkham.illager_treachery;
 
-import com.Polarice3.Goety.api.items.magic.ITotem;
 import com.casper.goetyarkham.curios.CurioSlotIds;
 import com.casper.goetyarkham.item.GrotesqueStatueItem;
 import com.casper.goetyarkham.item.ModItems;
@@ -13,9 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,42 +39,34 @@ public final class GrotesqueStatueProtectionService {
             if (protectedPlayers.contains(player.getUUID())) {
                 return true;
             }
-            return CuriosApi.getCuriosInventory(player).resolve()
-                    .flatMap(inventory -> inventory.getStacksHandler(CurioSlotIds.NECKLACE))
-                    .map(handler -> consumeFirstAffordable(player, handler))
+            boolean equipped = CuriosApi.getCuriosInventory(player).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(CurioSlotIds.CHARM))
+                    .map(this::hasEquippedStatue)
                     .orElse(false);
-        }
-
-        private boolean consumeFirstAffordable(
-                ServerPlayer player,
-                ICurioStacksHandler handler) {
-            List<Integer> storedSouls = new ArrayList<>();
-            List<Integer> statueSlots = new ArrayList<>();
-            for (int slot = 0; slot < handler.getStacks().getSlots(); slot++) {
-                ItemStack stack = handler.getStacks().getStackInSlot(slot);
-                if (stack.is(ModItems.GROTESQUE_STATUE.get())) {
-                    statueSlots.add(slot);
-                    storedSouls.add(ITotem.currentSouls(stack));
-                }
-            }
-
-            int statueIndex = GrotesqueStatuePaymentPolicy.firstAffordableIndex(
-                    storedSouls, GrotesqueStatueItem.TREACHERY_COST);
-            if (statueIndex < 0) {
+            if (!equipped
+                    || !SoulEnergyPoolService.hasSoul(
+                            player, GrotesqueStatueItem.TREACHERY_COST)
+                    || !SoulEnergyPoolService.tryRemoveSoul(
+                            player, GrotesqueStatueItem.TREACHERY_COST)) {
                 return false;
             }
 
-            int slot = statueSlots.get(statueIndex);
-            ItemStack stack = handler.getStacks().getStackInSlot(slot);
-            ITotem.decreaseSouls(stack, GrotesqueStatueItem.TREACHERY_COST);
-            handler.getStacks().setStackInSlot(slot, stack);
             protectedPlayers.add(player.getUUID());
-            SoulEnergyPoolService.refresh(player);
             player.displayClientMessage(Component.translatable(
                     "message.goetyarkham.grotesque_statue.protected"), true);
             player.playNotifySound(
                     SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.65F, 1.0F);
             return true;
+        }
+
+        private boolean hasEquippedStatue(ICurioStacksHandler handler) {
+            for (int slot = 0; slot < handler.getStacks().getSlots(); slot++) {
+                ItemStack stack = handler.getStacks().getStackInSlot(slot);
+                if (stack.is(ModItems.GROTESQUE_STATUE.get())) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

@@ -12,6 +12,7 @@ public final class SoulPoolOperationsSelfTest {
         testEquipAndUnequip();
         testGainOrderAndClamping();
         testConsumptionOrder();
+        testExactConsumptionIsAtomic();
         testCapacityDrop();
         testDirectCapacityPenaltyAndTruncation();
         testContainerRequirementAndArca();
@@ -84,6 +85,52 @@ public final class SoulPoolOperationsSelfTest {
         assertEquals(0, b.current, "second physical store never becomes negative");
         assertEquals(0, a.current, "first physical store never becomes negative");
         assertEquals(310, result.changedAmount(), "removal clamps to available souls");
+    }
+
+    private static void testExactConsumptionIsAtomic() {
+        FakeHandle a = new FakeHandle("a", 400, 1000);
+        FakeHandle b = new FakeHandle("b", 599, 1000);
+
+        SoulPoolOperations.MutationResult result = SoulPoolOperations.removeExact(
+                List.of(a, b), 0, 2000, 1000);
+        assertEquals(0, result.changedAmount(),
+                "underfunded exact payment changes nothing");
+        assertEquals(400, a.current,
+                "underfunded exact payment preserves first container");
+        assertEquals(599, b.current,
+                "underfunded exact payment preserves second container");
+
+        b.current = 600;
+        result = SoulPoolOperations.removeExact(
+                List.of(a, b), 0, 2000, 1000);
+        assertEquals(1000, result.changedAmount(),
+                "exact payment removes the full fixed cost");
+        assertEquals(0, a.current,
+                "exact payment spills through the unified removal order");
+        assertEquals(0, b.current,
+                "exact payment consumes the reverse-order container first");
+
+        a.current = 500;
+        b.current = 0;
+        result = SoulPoolOperations.removeExact(
+                List.of(a, b), 500, 2500, 1000);
+        assertEquals(1000, result.changedAmount(),
+                "virtual and physical soul combine for exact payment");
+        assertEquals(0, result.virtualReserve(),
+                "exact payment consumes virtual reserve first");
+        assertEquals(0, a.current,
+                "exact payment consumes the remaining physical soul");
+
+        RejectingHandle rejecting = new RejectingHandle("rejecting", 500, 500);
+        FakeHandle mutable = new FakeHandle("mutable", 500, 500);
+        result = SoulPoolOperations.removeExact(
+                List.of(rejecting, mutable), 0, 1000, 1000);
+        assertEquals(0, result.changedAmount(),
+                "failed exact payment reports no charge");
+        assertEquals(500, rejecting.getCurrentSoul(),
+                "failed exact payment preserves rejecting container");
+        assertEquals(500, mutable.current,
+                "failed exact payment rolls back prior container changes");
     }
 
     private static void testCapacityDrop() {
@@ -239,6 +286,38 @@ public final class SoulPoolOperationsSelfTest {
         @Override
         public void setCurrentSoul(int amount) {
             current = Math.max(0, Math.min(maximum, amount));
+        }
+    }
+
+    private static final class RejectingHandle implements SoulStorageHandle {
+        private final String id;
+        private final int current;
+        private final int maximum;
+
+        private RejectingHandle(String id, int current, int maximum) {
+            this.id = id;
+            this.current = current;
+            this.maximum = maximum;
+        }
+
+        @Override
+        public String slotId() {
+            return id;
+        }
+
+        @Override
+        public int getCurrentSoul() {
+            return current;
+        }
+
+        @Override
+        public int getMaximumSoul() {
+            return maximum;
+        }
+
+        @Override
+        public void setCurrentSoul(int amount) {
+            // Simulates a storage backend refusing a mutation.
         }
     }
 }

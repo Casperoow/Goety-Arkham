@@ -1,5 +1,7 @@
 package com.casper.goetyarkham.curios;
 
+import com.casper.goetyarkham.command.CuriosCommand;
+import com.mojang.brigadier.CommandDispatcher;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -8,9 +10,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.commands.CommandSourceStack;
 
 /**
  * Verifies that the source-controlled Curios data matches the stable Java slot catalog.
@@ -42,6 +47,8 @@ public final class CurioSlotDefinitionsSelfTest {
         verifySlotDefinitions();
         verifyPlayerBinding();
         verifyGrotesqueStatueTag();
+        verifyGoetySoulTooltip();
+        verifyCommandTree();
         verifyLanguage("en_us", ENGLISH_NAMES);
         verifyLanguage("zh_cn", CHINESE_NAMES);
         System.out.println("CurioSlotDefinitionsSelfTest: all checks passed");
@@ -81,23 +88,72 @@ public final class CurioSlotDefinitionsSelfTest {
     }
 
     private static void verifyGrotesqueStatueTag() throws IOException {
-        JsonObject necklace = readJson("/data/curios/tags/items/necklace.json");
-        assertFalse(necklace.get("replace").getAsBoolean(),
-                "necklace item tag must merge without replace");
-        JsonArray values = necklace.getAsJsonArray("values");
+        JsonObject charm = readJson("/data/curios/tags/items/charm.json");
+        assertFalse(charm.get("replace").getAsBoolean(),
+                "charm item tag must merge without replace");
+        JsonArray values = charm.getAsJsonArray("values");
         assertEquals(1, values.size(), "Grotesque Statue Curios tag entry count");
         assertEquals("goetyarkham:grotesque_statue", values.get(0).getAsString(),
-                "Grotesque Statue is tagged only for necklace");
+                "Grotesque Statue is tagged for charm");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/necklace.json",
+                "goetyarkham:grotesque_statue");
     }
 
     private static void verifyLanguage(String language, Map<String, String> expectedNames)
             throws IOException {
         JsonObject translations = readJson("/assets/goetyarkham/lang/" + language + ".json");
+        assertFalse(translations.has("tooltip.goetyarkham.grotesque_statue.souls"),
+                language + " must not duplicate Goety's soul tooltip translation");
         expectedNames.forEach((slotId, expectedName) -> assertEquals(
                 expectedName,
                 translations.get("curios.identifier." + slotId).getAsString(),
                 language + " translation for " + slotId
         ));
+        if ("zh_cn".equals(language)) {
+            assertEquals(
+                    "当你将要发生灾厄诡计时，从灵魂池消耗1000灵魂能量，免疫该次诡计。",
+                    translations.get("tooltip.goetyarkham.grotesque_statue.effect")
+                            .getAsString(),
+                    "Chinese Grotesque Statue pool-payment tooltip");
+            assertEquals(
+                    "诡秘石像从灵魂池消耗了1000灵魂能量，免疫了本次灾厄诡计。",
+                    translations.get("message.goetyarkham.grotesque_statue.protected")
+                            .getAsString(),
+                    "Chinese Grotesque Statue pool-payment message");
+        } else if ("en_us".equals(language)) {
+            assertEquals(
+                    "When you would suffer an Illager Treachery, consume 1,000 Soul Energy from your Soul Energy Pool to become immune to that treachery.",
+                    translations.get("tooltip.goetyarkham.grotesque_statue.effect")
+                            .getAsString(),
+                    "English Grotesque Statue pool-payment tooltip");
+            assertEquals(
+                    "The Grotesque Statue consumed 1,000 Soul Energy from your Soul Energy Pool and protected you from this Illager Treachery.",
+                    translations.get("message.goetyarkham.grotesque_statue.protected")
+                            .getAsString(),
+                    "English Grotesque Statue pool-payment message");
+        }
+    }
+
+    private static void verifyGoetySoulTooltip() throws IOException {
+        String key = "info.goety.totem_of_souls.souls";
+        assertEquals("§aSoul Energy: %d/%d§a",
+                readJson("/assets/goety/lang/en_us.json").get(key).getAsString(),
+                "Goety English soul tooltip contract");
+        assertEquals("§a灵魂能量: %d/%d§a",
+                readJson("/assets/goety/lang/zh_cn.json").get(key).getAsString(),
+                "Goety Chinese soul tooltip contract");
+    }
+
+    private static void verifyCommandTree() {
+        CommandDispatcher<CommandSourceStack> dispatcher = new CommandDispatcher<>();
+        CuriosCommand.register(dispatcher);
+        var root = dispatcher.getRoot().getChild("goetyarkham");
+        assertFalse(root == null, "missing /goetyarkham command root");
+        var curios = root.getChild("curios");
+        assertFalse(curios == null, "missing /goetyarkham curios command");
+        assertFalse(curios.getChild("slots") == null,
+                "missing /goetyarkham curios slots command");
     }
 
     private static JsonObject readJson(String resourcePath) throws IOException {
@@ -107,6 +163,26 @@ public final class CurioSlotDefinitionsSelfTest {
             }
             try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
                 return JsonParser.parseReader(reader).getAsJsonObject();
+            }
+        }
+    }
+
+    private static void assertResourceValueAbsent(
+            String resourcePath, String forbiddenValue) throws IOException {
+        Enumeration<URL> resources = CurioSlotDefinitionsSelfTest.class
+                .getClassLoader().getResources(resourcePath);
+        while (resources.hasMoreElements()) {
+            URL resource = resources.nextElement();
+            try (InputStream stream = resource.openStream();
+                 InputStreamReader reader = new InputStreamReader(
+                         stream, StandardCharsets.UTF_8)) {
+                JsonObject tag = JsonParser.parseReader(reader).getAsJsonObject();
+                if (tag.has("values")) {
+                    for (var value : tag.getAsJsonArray("values")) {
+                        assertFalse(forbiddenValue.equals(value.getAsString()),
+                                "forbidden value in " + resourcePath + " at " + resource);
+                    }
+                }
             }
         }
     }

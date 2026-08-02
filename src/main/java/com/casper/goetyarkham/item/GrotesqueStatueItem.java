@@ -2,9 +2,11 @@ package com.casper.goetyarkham.item;
 
 import com.Polarice3.Goety.api.items.magic.ITotem;
 import com.casper.goetyarkham.curios.CurioSlotIds;
+import com.casper.goetyarkham.soul.SoulStorageTooltip;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +18,7 @@ import top.theillusivec4.curios.api.type.capability.ICurioItem;
 
 import java.util.List;
 
-/** A necklace-only Curio backed by Goety's standard per-stack soul NBT. */
+/** A charm-only Curio backed by Goety's standard per-stack soul NBT. */
 public final class GrotesqueStatueItem extends Item implements ITotem, ICurioItem {
     public static final int MAX_SOULS = 5_000;
     public static final int TREACHERY_COST = 1_000;
@@ -60,12 +62,49 @@ public final class GrotesqueStatueItem extends Item implements ITotem, ICurioIte
 
     @Override
     public boolean canEquip(SlotContext slotContext, ItemStack stack) {
-        return CurioSlotIds.NECKLACE.equals(slotContext.identifier());
+        return CurioSlotIds.CHARM.equals(slotContext.identifier());
     }
 
     @Override
     public boolean canEquipFromUse(SlotContext slotContext, ItemStack stack) {
         return canEquip(slotContext, stack);
+    }
+
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return stack.getTag() != null;
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        if (stack.getTag() != null) {
+            int current = stack.getTag().getInt(ITotem.SOULS_AMOUNT);
+            int maximum = stack.getTag().getInt(ITotem.MAX_SOUL_AMOUNT);
+            return maximum > 0
+                    ? Math.round(current * 13.0F / maximum)
+                    : 0;
+        }
+        return 0;
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        float value = Math.max(
+                0.0F,
+                (float) (1.0F - amountColor(stack)) / 2.0F
+        );
+        return Mth.hsvToRgb(value, 1.0F, 1.0F);
+    }
+
+    private double amountColor(ItemStack stack) {
+        if (stack.getTag() != null) {
+            int current = stack.getTag().getInt(ITotem.SOULS_AMOUNT);
+            int maximum = stack.getTag().getInt(ITotem.MAX_SOUL_AMOUNT);
+            if (maximum > 0) {
+                return 1.0D - current / (double) maximum;
+            }
+        }
+        return 1.0D;
     }
 
     @Override
@@ -76,9 +115,7 @@ public final class GrotesqueStatueItem extends Item implements ITotem, ICurioIte
             TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
         int souls = Math.max(0, Math.min(MAX_SOULS, ITotem.currentSouls(stack)));
-        tooltip.add(Component.translatable(
-                "tooltip.goetyarkham.grotesque_statue.souls", souls, MAX_SOULS)
-                .withStyle(ChatFormatting.AQUA));
+        SoulStorageTooltip.append(tooltip, souls, MAX_SOULS);
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable(
                 "tooltip.goetyarkham.grotesque_statue.when_equipped")

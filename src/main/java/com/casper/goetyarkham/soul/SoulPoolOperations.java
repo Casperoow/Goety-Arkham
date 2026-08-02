@@ -172,6 +172,42 @@ final class SoulPoolOperations {
         return new MutationResult(updatedVirtual, before - after, remaining);
     }
 
+    /**
+     * Removes the full requested amount or leaves every storage handle and the
+     * virtual reserve unchanged when the unified pool cannot afford it.
+     */
+    static MutationResult removeExact(
+            List<? extends SoulStorageHandle> handles,
+            int virtualReserve,
+            int maximum,
+            int amount) {
+        int requested = Math.max(0, amount);
+        int available = current(physicalCurrent(handles), virtualReserve, maximum);
+        if (requested == 0 || available < requested) {
+            return new MutationResult(
+                    Math.max(0, virtualReserve), 0, requested);
+        }
+
+        int[] originalSoul = new int[handles.size()];
+        for (int index = 0; index < handles.size(); index++) {
+            SoulStorageHandle handle = handles.get(index);
+            originalSoul[index] = clamp(
+                    handle.getCurrentSoul(), 0, handle.getMaximumSoul());
+        }
+
+        MutationResult result = remove(
+                handles, virtualReserve, maximum, requested);
+        if (result.changedAmount() == requested && result.remainder() == 0) {
+            return result;
+        }
+
+        for (int index = 0; index < handles.size(); index++) {
+            handles.get(index).setCurrentSoul(originalSoul[index]);
+        }
+        return new MutationResult(
+                Math.max(0, virtualReserve), 0, requested);
+    }
+
     private static int clamp(int value, int minimum, int maximum) {
         return Math.max(minimum, Math.min(Math.max(minimum, maximum), value));
     }
