@@ -55,7 +55,7 @@ public final class SanityHud {
         int rows = (displayedSlots + ICONS_PER_ROW - 1) / ICONS_PER_ROW;
         int rightEdgeX = screenWidth / 2 + 91
                 + SanityClientConfig.hudOffsetX();
-        int bottomY = screenHeight - gui.rightHeight - ICON_SIZE
+        int bottomY = screenHeight - gui.rightHeight
                 + SanityClientConfig.hudOffsetY();
 
         for (int row = 0; row < rows; row++) {
