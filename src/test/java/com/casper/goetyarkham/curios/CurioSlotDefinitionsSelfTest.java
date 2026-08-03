@@ -108,7 +108,8 @@ public final class CurioSlotDefinitionsSelfTest {
         assertEquals(Set.of(
                         "goetyarkham:grotesque_statue",
                         "goetyarkham:disc_of_itzamna",
-                        "goetyarkham:wendys_amulet"
+                        "goetyarkham:wendys_amulet",
+                        "goetyarkham:police_badge"
                 ),
                 entries,
                 "Goety: Arkham charm item tag entries");
@@ -121,6 +122,9 @@ public final class CurioSlotDefinitionsSelfTest {
         assertResourceValueAbsent(
                 "data/curios/tags/items/necklace.json",
                 "goetyarkham:wendys_amulet");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/necklace.json",
+                "goetyarkham:police_badge");
     }
 
     private static void verifyHandsItemTag() throws IOException {

@@ -53,6 +53,9 @@ public final class ModItems {
     public static final RegistryObject<AbandonedAndAloneItem> ABANDONED_AND_ALONE =
             ITEMS.register("abandoned_and_alone", AbandonedAndAloneItem::new);
 
+    public static final RegistryObject<PoliceBadgeItem> POLICE_BADGE =
+            ITEMS.register("police_badge", PoliceBadgeItem::new);
+
     private ModItems() {
     }
 

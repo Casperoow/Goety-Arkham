@@ -16,6 +16,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import top.theillusivec4.curios.api.event.CurioChangeEvent;
+import top.theillusivec4.curios.api.event.CurioEquipEvent;
 import top.theillusivec4.curios.api.event.CurioUnequipEvent;
 
 import java.util.Set;
@@ -37,6 +38,22 @@ public final class CuriosForgeEvents {
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
         CuriosCommand.register(event.getDispatcher());
+    }
+
+    /**
+     * Pre-equip legality gate shared by every Goety: Arkham Curio. Curios
+     * posts this event from inside its slot's {@code isItemValid} check
+     * (drag-and-drop, shift-click quick move, right-click auto-equip, and
+     * creative-mode placement all route through it), so denying here stops
+     * the item before it ever enters the slot rather than ejecting it
+     * afterward. Only this mod's own registered items are restricted.
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void preventDuplicateGoetyArkhamCurio(CurioEquipEvent event) {
+        if (CurioEquipRules.isDuplicateElsewhere(
+                event.getSlotContext(), event.getStack())) {
+            event.setResult(net.minecraftforge.eventbus.api.Event.Result.DENY);
+        }
     }
 
     /** Curios posts this event before applying its attribute add/remove operation. */
