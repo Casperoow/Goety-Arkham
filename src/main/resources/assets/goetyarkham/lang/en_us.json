@@ -110,5 +110,14 @@
   "tooltip.goetyarkham.dark_memory.hold_shift": "Hold Shift to view the weakness effect",
   "tooltip.goetyarkham.dark_memory.effect.treachery": "All players immediately trigger one Illager Treachery.",
   "tooltip.goetyarkham.dark_memory.effect.sanity": "Lose 2 Sanity.",
-  "item.goetyarkham.rabbit_foot": "Rabbit’s Foot"
+  "item.goetyarkham.rabbit_foot": "Rabbit’s Foot",
+  "item.goetyarkham.wendys_amulet": "Wendy's Amulet",
+  "item.goetyarkham.abandoned_and_alone": "Abandoned and Alone",
+  "tooltip.goetyarkham.slot.charm": "Slot: Charm",
+  "tooltip.goetyarkham.slot.weakness": "Slot: Weakness",
+  "tooltip.goetyarkham.wendys_amulet.immunity": "When you would gain a negative status effect, prevent it and gain 1 Loneliness.",
+  "tooltip.goetyarkham.wendys_amulet.weakness_slot": "+1 Weakness Slot",
+  "tooltip.goetyarkham.signature_weakness": "Signature Weakness:",
+  "tooltip.goetyarkham.hold_shift": "Hold Shift for details",
+  "tooltip.goetyarkham.abandoned_and_alone.effect": "%s/5. When Loneliness reaches 5, remove all Loneliness and lose 2 Sanity."
 }

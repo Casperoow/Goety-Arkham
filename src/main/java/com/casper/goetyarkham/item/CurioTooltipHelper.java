@@ -15,6 +15,12 @@ public final class CurioTooltipHelper {
     private CurioTooltipHelper() {
     }
 
+    public static void appendSlot(
+            List<Component> tooltip, String slotTranslationKey) {
+        tooltip.add(Component.translatable(slotTranslationKey)
+                .withStyle(ChatFormatting.GRAY));
+    }
+
     public static void appendWhenWorn(
             List<Component> tooltip,
             String effectTranslationKey) {

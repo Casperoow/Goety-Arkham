@@ -2,6 +2,7 @@ package com.casper.goetyarkham.curios;
 
 import com.casper.goetyarkham.command.CuriosCommand;
 import com.casper.goetyarkham.item.CurioTooltipHelper;
+import com.casper.goetyarkham.item.SignatureWeaknessTooltipHelper;
 import com.mojang.brigadier.CommandDispatcher;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -106,7 +107,8 @@ public final class CurioSlotDefinitionsSelfTest {
         values.forEach(element -> entries.add(element.getAsString()));
         assertEquals(Set.of(
                         "goetyarkham:grotesque_statue",
-                        "goetyarkham:disc_of_itzamna"
+                        "goetyarkham:disc_of_itzamna",
+                        "goetyarkham:wendys_amulet"
                 ),
                 entries,
                 "Goety: Arkham charm item tag entries");
@@ -116,6 +118,9 @@ public final class CurioSlotDefinitionsSelfTest {
         assertResourceValueAbsent(
                 "data/curios/tags/items/necklace.json",
                 "goetyarkham:disc_of_itzamna");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/necklace.json",
+                "goetyarkham:wendys_amulet");
     }
 
     private static void verifyHandsItemTag() throws IOException {
@@ -154,10 +159,12 @@ public final class CurioSlotDefinitionsSelfTest {
                 "/data/curios/tags/items/weakness.json");
         assertFalse(weakness.get("replace").getAsBoolean(),
                 "weakness item tag must merge without replace");
-        assertEquals(List.of("goetyarkham:dark_memory"),
+        assertEquals(List.of(
+                        "goetyarkham:dark_memory",
+                        "goetyarkham:abandoned_and_alone"),
                 weakness.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
-                "Dark Memory weakness tag entries");
+                "Weakness tag entries");
 
         for (String slotId : CurioSlotIds.ALL) {
             if (!CurioSlotIds.NECKLACE.equals(slotId)) {
@@ -172,6 +179,9 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:dark_memory");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:abandoned_and_alone");
             }
         }
     }
@@ -247,6 +257,30 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Rabbit's Foot model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/rabbit_food.png");
+
+        JsonObject amuletModel = readJson(
+                "/assets/goetyarkham/models/item/wendys_amulet.json");
+        assertEquals("minecraft:item/generated",
+                amuletModel.get("parent").getAsString(),
+                "Wendy's Amulet model parent");
+        assertEquals("goetyarkham:item/wendy_amulet",
+                amuletModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Wendy's Amulet model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/wendy_amulet.png");
+
+        JsonObject abandonedModel = readJson(
+                "/assets/goetyarkham/models/item/abandoned_and_alone.json");
+        assertEquals("minecraft:item/generated",
+                abandonedModel.get("parent").getAsString(),
+                "Abandoned and Alone model parent");
+        assertEquals("goetyarkham:item/abandoned_and_alone",
+                abandonedModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Abandoned and Alone model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/abandoned_and_alone.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -378,6 +412,47 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("item.goetyarkham.rabbit_foot")
                             .getAsString(),
                     "Chinese Rabbit's Foot name");
+            assertEquals("温蒂的护身符",
+                    translations.get("item.goetyarkham.wendys_amulet")
+                            .getAsString(),
+                    "Chinese Wendy's Amulet name");
+            assertEquals("被抛弃的孤单",
+                    translations.get("item.goetyarkham.abandoned_and_alone")
+                            .getAsString(),
+                    "Chinese Abandoned and Alone name");
+            assertEquals("栏位：护符",
+                    translations.get("tooltip.goetyarkham.slot.charm")
+                            .getAsString(),
+                    "Chinese charm slot label");
+            assertEquals("栏位：弱点",
+                    translations.get("tooltip.goetyarkham.slot.weakness")
+                            .getAsString(),
+                    "Chinese weakness slot label");
+            assertEquals("专属弱点：",
+                    translations.get(
+                            SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)
+                            .getAsString(),
+                    "Chinese signature-weakness heading");
+            assertEquals("按住 Shift 查看",
+                    translations.get(
+                            SignatureWeaknessTooltipHelper.HOLD_SHIFT_TRANSLATION_KEY)
+                            .getAsString(),
+                    "Chinese shared hold-shift hint");
+            assertEquals(
+                    "当你将要获得一个负面状态效果时，免疫该效果，并获得1层\"孤单\"",
+                    translations.get("tooltip.goetyarkham.wendys_amulet.immunity")
+                            .getAsString(),
+                    "Chinese Wendy's Amulet immunity tooltip");
+            assertEquals("+1弱点栏位",
+                    translations.get(
+                            "tooltip.goetyarkham.wendys_amulet.weakness_slot")
+                            .getAsString(),
+                    "Chinese Wendy's Amulet slot tooltip");
+            assertEquals(
+                    "%s/5，当\"孤单\"达到5层时，移除所有\"孤单\"。失去2点理智",
+                    translations.get("tooltip.goetyarkham.abandoned_and_alone.effect")
+                            .getAsString(),
+                    "Chinese Abandoned and Alone effect tooltip");
         } else if ("en_us".equals(language)) {
             assertEquals("Goety: Arkham",
                     translations.get("creativetab.goetyarkham.goety_arkham")
@@ -467,6 +542,47 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("item.goetyarkham.rabbit_foot")
                             .getAsString(),
                     "English Rabbit's Foot name");
+            assertEquals("Wendy's Amulet",
+                    translations.get("item.goetyarkham.wendys_amulet")
+                            .getAsString(),
+                    "English Wendy's Amulet name");
+            assertEquals("Abandoned and Alone",
+                    translations.get("item.goetyarkham.abandoned_and_alone")
+                            .getAsString(),
+                    "English Abandoned and Alone name");
+            assertEquals("Slot: Charm",
+                    translations.get("tooltip.goetyarkham.slot.charm")
+                            .getAsString(),
+                    "English charm slot label");
+            assertEquals("Slot: Weakness",
+                    translations.get("tooltip.goetyarkham.slot.weakness")
+                            .getAsString(),
+                    "English weakness slot label");
+            assertEquals("Signature Weakness:",
+                    translations.get(
+                            SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)
+                            .getAsString(),
+                    "English signature-weakness heading");
+            assertEquals("Hold Shift for details",
+                    translations.get(
+                            SignatureWeaknessTooltipHelper.HOLD_SHIFT_TRANSLATION_KEY)
+                            .getAsString(),
+                    "English shared hold-shift hint");
+            assertEquals(
+                    "When you would gain a negative status effect, prevent it and gain 1 Loneliness.",
+                    translations.get("tooltip.goetyarkham.wendys_amulet.immunity")
+                            .getAsString(),
+                    "English Wendy's Amulet immunity tooltip");
+            assertEquals("+1 Weakness Slot",
+                    translations.get(
+                            "tooltip.goetyarkham.wendys_amulet.weakness_slot")
+                            .getAsString(),
+                    "English Wendy's Amulet slot tooltip");
+            assertEquals(
+                    "%s/5. When Loneliness reaches 5, remove all Loneliness and lose 2 Sanity.",
+                    translations.get("tooltip.goetyarkham.abandoned_and_alone.effect")
+                            .getAsString(),
+                    "English Abandoned and Alone effect tooltip");
         }
     }
 

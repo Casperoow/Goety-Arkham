@@ -110,5 +110,14 @@
   "tooltip.goetyarkham.dark_memory.hold_shift": "按住 Shift 查看弱点效果",
   "tooltip.goetyarkham.dark_memory.effect.treachery": "所有人立即触发一次灾厄诡计。",
   "tooltip.goetyarkham.dark_memory.effect.sanity": "失去2点理智",
-  "item.goetyarkham.rabbit_foot": "幸运兔脚"
+  "item.goetyarkham.rabbit_foot": "幸运兔脚",
+  "item.goetyarkham.wendys_amulet": "温蒂的护身符",
+  "item.goetyarkham.abandoned_and_alone": "被抛弃的孤单",
+  "tooltip.goetyarkham.slot.charm": "栏位：护符",
+  "tooltip.goetyarkham.slot.weakness": "栏位：弱点",
+  "tooltip.goetyarkham.wendys_amulet.immunity": "当你将要获得一个负面状态效果时，免疫该效果，并获得1层\"孤单\"",
+  "tooltip.goetyarkham.wendys_amulet.weakness_slot": "+1弱点栏位",
+  "tooltip.goetyarkham.signature_weakness": "专属弱点：",
+  "tooltip.goetyarkham.hold_shift": "按住 Shift 查看",
+  "tooltip.goetyarkham.abandoned_and_alone.effect": "%s/5，当\"孤单\"达到5层时，移除所有\"孤单\"。失去2点理智"
 }

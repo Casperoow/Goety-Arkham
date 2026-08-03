@@ -8,5 +8,6 @@ public enum SanityChangeCause {
     DEATH,
     RITUAL,
     DARK_MEMORY,
+    ABANDONED_AND_ALONE,
     OTHER
 }

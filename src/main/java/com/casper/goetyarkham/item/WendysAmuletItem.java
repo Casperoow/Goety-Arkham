@@ -13,15 +13,15 @@ import top.theillusivec4.curios.api.type.capability.ICurioItem;
 
 import java.util.List;
 
-/** Necklace Curio whose stateful effects are settled by the Curios event service. */
-public final class HeirloomOfHyperboreaItem extends Item implements ICurioItem {
-    public HeirloomOfHyperboreaItem() {
+/** Charm Curio whose stateful effects are settled by the Curios event service. */
+public final class WendysAmuletItem extends Item implements ICurioItem {
+    public WendysAmuletItem() {
         super(new Item.Properties().stacksTo(1));
     }
 
     @Override
     public boolean canEquip(SlotContext slotContext, ItemStack stack) {
-        return CurioSlotIds.NECKLACE.equals(slotContext.identifier())
+        return CurioSlotIds.CHARM.equals(slotContext.identifier())
                 && slotContext.entity() instanceof Player;
     }
 
@@ -37,14 +37,15 @@ public final class HeirloomOfHyperboreaItem extends Item implements ICurioItem {
             List<Component> tooltip,
             TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
+        CurioTooltipHelper.appendSlot(tooltip, "tooltip.goetyarkham.slot.charm");
         CurioTooltipHelper.appendWhenWorn(
                 tooltip,
                 Component.translatable(
-                        "tooltip.goetyarkham.heirloom_of_hyperborea.damage"),
+                        "tooltip.goetyarkham.wendys_amulet.immunity"),
                 Component.translatable(
-                        "tooltip.goetyarkham.heirloom_of_hyperborea.weakness_slot")
+                        "tooltip.goetyarkham.wendys_amulet.weakness_slot")
         );
         SignatureWeaknessTooltipHelper.append(
-                tooltip, "item.goetyarkham.dark_memory");
+                tooltip, "item.goetyarkham.abandoned_and_alone");
     }
 }

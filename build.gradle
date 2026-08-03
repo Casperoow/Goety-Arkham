@@ -327,6 +327,22 @@ tasks.register('curioSlotsSelfTest', JavaExec) {
     mainClass = 'com.casper.goetyarkham.curios.CurioSlotDefinitionsSelfTest'
 }
 
+tasks.register('lonelinessSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs deterministic tests for the Loneliness data model, settlement, and packet codec.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.loneliness.LonelinessSelfTest'
+}
+
+tasks.register('signatureWeaknessTooltipSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs deterministic tests for the shared signature-weakness Shift tooltip helper.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.item.SignatureWeaknessTooltipHelperSelfTest'
+}
+
 tasks.register('prepareGameTestStructures', Copy) {
     group = 'verification'
     description = 'Copies source-controlled SNBT templates into the Forge GameTest directory.'
@@ -344,4 +360,6 @@ tasks.named('check').configure {
     dependsOn tasks.named('chaosBagSelfTest')
     dependsOn tasks.named('youngDeepOneAttackSelfTest')
     dependsOn tasks.named('curioSlotsSelfTest')
+    dependsOn tasks.named('lonelinessSelfTest')
+    dependsOn tasks.named('signatureWeaknessTooltipSelfTest')
 }

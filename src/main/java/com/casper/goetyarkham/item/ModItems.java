@@ -47,6 +47,12 @@ public final class ModItems {
     public static final RegistryObject<RabbitFootItem> RABBIT_FOOT =
             ITEMS.register("rabbit_foot", RabbitFootItem::new);
 
+    public static final RegistryObject<WendysAmuletItem> WENDYS_AMULET =
+            ITEMS.register("wendys_amulet", WendysAmuletItem::new);
+
+    public static final RegistryObject<AbandonedAndAloneItem> ABANDONED_AND_ALONE =
+            ITEMS.register("abandoned_and_alone", AbandonedAndAloneItem::new);
+
     private ModItems() {
     }
 

@@ -4,6 +4,7 @@ import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.CuriosCommand;
 import com.casper.goetyarkham.item.HeirloomOfHyperboreaService;
 import com.casper.goetyarkham.item.ModItems;
+import com.casper.goetyarkham.item.WendysAmuletService;
 import com.casper.goetyarkham.sanity.SanityService;
 import com.casper.goetyarkham.sanity.weakness.ILockedWeakness;
 import com.casper.goetyarkham.stats.EquipmentStatsService;
@@ -27,6 +28,8 @@ public final class CuriosForgeEvents {
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_HEIRLOOM_RECONCILE =
             ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_WENDYS_AMULET_RECONCILE =
+            ConcurrentHashMap.newKeySet();
 
     private CuriosForgeEvents() {
     }
@@ -42,6 +45,7 @@ public final class CuriosForgeEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             DIRTY_EQUIPMENT.add(player.getUUID());
             handleHeirloomTransition(player, event);
+            handleWendysAmuletTransition(player, event);
         }
     }
 
@@ -66,6 +70,9 @@ public final class CuriosForgeEvents {
         if (PENDING_HEIRLOOM_RECONCILE.remove(player.getUUID())) {
             HeirloomOfHyperboreaService.reconcile(player);
         }
+        if (PENDING_WENDYS_AMULET_RECONCILE.remove(player.getUUID())) {
+            WendysAmuletService.reconcile(player);
+        }
         if (!DIRTY_EQUIPMENT.remove(player.getUUID())) {
             return;
         }
@@ -79,6 +86,7 @@ public final class CuriosForgeEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             DIRTY_EQUIPMENT.remove(player.getUUID());
             PENDING_HEIRLOOM_RECONCILE.remove(player.getUUID());
+            PENDING_WENDYS_AMULET_RECONCILE.remove(player.getUUID());
         }
     }
 
@@ -102,12 +110,42 @@ public final class CuriosForgeEvents {
     public static void clonePlayer(PlayerEvent.Clone event) {
         HeirloomOfHyperboreaService.copyPersistentState(
                 event.getOriginal(), event.getEntity());
+        WendysAmuletService.copyPersistentState(
+                event.getOriginal(), event.getEntity());
         queueReconcile(event);
     }
 
     private static void queueReconcile(PlayerEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PENDING_HEIRLOOM_RECONCILE.add(player.getUUID());
+            PENDING_WENDYS_AMULET_RECONCILE.add(player.getUUID());
+        }
+    }
+
+    private static void handleWendysAmuletTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.CHARM.equals(event.getIdentifier())) {
+            return;
+        }
+        boolean from = event.getFrom().is(
+                ModItems.WENDYS_AMULET.get());
+        boolean to = event.getTo().is(
+                ModItems.WENDYS_AMULET.get());
+        if (!from && !to) {
+            return;
+        }
+
+        // Curios discovers the change while comparing its previous stack to
+        // the already-committed current handler contents.
+        int after = WendysAmuletService.equippedCount(player);
+        int before = after - (to ? 1 : 0) + (from ? 1 : 0);
+        if (before <= 0 && after > 0) {
+            WendysAmuletService.equipTransition(player);
+        } else if (before > 0 && after <= 0) {
+            // This occurs before Curios settles any remaining modifiers.
+            WendysAmuletService.unequipTransition(player);
+        } else {
+            PENDING_WENDYS_AMULET_RECONCILE.add(player.getUUID());
         }
     }
 
