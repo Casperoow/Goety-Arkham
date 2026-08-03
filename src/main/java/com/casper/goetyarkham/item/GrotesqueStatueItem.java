@@ -3,7 +3,6 @@ package com.casper.goetyarkham.item;
 import com.Polarice3.Goety.api.items.magic.ITotem;
 import com.casper.goetyarkham.curios.CurioSlotIds;
 import com.casper.goetyarkham.soul.SoulStorageTooltip;
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
@@ -117,11 +116,9 @@ public final class GrotesqueStatueItem extends Item implements ITotem, ICurioIte
         int souls = Math.max(0, Math.min(MAX_SOULS, ITotem.currentSouls(stack)));
         SoulStorageTooltip.append(tooltip, souls, MAX_SOULS);
         tooltip.add(Component.empty());
-        tooltip.add(Component.translatable(
-                "tooltip.goetyarkham.grotesque_statue.when_equipped")
-                .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable(
-                "tooltip.goetyarkham.grotesque_statue.effect")
-                .withStyle(ChatFormatting.GRAY));
+        CurioTooltipHelper.appendWhenWorn(
+                tooltip,
+                "tooltip.goetyarkham.grotesque_statue.effect"
+        );
     }
 }

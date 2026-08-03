@@ -304,6 +304,8 @@ public final class IllagerTreacherySelfTest {
 
     private static void mergingDeduplicationAndLock() {
         UUID ritualPlayer = UUID.randomUUID();
+        UUID firstOnlinePlayer = UUID.randomUUID();
+        UUID secondOnlinePlayer = UUID.randomUUID();
         TriggerAccumulator accumulator = new TriggerAccumulator(77L);
         accumulator.merge(TriggerRequest.daily(false));
         accumulator.merge(TriggerRequest.of(TriggerSource.RITUAL, Set.of(ritualPlayer)));
@@ -313,6 +315,17 @@ public final class IllagerTreacherySelfTest {
                 "same-tick sources were not retained");
         assertTrue(accumulator.players(TriggerSource.RITUAL).contains(ritualPlayer),
                 "trigger player was not retained");
+
+        TriggerAccumulator darkMemories = new TriggerAccumulator(78L);
+        Set<UUID> allOnline = Set.of(firstOnlinePlayer, secondOnlinePlayer);
+        darkMemories.merge(TriggerRequest.of(TriggerSource.ITEM, allOnline));
+        darkMemories.merge(TriggerRequest.of(TriggerSource.ITEM, allOnline));
+        assertTrue(darkMemories.sources().equals(Set.of(TriggerSource.ITEM)),
+                "same-tick Dark Memories did not merge into one ITEM source");
+        assertTrue(darkMemories.players(TriggerSource.ITEM).equals(allOnline),
+                "same-tick Dark Memories duplicated or lost online candidates");
+        assertTrue(TriggerSource.ITEM.isForced(),
+                "Dark Memory ITEM trigger unexpectedly uses daily probability");
 
         ExpiringDeduplicator perInstance = new ExpiringDeduplicator(8, 10L);
         for (String key : java.util.List.of(

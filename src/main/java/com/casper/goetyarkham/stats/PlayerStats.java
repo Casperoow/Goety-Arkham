@@ -59,6 +59,22 @@ final class PlayerStats implements IPlayerStats {
         return setComponent(stat, ComponentSource.EQUIPMENT, value);
     }
 
+    boolean replaceEquipment(Map<StatType, Integer> values) {
+        boolean changed = false;
+        for (StatType stat : StatType.values()) {
+            MutableStat entry = stats.get(stat);
+            int replacement = clamp(values.getOrDefault(stat, 0));
+            if (entry.equipment != replacement) {
+                entry.equipment = replacement;
+                changed = true;
+            }
+        }
+        if (changed) {
+            onChanged.run();
+        }
+        return changed;
+    }
+
     boolean setTemporary(StatType stat, int value) {
         return setComponent(stat, ComponentSource.TEMPORARY, value);
     }

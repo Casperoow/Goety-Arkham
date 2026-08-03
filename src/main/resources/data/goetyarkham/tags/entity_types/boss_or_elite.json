@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "#forge:bosses",
+    "#goety:mini_bosses",
+    "graveyard:lich"
+  ]
+}

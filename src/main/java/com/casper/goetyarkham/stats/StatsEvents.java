@@ -115,7 +115,7 @@ public final class StatsEvents {
                         System.identityHashCode(player),
                         present
                 );
-                PlayerStatsService.sync(player);
+                EquipmentStatsService.refresh(player);
             }
         }
 
@@ -130,7 +130,7 @@ public final class StatsEvents {
                         System.identityHashCode(player),
                         present
                 );
-                PlayerStatsService.sync(player);
+                EquipmentStatsService.refresh(player);
             }
         }
 
@@ -147,7 +147,7 @@ public final class StatsEvents {
                         event.getTo().location(),
                         present
                 );
-                PlayerStatsService.sync(player);
+                EquipmentStatsService.refresh(player);
             }
         }
 

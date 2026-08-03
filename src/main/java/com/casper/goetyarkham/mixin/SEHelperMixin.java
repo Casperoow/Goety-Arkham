@@ -2,6 +2,7 @@ package com.casper.goetyarkham.mixin;
 
 import com.Polarice3.Goety.utils.SEHelper;
 import com.casper.goetyarkham.soul.SoulEnergyPoolService;
+import com.casper.goetyarkham.soul.FocusCastSoulSpendTracker;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
@@ -58,7 +59,10 @@ public abstract class SEHelperMixin {
     private static void goetyarkham$decreaseSouls(
             Player player, int amount, CallbackInfo callback) {
         if (player instanceof ServerPlayer serverPlayer) {
-            SoulEnergyPoolService.removeSoulFromGoety(serverPlayer, amount);
+            int actualSpent = SoulEnergyPoolService.removeSoulFromGoety(
+                    serverPlayer, amount);
+            FocusCastSoulSpendTracker.recordActualSpend(
+                    serverPlayer, actualSpent);
             callback.cancel();
         }
     }

@@ -1,0 +1,78 @@
+package com.casper.goetyarkham.stats;
+
+import com.casper.goetyarkham.soul.SoulEnergyPoolService;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import top.theillusivec4.curios.api.CuriosApi;
+import top.theillusivec4.curios.api.SlotContext;
+import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
+
+import java.util.EnumMap;
+import java.util.Map;
+
+/** Rebuilds the transient Player Stats equipment phase from equipped Curios. */
+public final class EquipmentStatsService {
+    private EquipmentStatsService() {
+    }
+
+    public static boolean refresh(ServerPlayer player) {
+        EnumMap<StatType, Integer> totals = emptyTotals();
+        CuriosApi.getCuriosInventory(player).resolve().ifPresent(inventory ->
+                inventory.getCurios().forEach((slotId, handler) ->
+                        addContributions(player, slotId, handler, totals)));
+
+        boolean changed = PlayerStatsService.replaceEquipment(player, totals);
+        if (!changed) {
+            // Lifecycle refreshes still need to synchronize the current values.
+            PlayerStatsService.sync(player);
+        }
+        SoulEnergyPoolService.refresh(player);
+        return changed;
+    }
+
+    static EnumMap<StatType, Integer> emptyTotals() {
+        EnumMap<StatType, Integer> totals = new EnumMap<>(StatType.class);
+        for (StatType stat : StatType.values()) {
+            totals.put(stat, 0);
+        }
+        return totals;
+    }
+
+    static void addContribution(
+            Map<StatType, Integer> totals,
+            EquipmentStatModifier modifier,
+            SlotContext slotContext,
+            ItemStack stack) {
+        for (StatType stat : StatType.values()) {
+            int contribution = modifier.getEquipmentStatModifier(
+                    stat, slotContext, stack);
+            totals.compute(stat, (ignored, current) -> saturatingAdd(
+                    current == null ? 0 : current,
+                    contribution));
+        }
+    }
+
+    private static void addContributions(
+            ServerPlayer player,
+            String slotId,
+            ICurioStacksHandler handler,
+            Map<StatType, Integer> totals) {
+        for (int slot = 0; slot < handler.getStacks().getSlots(); slot++) {
+            ItemStack stack = handler.getStacks().getStackInSlot(slot);
+            if (stack.isEmpty()
+                    || !(stack.getItem() instanceof EquipmentStatModifier modifier)) {
+                continue;
+            }
+            addContribution(
+                    totals,
+                    modifier,
+                    new SlotContext(slotId, player, slot, false, true),
+                    stack);
+        }
+    }
+
+    private static int saturatingAdd(int left, int right) {
+        long result = (long) left + right;
+        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, result));
+    }
+}

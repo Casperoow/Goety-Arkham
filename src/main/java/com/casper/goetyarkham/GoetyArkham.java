@@ -5,6 +5,7 @@ import com.casper.goetyarkham.effect.ModEffects;
 import com.casper.goetyarkham.entity.ModEntities;
 import com.casper.goetyarkham.entity.ModEntityAttributes;
 import com.casper.goetyarkham.item.ModItems;
+import com.casper.goetyarkham.item.ModCreativeModeTabs;
 import com.casper.goetyarkham.illager_treachery.config.IllagerTreacheryConfig;
 import com.casper.goetyarkham.illager_treachery.encounter.formal.BuiltInFormalEncounters;
 import com.casper.goetyarkham.illager_treachery.encounter.type.BuiltInEncounterTypes;
@@ -41,6 +42,7 @@ public final class GoetyArkham {
         ModEffects.register(modEventBus);
         ModEntities.register(modEventBus);
         ModItems.register(modEventBus);
+        ModCreativeModeTabs.register(modEventBus);
         ModEntityAttributes.register(modEventBus);
         ModNetwork.register();
     }

@@ -3,16 +3,30 @@ package com.casper.goetyarkham.curios;
 import com.Polarice3.Goety.api.items.magic.ITotem;
 import com.mojang.authlib.GameProfile;
 import com.casper.goetyarkham.GoetyArkham;
+import com.casper.goetyarkham.attribute.ModAttributes;
 import com.casper.goetyarkham.illager_treachery.GrotesqueStatueProtectionService;
 import com.casper.goetyarkham.item.GrotesqueStatueItem;
+import com.casper.goetyarkham.item.HolyRosaryItem;
+import com.casper.goetyarkham.item.CurioTooltipHelper;
+import com.casper.goetyarkham.item.DiscOfItzamnaEffectService;
+import com.casper.goetyarkham.item.DiscOfItzamnaItem;
+import com.casper.goetyarkham.item.ModCreativeModeTabs;
 import com.casper.goetyarkham.item.ModItems;
+import com.casper.goetyarkham.sanity.SanityChangeCause;
+import com.casper.goetyarkham.sanity.SanityMath;
+import com.casper.goetyarkham.sanity.SanityService;
 import com.casper.goetyarkham.soul.SoulEnergyPoolService;
 import com.casper.goetyarkham.soul.SoulStorageTooltip;
+import com.casper.goetyarkham.stats.EquipmentStatsService;
+import com.casper.goetyarkham.stats.PlayerStatsService;
+import com.casper.goetyarkham.stats.StatType;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,9 +35,14 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.CuriosApi;
@@ -34,6 +53,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @GameTestHolder(GoetyArkham.MOD_ID)
@@ -102,6 +122,9 @@ public final class CurioSlotGameTests {
             }
         }
         verifyGrotesqueStatueRuntimeWiring(helper);
+        verifyDiscRuntimeWiring(helper);
+        verifyHolyRosaryRuntimeWiring(helper);
+        verifyCreativeTabContents(helper);
         helper.succeed();
     }
 
@@ -247,6 +270,242 @@ public final class CurioSlotGameTests {
         helper.assertTrue(!curio.canEquip(new SlotContext(
                         CurioSlotIds.NECKLACE, wearer, 0, false, true)),
                 "Grotesque Statue accepted the necklace slot");
+    }
+
+    private static void verifyDiscRuntimeWiring(GameTestHelper helper) {
+        ResourceLocation expectedId = ResourceLocation.fromNamespaceAndPath(
+                GoetyArkham.MOD_ID, "disc_of_itzamna");
+        helper.assertTrue(expectedId.equals(ForgeRegistries.ITEMS.getKey(
+                        ModItems.DISC_OF_ITZAMNA.get())),
+                "Disc of Itzamna registry ID mismatch");
+
+        ItemStack stack = new ItemStack(ModItems.DISC_OF_ITZAMNA.get());
+        DiscOfItzamnaItem item = ModItems.DISC_OF_ITZAMNA.get();
+        helper.assertTrue(stack.getMaxDamage()
+                        == DiscOfItzamnaItem.MAX_DURABILITY,
+                "Disc of Itzamna maximum durability mismatch");
+        helper.assertTrue(stack.getMaxStackSize() == 1,
+                "Disc of Itzamna must not stack");
+        helper.assertTrue(Enchantments.UNBREAKING.canEnchant(stack),
+                "Disc of Itzamna rejected the vanilla Unbreaking enchantment");
+
+        List<Component> tooltip = new ArrayList<>();
+        item.appendHoverText(stack, helper.getLevel(), tooltip,
+                net.minecraft.world.item.TooltipFlag.NORMAL);
+        helper.assertTrue(tooltip.size() == 2,
+                "Disc of Itzamna tooltip line count mismatch");
+        helper.assertTrue(tooltip.get(0).getContents()
+                        instanceof TranslatableContents heading
+                        && CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY
+                        .equals(heading.getKey()),
+                "Disc of Itzamna does not use the shared when-worn heading");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.YELLOW)
+                        .equals(tooltip.get(0).getStyle().getColor()),
+                "Disc of Itzamna when-worn heading is not yellow");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(1).getStyle().getColor()),
+                "Disc of Itzamna effect body is not gray");
+
+        Map<String, ISlotType> acceptedSlots =
+                CuriosApi.getItemStackSlots(stack, helper.getLevel());
+        helper.assertTrue(acceptedSlots.keySet().equals(Set.of(
+                        CurioSlotIds.CHARM)),
+                "Disc of Itzamna item tag must expose only the charm slot");
+
+        ICurio curio = CuriosApi.getCurio(stack).resolve().orElse(null);
+        helper.assertTrue(curio != null,
+                "Disc of Itzamna Curios capability was not registered");
+        ServerPlayer wearer = new PoolTestPlayer(
+                helper.getLevel(), "disc-slot-wearer");
+        try {
+            helper.assertTrue(curio.canEquip(new SlotContext(
+                            CurioSlotIds.CHARM, wearer, 0, false, true)),
+                    "Disc of Itzamna rejected the charm slot");
+            helper.assertTrue(!curio.canEquip(new SlotContext(
+                            CurioSlotIds.NECKLACE, wearer, 0, false, true)),
+                    "Disc of Itzamna accepted the necklace slot");
+
+            wearer.getInventory().setItem(0, stack.copy());
+            helper.assertTrue(
+                    !DiscOfItzamnaEffectService.isWearingActiveDisc(wearer),
+                    "Inventory-only Disc of Itzamna incorrectly activated");
+
+            var charm = CuriosApi.getCuriosInventory(wearer).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(
+                            CurioSlotIds.CHARM))
+                    .orElse(null);
+            helper.assertTrue(charm != null,
+                    "Disc test wearer is missing the charm Curios handler");
+            charm.getStacks().setStackInSlot(0, stack.copy());
+            helper.assertTrue(
+                    DiscOfItzamnaEffectService.isWearingActiveDisc(wearer),
+                    "Charm-equipped Disc of Itzamna did not activate");
+        } finally {
+            wearer.discard();
+        }
+    }
+
+    private static void verifyHolyRosaryRuntimeWiring(GameTestHelper helper) {
+        ResourceLocation expectedId = ResourceLocation.fromNamespaceAndPath(
+                GoetyArkham.MOD_ID, "holy_rosary");
+        helper.assertTrue(expectedId.equals(ForgeRegistries.ITEMS.getKey(
+                        ModItems.HOLY_ROSARY.get())),
+                "Holy Rosary registry ID mismatch");
+
+        HolyRosaryItem item = ModItems.HOLY_ROSARY.get();
+        ItemStack stack = new ItemStack(item);
+        helper.assertTrue(stack.getMaxStackSize() == 1,
+                "Holy Rosary must not stack");
+
+        List<Component> tooltip = new ArrayList<>();
+        item.appendHoverText(stack, helper.getLevel(), tooltip,
+                net.minecraft.world.item.TooltipFlag.NORMAL);
+        helper.assertTrue(tooltip.size() == 3,
+                "Holy Rosary tooltip line count mismatch");
+        helper.assertTrue(tooltip.get(0).getContents()
+                        instanceof TranslatableContents heading
+                        && CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY
+                        .equals(heading.getKey()),
+                "Holy Rosary does not use the shared when-worn heading");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.YELLOW)
+                        .equals(tooltip.get(0).getStyle().getColor()),
+                "Holy Rosary when-worn heading is not yellow");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(1).getStyle().getColor())
+                        && TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(2).getStyle().getColor()),
+                "Holy Rosary effect lines are not gray");
+        helper.assertTrue("When worn:".equals(tooltip.get(0).getString())
+                        && "+2 Max Sanity".equals(tooltip.get(1).getString())
+                        && "+1 Will".equals(tooltip.get(2).getString()),
+                "Holy Rosary English tooltip text mismatch");
+
+        Map<String, ISlotType> acceptedSlots =
+                CuriosApi.getItemStackSlots(stack, helper.getLevel());
+        helper.assertTrue(acceptedSlots.keySet().equals(Set.of(
+                        CurioSlotIds.HANDS)),
+                "Holy Rosary item tag must expose only the hands slot");
+
+        ServerPlayer wearer = new PoolTestPlayer(
+                helper.getLevel(), "holy-rosary-wearer");
+        helper.getLevel().players().add(wearer);
+        try {
+            ICurio curio = CuriosApi.getCurio(stack).resolve().orElse(null);
+            helper.assertTrue(curio != null,
+                    "Holy Rosary Curios capability was not registered");
+            SlotContext firstHand = new SlotContext(
+                    CurioSlotIds.HANDS, wearer, 0, false, true);
+            SlotContext secondHand = new SlotContext(
+                    CurioSlotIds.HANDS, wearer, 1, false, true);
+            helper.assertTrue(curio.canEquip(firstHand),
+                    "Holy Rosary rejected the hands slot");
+            helper.assertTrue(!curio.canEquip(new SlotContext(
+                            CurioSlotIds.NECKLACE, wearer, 0, false, true)),
+                    "Holy Rosary accepted a non-hands slot");
+
+            var firstModifiers = curio.getAttributeModifiers(
+                    firstHand, UUID.randomUUID());
+            var secondModifiers = curio.getAttributeModifiers(
+                    secondHand, UUID.randomUUID());
+            AttributeModifier firstSanity = firstModifiers.get(
+                    ModAttributes.MAX_SANITY.get()).stream().findFirst().orElse(null);
+            AttributeModifier secondSanity = secondModifiers.get(
+                    ModAttributes.MAX_SANITY.get()).stream().findFirst().orElse(null);
+            helper.assertTrue(firstSanity != null
+                            && firstSanity.getAmount() == HolyRosaryItem.MAX_SANITY_BONUS
+                            && firstSanity.getOperation()
+                            == AttributeModifier.Operation.ADDITION,
+                    "Holy Rosary maximum-sanity modifier mismatch");
+            helper.assertTrue(secondSanity != null
+                            && !firstSanity.getId().equals(secondSanity.getId()),
+                    "Two hands slots do not receive distinct sanity modifier UUIDs");
+
+            var hands = CuriosApi.getCuriosInventory(wearer).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(
+                            CurioSlotIds.HANDS))
+                    .orElse(null);
+            helper.assertTrue(hands != null,
+                    "Holy Rosary test wearer is missing the hands handler");
+            int baseWill = PlayerStatsService.get(wearer)
+                    .map(stats -> stats.get(StatType.WILLPOWER).base())
+                    .orElse(0);
+            double baseMaximum = SanityService.getMaximumAttributeValue(wearer);
+
+            hands.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.WILLPOWER) == baseWill + 1,
+                    "One Holy Rosary did not add exactly one final Will");
+            helper.assertTrue(SanityService.getMaximumAttributeValue(wearer)
+                            == baseMaximum + 2.0D,
+                    "One Holy Rosary did not add exactly two maximum sanity");
+            helper.assertTrue(SanityService.addPermanentMaxLoss(
+                            wearer, 3, SanityChangeCause.COMMAND) == 3,
+                    "Holy Rosary test could not apply permanent sanity loss");
+            helper.assertTrue(SanityService.getMaximumSanity(wearer)
+                            == SanityMath.maximumSanity(
+                            baseMaximum + HolyRosaryItem.MAX_SANITY_BONUS, 3),
+                    "Holy Rosary maximum bonus bypassed permanent sanity loss");
+
+            hands.getStacks().setStackInSlot(1, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.WILLPOWER) == baseWill + 2,
+                    "Two Holy Rosaries did not stack final Will");
+            helper.assertTrue(SanityService.getMaximumAttributeValue(wearer)
+                            == baseMaximum + 4.0D,
+                    "Two Holy Rosaries did not stack maximum sanity");
+            EquipmentStatsService.refresh(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.WILLPOWER) == baseWill + 2,
+                    "Repeated equipment refresh duplicated Will");
+
+            int twoRosaryMaximum = SanityService.getMaximumSanity(wearer);
+            SanityService.setSanity(
+                    wearer, twoRosaryMaximum, SanityChangeCause.COMMAND);
+            hands.getStacks().setStackInSlot(1, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.WILLPOWER) == baseWill + 1,
+                    "Unequipping one Holy Rosary did not remove one final Will");
+            helper.assertTrue(SanityService.getMaximumAttributeValue(wearer)
+                            == baseMaximum + 2.0D,
+                    "Unequipping one Holy Rosary did not remove two maximum sanity");
+            helper.assertTrue(SanityService.getCurrentSanity(wearer)
+                            <= SanityService.getMaximumSanity(wearer),
+                    "Current sanity exceeded the lowered effective maximum");
+            helper.assertTrue(SanityService.getPermanentMaxLoss(wearer) == 3,
+                    "Holy Rosary changed permanent sanity loss");
+            helper.assertTrue(PlayerStatsService.get(wearer)
+                            .map(stats -> stats.get(StatType.WILLPOWER).base())
+                            .orElse(0) == baseWill,
+                    "Holy Rosary changed stored base Will");
+        } finally {
+            helper.getLevel().players().remove(wearer);
+            wearer.discard();
+        }
+    }
+
+    private static void settleCurioChange(ServerPlayer player) {
+        MinecraftForge.EVENT_BUS.post(new LivingEvent.LivingTickEvent(player));
+    }
+
+    private static void verifyCreativeTabContents(GameTestHelper helper) {
+        CreativeModeTabs.tryRebuildTabContents(
+                helper.getLevel().enabledFeatures(),
+                false,
+                helper.getLevel().registryAccess()
+        );
+        Set<net.minecraft.world.item.Item> displayed =
+                ModCreativeModeTabs.GOETY_ARKHAM.get().getDisplayItems().stream()
+                        .map(ItemStack::getItem)
+                        .collect(Collectors.toSet());
+        ModItems.ITEMS.getEntries().forEach(entry -> helper.assertTrue(
+                displayed.contains(entry.get()),
+                "Goety: Arkham creative tab is missing " + entry.getId()));
+        helper.assertTrue(ModCreativeModeTabs.GOETY_ARKHAM.get()
+                        .getIconItem().is(ModItems.DISC_OF_ITZAMNA.get()),
+                "Goety: Arkham creative tab icon is not the Disc of Itzamna");
     }
 
     private static void verifyGrotesqueStatueSoulBar(

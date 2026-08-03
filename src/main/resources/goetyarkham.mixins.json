@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "CakeBlockMixin",
+    "CurioStacksHandlerMixin",
     "CursedCageBlockEntityMixin",
+    "DarkWandFocusSpendMixin",
     "GoetyIllagerAssaultMixin",
     "GoetyRitualCompletionMixin",
     "RaidCreationMixin",

@@ -8,6 +8,7 @@ import com.casper.goetyarkham.strength.StrengthEffects;
 import com.casper.goetyarkham.willpower.WillpowerEffects;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.Map;
 import java.util.Optional;
 
 public final class PlayerStatsService {
@@ -58,6 +59,12 @@ public final class PlayerStatsService {
      */
     public static boolean setEquipment(ServerPlayer player, StatType stat, int value) {
         return mutable(player).map(data -> data.setEquipment(stat, value)).orElse(false);
+    }
+
+    /** Atomically replaces every transient equipment component and syncs once. */
+    public static boolean replaceEquipment(
+            ServerPlayer player, Map<StatType, Integer> values) {
+        return mutable(player).map(data -> data.replaceEquipment(values)).orElse(false);
     }
 
     public static boolean setTemporary(ServerPlayer player, StatType stat, int value) {

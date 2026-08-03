@@ -11,6 +11,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import top.theillusivec4.curios.api.CuriosApi;
+import top.theillusivec4.curios.api.type.capability.ICurioItem;
 
 public final class ModItems {
     public static final DeferredRegister<Item> ITEMS =
@@ -28,6 +30,20 @@ public final class ModItems {
     public static final RegistryObject<GrotesqueStatueItem> GROTESQUE_STATUE =
             ITEMS.register("grotesque_statue", GrotesqueStatueItem::new);
 
+    public static final RegistryObject<DiscOfItzamnaItem> DISC_OF_ITZAMNA =
+            ITEMS.register("disc_of_itzamna", DiscOfItzamnaItem::new);
+
+    public static final RegistryObject<HolyRosaryItem> HOLY_ROSARY =
+            ITEMS.register("holy_rosary", HolyRosaryItem::new);
+
+    public static final RegistryObject<HeirloomOfHyperboreaItem>
+            HEIRLOOM_OF_HYPERBOREA = ITEMS.register(
+                    "heirloom_of_hyperborea",
+                    HeirloomOfHyperboreaItem::new);
+
+    public static final RegistryObject<DarkMemoryItem> DARK_MEMORY =
+            ITEMS.register("dark_memory", DarkMemoryItem::new);
+
     private ModItems() {
     }
 
@@ -38,8 +54,12 @@ public final class ModItems {
     }
 
     private static void commonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> top.theillusivec4.curios.api.CuriosApi.registerCurio(
-                GROTESQUE_STATUE.get(), GROTESQUE_STATUE.get()));
+        event.enqueueWork(() -> ITEMS.getEntries().forEach(entry -> {
+            Item item = entry.get();
+            if (item instanceof ICurioItem curioItem) {
+                CuriosApi.registerCurio(item, curioItem);
+            }
+        }));
     }
 
     private static void addCreativeTabItems(

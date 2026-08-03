@@ -1,6 +1,7 @@
 package com.casper.goetyarkham.curios;
 
 import com.casper.goetyarkham.command.CuriosCommand;
+import com.casper.goetyarkham.item.CurioTooltipHelper;
 import com.mojang.brigadier.CommandDispatcher;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -13,9 +14,13 @@ import java.nio.charset.StandardCharsets;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 
 /**
  * Verifies that the source-controlled Curios data matches the stable Java slot catalog.
@@ -46,7 +51,12 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyCatalog();
         verifySlotDefinitions();
         verifyPlayerBinding();
-        verifyGrotesqueStatueTag();
+        verifyCharmItemTag();
+        verifyHandsItemTag();
+        verifyHeirloomItemTags();
+        verifyBossOrEliteTag();
+        verifyItemResources();
+        verifySharedTooltipFormatting();
         verifyGoetySoulTooltip();
         verifyCommandTree();
         verifyLanguage("en_us", ENGLISH_NAMES);
@@ -87,17 +97,170 @@ public final class CurioSlotDefinitionsSelfTest {
         assertEquals(new HashSet<>(CurioSlotIds.ALL), uniqueSlots, "player binding covers the slot catalog");
     }
 
-    private static void verifyGrotesqueStatueTag() throws IOException {
+    private static void verifyCharmItemTag() throws IOException {
         JsonObject charm = readJson("/data/curios/tags/items/charm.json");
         assertFalse(charm.get("replace").getAsBoolean(),
                 "charm item tag must merge without replace");
         JsonArray values = charm.getAsJsonArray("values");
-        assertEquals(1, values.size(), "Grotesque Statue Curios tag entry count");
-        assertEquals("goetyarkham:grotesque_statue", values.get(0).getAsString(),
-                "Grotesque Statue is tagged for charm");
+        Set<String> entries = new HashSet<>();
+        values.forEach(element -> entries.add(element.getAsString()));
+        assertEquals(Set.of(
+                        "goetyarkham:grotesque_statue",
+                        "goetyarkham:disc_of_itzamna"
+                ),
+                entries,
+                "Goety: Arkham charm item tag entries");
         assertResourceValueAbsent(
                 "data/curios/tags/items/necklace.json",
                 "goetyarkham:grotesque_statue");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/necklace.json",
+                "goetyarkham:disc_of_itzamna");
+    }
+
+    private static void verifyHandsItemTag() throws IOException {
+        JsonObject hands = readJson("/data/curios/tags/items/hands.json");
+        assertFalse(hands.get("replace").getAsBoolean(),
+                "hands item tag must merge without replace");
+        JsonArray values = hands.getAsJsonArray("values");
+        assertEquals(1, values.size(), "Holy Rosary hands tag entry count");
+        assertEquals("goetyarkham:holy_rosary", values.get(0).getAsString(),
+                "Holy Rosary is tagged for hands");
+        for (String slotId : CurioSlotIds.ALL) {
+            if (!CurioSlotIds.HANDS.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:holy_rosary");
+            }
+        }
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:holy_rosary");
+    }
+
+    private static void verifyHeirloomItemTags() throws IOException {
+        JsonObject necklace = readJson(
+                "/data/curios/tags/items/necklace.json");
+        assertFalse(necklace.get("replace").getAsBoolean(),
+                "necklace item tag must merge without replace");
+        assertEquals(List.of("goetyarkham:heirloom_of_hyperborea"),
+                necklace.getAsJsonArray("values").asList().stream()
+                        .map(element -> element.getAsString()).toList(),
+                "Heirloom necklace tag entries");
+
+        JsonObject weakness = readJson(
+                "/data/curios/tags/items/weakness.json");
+        assertFalse(weakness.get("replace").getAsBoolean(),
+                "weakness item tag must merge without replace");
+        assertEquals(List.of("goetyarkham:dark_memory"),
+                weakness.getAsJsonArray("values").asList().stream()
+                        .map(element -> element.getAsString()).toList(),
+                "Dark Memory weakness tag entries");
+
+        for (String slotId : CurioSlotIds.ALL) {
+            if (!CurioSlotIds.NECKLACE.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:heirloom_of_hyperborea");
+            }
+            if (!CurioSlotIds.WEAKNESS.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:dark_memory");
+            }
+        }
+    }
+
+    private static void verifyBossOrEliteTag() throws IOException {
+        JsonObject tag = readJson(
+                "/data/goetyarkham/tags/entity_types/boss_or_elite.json");
+        assertFalse(tag.get("replace").getAsBoolean(),
+                "boss_or_elite must permit data-pack additions");
+        Set<String> entries = new HashSet<>();
+        tag.getAsJsonArray("values")
+                .forEach(element -> entries.add(element.getAsString()));
+        assertEquals(Set.of(
+                        "#forge:bosses",
+                        "#goety:mini_bosses",
+                        "graveyard:lich"
+                ),
+                entries,
+                "boss_or_elite entries");
+    }
+
+    private static void verifyItemResources() throws IOException {
+        JsonObject discModel = readJson(
+                "/assets/goetyarkham/models/item/disc_of_itzamna.json");
+        assertEquals("goetyarkham:item/disc_of_itzamna",
+                discModel.getAsJsonObject("textures").get("layer0").getAsString(),
+                "Disc of Itzamna model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/disc_of_itzamna.png");
+        JsonObject rosaryModel = readJson(
+                "/assets/goetyarkham/models/item/holy_rosary.json");
+        assertEquals("minecraft:item/generated",
+                rosaryModel.get("parent").getAsString(),
+                "Holy Rosary model parent");
+        assertEquals("goetyarkham:item/holy_rosary",
+                rosaryModel.getAsJsonObject("textures").get("layer0").getAsString(),
+                "Holy Rosary model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/holy_rosary.png");
+
+        JsonObject heirloomModel = readJson(
+                "/assets/goetyarkham/models/item/heirloom_of_hyperborea.json");
+        assertEquals("minecraft:item/generated",
+                heirloomModel.get("parent").getAsString(),
+                "Heirloom model parent");
+        assertEquals("goetyarkham:item/heirloom_of_hyperborea",
+                heirloomModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Heirloom model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/heirloom_of_hyperborea.png");
+
+        JsonObject memoryModel = readJson(
+                "/assets/goetyarkham/models/item/dark_memory.json");
+        assertEquals("minecraft:item/generated",
+                memoryModel.get("parent").getAsString(),
+                "Dark Memory model parent");
+        assertEquals("goetyarkham:item/dark_memory",
+                memoryModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Dark Memory model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/dark_memory.png");
+    }
+
+    private static void verifySharedTooltipFormatting() {
+        List<Component> tooltip = new java.util.ArrayList<>();
+        CurioTooltipHelper.appendWhenWorn(tooltip, "test.effect");
+        assertEquals(2, tooltip.size(), "shared Curio tooltip line count");
+        assertEquals(
+                TextColor.fromLegacyFormat(ChatFormatting.YELLOW),
+                tooltip.get(0).getStyle().getColor(),
+                "shared when-worn heading color");
+        assertEquals(
+                TextColor.fromLegacyFormat(ChatFormatting.GRAY),
+                tooltip.get(1).getStyle().getColor(),
+                "shared Curio effect body color");
+
+        tooltip.clear();
+        CurioTooltipHelper.appendWhenWorn(
+                tooltip,
+                CurioTooltipHelper.attributeBonus(
+                        2, "attribute.name.goetyarkham.max_sanity"),
+                CurioTooltipHelper.attributeBonus(
+                        1, "attribute.name.goetyarkham.willpower"));
+        assertEquals(3, tooltip.size(), "multi-effect Curio tooltip line count");
+        assertEquals(
+                TextColor.fromLegacyFormat(ChatFormatting.YELLOW),
+                tooltip.get(0).getStyle().getColor(),
+                "multi-effect when-worn heading color");
+        assertEquals(
+                TextColor.fromLegacyFormat(ChatFormatting.GRAY),
+                tooltip.get(2).getStyle().getColor(),
+                "multi-effect Curio body color");
     }
 
     private static void verifyLanguage(String language, Map<String, String> expectedNames)
@@ -111,6 +274,47 @@ public final class CurioSlotDefinitionsSelfTest {
                 language + " translation for " + slotId
         ));
         if ("zh_cn".equals(language)) {
+            assertEquals("诡厄巫法：阿卡姆",
+                    translations.get("creativetab.goetyarkham.goety_arkham")
+                            .getAsString(),
+                    "Chinese creative tab name");
+            assertEquals("佩戴时：",
+                    translations.get(CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY)
+                            .getAsString(),
+                    "Chinese shared when-worn heading");
+            assertEquals("最大理智",
+                    translations.get("attribute.name.goetyarkham.max_sanity")
+                            .getAsString(),
+                    "Chinese Max Sanity attribute name");
+            assertEquals("意志",
+                    translations.get("attribute.name.goetyarkham.willpower")
+                            .getAsString(),
+                    "Chinese Will attribute name");
+            assertEquals("+%1$s %2$s",
+                    translations.get(CurioTooltipHelper.ATTRIBUTE_BONUS_TRANSLATION_KEY)
+                            .getAsString(),
+                    "Chinese shared attribute bonus format");
+            assertEquals("圣玫瑰珠",
+                    translations.get("item.goetyarkham.holy_rosary").getAsString(),
+                    "Chinese Holy Rosary name");
+            assertEquals("+2 最大理智",
+                    attributeBonusText(
+                            translations, 2,
+                            "attribute.name.goetyarkham.max_sanity"),
+                    "Chinese Holy Rosary maximum-sanity tooltip");
+            assertEquals("+1 意志",
+                    attributeBonusText(
+                            translations, 1,
+                            "attribute.name.goetyarkham.willpower"),
+                    "Chinese Holy Rosary Will tooltip");
+            assertEquals("伊察姆纳圆盘",
+                    translations.get("item.goetyarkham.disc_of_itzamna")
+                            .getAsString(),
+                    "Chinese Disc of Itzamna name");
+            assertEquals("半径10格内的所有非BOSS敌人会主动远离你",
+                    translations.get("tooltip.goetyarkham.disc_of_itzamna.effect")
+                            .getAsString(),
+                    "Chinese Disc of Itzamna tooltip");
             assertEquals(
                     "当你将要发生灾厄诡计时，从灵魂池消耗1000灵魂能量，免疫该次诡计。",
                     translations.get("tooltip.goetyarkham.grotesque_statue.effect")
@@ -121,7 +325,81 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("message.goetyarkham.grotesque_statue.protected")
                             .getAsString(),
                     "Chinese Grotesque Statue pool-payment message");
+            assertEquals("希波利尔传家宝",
+                    translations.get("item.goetyarkham.heirloom_of_hyperborea")
+                            .getAsString(),
+                    "Chinese Heirloom name");
+            assertEquals(
+                    "你使用聚晶施法时，每实际消耗1点灵魂能量，对身边的所有敌人造成1点伤害",
+                    translations.get(
+                            "tooltip.goetyarkham.heirloom_of_hyperborea.damage")
+                            .getAsString(),
+                    "Chinese Heirloom damage tooltip");
+            assertEquals("+1弱点栏位",
+                    translations.get(
+                            "tooltip.goetyarkham.heirloom_of_hyperborea.weakness_slot")
+                            .getAsString(),
+                    "Chinese Heirloom slot tooltip");
+            assertEquals("黑暗回忆",
+                    translations.get("item.goetyarkham.dark_memory").getAsString(),
+                    "Chinese Dark Memory name");
+            assertEquals("按住 Shift 查看弱点效果",
+                    translations.get("tooltip.goetyarkham.dark_memory.hold_shift")
+                            .getAsString(),
+                    "Chinese Dark Memory Shift hint");
+            assertEquals("所有人立即触发一次灾厄诡计。",
+                    translations.get(
+                            "tooltip.goetyarkham.dark_memory.effect.treachery")
+                            .getAsString(),
+                    "Chinese Dark Memory treachery text");
+            assertEquals("失去2点理智",
+                    translations.get(
+                            "tooltip.goetyarkham.dark_memory.effect.sanity")
+                            .getAsString(),
+                    "Chinese Dark Memory sanity text");
         } else if ("en_us".equals(language)) {
+            assertEquals("Goety: Arkham",
+                    translations.get("creativetab.goetyarkham.goety_arkham")
+                            .getAsString(),
+                    "English creative tab name");
+            assertEquals("When worn:",
+                    translations.get(CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY)
+                            .getAsString(),
+                    "English shared when-worn heading");
+            assertEquals("Max Sanity",
+                    translations.get("attribute.name.goetyarkham.max_sanity")
+                            .getAsString(),
+                    "English Max Sanity attribute name");
+            assertEquals("Will",
+                    translations.get("attribute.name.goetyarkham.willpower")
+                            .getAsString(),
+                    "English Will attribute name");
+            assertEquals("+%1$s %2$s",
+                    translations.get(CurioTooltipHelper.ATTRIBUTE_BONUS_TRANSLATION_KEY)
+                            .getAsString(),
+                    "English shared attribute bonus format");
+            assertEquals("Holy Rosary",
+                    translations.get("item.goetyarkham.holy_rosary").getAsString(),
+                    "English Holy Rosary name");
+            assertEquals("+2 Max Sanity",
+                    attributeBonusText(
+                            translations, 2,
+                            "attribute.name.goetyarkham.max_sanity"),
+                    "English Holy Rosary maximum-sanity tooltip");
+            assertEquals("+1 Will",
+                    attributeBonusText(
+                            translations, 1,
+                            "attribute.name.goetyarkham.willpower"),
+                    "English Holy Rosary Will tooltip");
+            assertEquals("Disc of Itzamna",
+                    translations.get("item.goetyarkham.disc_of_itzamna")
+                            .getAsString(),
+                    "English Disc of Itzamna name");
+            assertEquals(
+                    "All non-boss enemies within a 10-block radius will actively avoid you.",
+                    translations.get("tooltip.goetyarkham.disc_of_itzamna.effect")
+                            .getAsString(),
+                    "English Disc of Itzamna tooltip");
             assertEquals(
                     "When you would suffer an Illager Treachery, consume 1,000 Soul Energy from your Soul Energy Pool to become immune to that treachery.",
                     translations.get("tooltip.goetyarkham.grotesque_statue.effect")
@@ -132,6 +410,38 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("message.goetyarkham.grotesque_statue.protected")
                             .getAsString(),
                     "English Grotesque Statue pool-payment message");
+            assertEquals("Heirloom of Hyperborea",
+                    translations.get("item.goetyarkham.heirloom_of_hyperborea")
+                            .getAsString(),
+                    "English Heirloom name");
+            assertEquals(
+                    "For every 1 Soul Energy actually spent casting a focus spell, deal 1 damage to all nearby enemies.",
+                    translations.get(
+                            "tooltip.goetyarkham.heirloom_of_hyperborea.damage")
+                            .getAsString(),
+                    "English Heirloom damage tooltip");
+            assertEquals("+1 Weakness Slot",
+                    translations.get(
+                            "tooltip.goetyarkham.heirloom_of_hyperborea.weakness_slot")
+                            .getAsString(),
+                    "English Heirloom slot tooltip");
+            assertEquals("Dark Memory",
+                    translations.get("item.goetyarkham.dark_memory").getAsString(),
+                    "English Dark Memory name");
+            assertEquals("Hold Shift to view the weakness effect",
+                    translations.get("tooltip.goetyarkham.dark_memory.hold_shift")
+                            .getAsString(),
+                    "English Dark Memory Shift hint");
+            assertEquals("All players immediately trigger one Illager Treachery.",
+                    translations.get(
+                            "tooltip.goetyarkham.dark_memory.effect.treachery")
+                            .getAsString(),
+                    "English Dark Memory treachery text");
+            assertEquals("Lose 2 Sanity.",
+                    translations.get(
+                            "tooltip.goetyarkham.dark_memory.effect.sanity")
+                            .getAsString(),
+                    "English Dark Memory sanity text");
         }
     }
 
@@ -143,6 +453,14 @@ public final class CurioSlotDefinitionsSelfTest {
         assertEquals("§a灵魂能量: %d/%d§a",
                 readJson("/assets/goety/lang/zh_cn.json").get(key).getAsString(),
                 "Goety Chinese soul tooltip contract");
+    }
+
+    private static String attributeBonusText(
+            JsonObject translations, int amount, String attributeKey) {
+        return translations.get(CurioTooltipHelper.ATTRIBUTE_BONUS_TRANSLATION_KEY)
+                .getAsString()
+                .replace("%1$s", Integer.toString(amount))
+                .replace("%2$s", translations.get(attributeKey).getAsString());
     }
 
     private static void verifyCommandTree() {
@@ -163,6 +481,16 @@ public final class CurioSlotDefinitionsSelfTest {
             }
             try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
                 return JsonParser.parseReader(reader).getAsJsonObject();
+            }
+        }
+    }
+
+    private static void assertResourceExists(String resourcePath)
+            throws IOException {
+        try (InputStream stream = CurioSlotDefinitionsSelfTest.class
+                .getResourceAsStream(resourcePath)) {
+            if (stream == null || stream.read() < 0) {
+                throw new AssertionError("Missing or empty resource: " + resourcePath);
             }
         }
     }

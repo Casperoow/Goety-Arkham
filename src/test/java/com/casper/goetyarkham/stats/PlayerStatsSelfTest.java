@@ -8,7 +8,9 @@ import com.casper.goetyarkham.strength.StrengthEffectsSelfTest;
 import com.casper.goetyarkham.willpower.WillpowerEffectsSelfTest;
 
 import java.util.Optional;
+import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import top.theillusivec4.curios.api.SlotContext;
 
 /**
  * Dependency-free verification entry point for the data model. Run with:
@@ -61,6 +63,7 @@ public final class PlayerStatsSelfTest {
 
         assertCloneCopiesAllComponents(true);
         assertCloneCopiesAllComponents(false);
+        assertEquipmentRecalculation();
 
         assertTrue(cloned.reset(), "reset reports a change");
         for (StatType type : StatType.values()) {
@@ -135,6 +138,49 @@ public final class PlayerStatsSelfTest {
         replacement.setEquipment(StatType.AGILITY, originalAgility + 100);
         assertEquals(originalAgility, original.get(StatType.AGILITY).equipment(),
                 cloneType + " original is independent from replacement mutation");
+    }
+
+    private static void assertEquipmentRecalculation() {
+        PlayerStats stats = new PlayerStats();
+        AtomicInteger changes = new AtomicInteger();
+        stats.setOnChanged(changes::incrementAndGet);
+        stats.setBase(StatType.WILLPOWER, 4);
+
+        EnumMap<StatType, Integer> totals = EquipmentStatsService.emptyTotals();
+        EquipmentStatModifier plusOneWill = (stat, context, stack) ->
+                stat == StatType.WILLPOWER ? 1 : 0;
+        EquipmentStatsService.addContribution(
+                totals,
+                plusOneWill,
+                new SlotContext("hands", null, 0, false, true),
+                null);
+        EquipmentStatsService.addContribution(
+                totals,
+                plusOneWill,
+                new SlotContext("hands", null, 1, false, true),
+                null);
+
+        int changesBeforeReplacement = changes.get();
+        assertTrue(stats.replaceEquipment(totals),
+                "equipment replacement reports a change");
+        assertEquals(changesBeforeReplacement + 1, changes.get(),
+                "equipment replacement notifies atomically");
+        assertEquals(4, stats.get(StatType.WILLPOWER).base(),
+                "equipment replacement preserves base will");
+        assertEquals(2, stats.get(StatType.WILLPOWER).equipment(),
+                "two equipment modifiers stack");
+        assertEquals(6, stats.get(StatType.WILLPOWER).finalValue(),
+                "equipment contributes to final will");
+
+        EnumMap<StatType, Integer> empty = EquipmentStatsService.emptyTotals();
+        assertTrue(stats.replaceEquipment(empty),
+                "unequip replacement reports a change");
+        assertEquals(0, stats.get(StatType.WILLPOWER).equipment(),
+                "unequip removes equipment will");
+        assertEquals(4, stats.get(StatType.WILLPOWER).finalValue(),
+                "unequip restores final will without changing base");
+        assertFalse(stats.replaceEquipment(empty),
+                "repeated recomputation does not duplicate or notify");
     }
 
     private static void assertTrue(boolean value, String label) {
