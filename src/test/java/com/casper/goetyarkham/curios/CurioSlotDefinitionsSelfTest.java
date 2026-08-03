@@ -54,6 +54,8 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyPlayerBinding();
         verifyCharmItemTag();
         verifyHandsItemTag();
+        verifyBodyItemTag();
+        verifyTokenItemTag();
         verifyHeirloomItemTags();
         verifyBossOrEliteTag();
         verifyItemResources();
@@ -147,6 +149,54 @@ public final class CurioSlotDefinitionsSelfTest {
                 "goetyarkham:holy_rosary");
     }
 
+    private static void verifyBodyItemTag() throws IOException {
+        JsonObject body = readJson("/data/curios/tags/items/body.json");
+        assertFalse(body.get("replace").getAsBoolean(),
+                "body item tag must merge without replace");
+        assertEquals(List.of(
+                        "goetyarkham:leather_coat",
+                        "goetyarkham:bulletproof_vest"),
+                body.getAsJsonArray("values").asList().stream()
+                        .map(element -> element.getAsString()).toList(),
+                "Body tag entries");
+        for (String slotId : CurioSlotIds.ALL) {
+            if (!CurioSlotIds.BODY.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:leather_coat");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:bulletproof_vest");
+            }
+        }
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:leather_coat");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:bulletproof_vest");
+    }
+
+    private static void verifyTokenItemTag() throws IOException {
+        JsonObject token = readJson("/data/curios/tags/items/token.json");
+        assertFalse(token.get("replace").getAsBoolean(),
+                "token item tag must merge without replace");
+        assertEquals(List.of("goetyarkham:aquinnahs_token"),
+                token.getAsJsonArray("values").asList().stream()
+                        .map(element -> element.getAsString()).toList(),
+                "Token tag entries");
+        for (String slotId : CurioSlotIds.ALL) {
+            if (!CurioSlotIds.TOKEN.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:aquinnahs_token");
+            }
+        }
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:aquinnahs_token");
+    }
+
     private static void verifyHeirloomItemTags() throws IOException {
         JsonObject necklace = readJson(
                 "/data/curios/tags/items/necklace.json");
@@ -154,7 +204,8 @@ public final class CurioSlotDefinitionsSelfTest {
                 "necklace item tag must merge without replace");
         assertEquals(List.of(
                         "goetyarkham:heirloom_of_hyperborea",
-                        "goetyarkham:rabbit_foot"),
+                        "goetyarkham:rabbit_foot",
+                        "goetyarkham:elder_sign_amulet"),
                 necklace.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Necklace tag entries");
@@ -285,6 +336,42 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Abandoned and Alone model texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/abandoned_and_alone.png");
+
+        JsonObject leatherCoatModel = readJson(
+                "/assets/goetyarkham/models/item/leather_coat.json");
+        assertEquals("minecraft:item/generated",
+                leatherCoatModel.get("parent").getAsString(),
+                "Leather Coat model parent");
+        assertEquals("goetyarkham:item/leather_coat",
+                leatherCoatModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Leather Coat model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/leather_coat.png");
+
+        JsonObject bulletproofVestModel = readJson(
+                "/assets/goetyarkham/models/item/bulletproof_vest.json");
+        assertEquals("minecraft:item/generated",
+                bulletproofVestModel.get("parent").getAsString(),
+                "Bulletproof Vest model parent");
+        assertEquals("goetyarkham:item/bulletproof_vest",
+                bulletproofVestModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Bulletproof Vest model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/bulletproof_vest.png");
+
+        JsonObject aquinnahsTokenModel = readJson(
+                "/assets/goetyarkham/models/item/aquinnahs_token.json");
+        assertEquals("minecraft:item/generated",
+                aquinnahsTokenModel.get("parent").getAsString(),
+                "Aquinnah's Token model parent");
+        assertEquals("goetyarkham:item/aquinnahs_token",
+                aquinnahsTokenModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Aquinnah's Token model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/aquinnahs_token.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -349,6 +436,11 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get(CurioTooltipHelper.ATTRIBUTE_BONUS_TRANSLATION_KEY)
                             .getAsString(),
                     "Chinese shared attribute bonus format");
+            assertEquals("+%1$s%% %2$s",
+                    translations.get(
+                            CurioTooltipHelper.ATTRIBUTE_BONUS_PERCENT_TRANSLATION_KEY)
+                            .getAsString(),
+                    "Chinese shared percent attribute bonus format");
             assertEquals("圣玫瑰珠",
                     translations.get("item.goetyarkham.holy_rosary").getAsString(),
                     "Chinese Holy Rosary name");
@@ -432,6 +524,35 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.slot.weakness")
                             .getAsString(),
                     "Chinese weakness slot label");
+            assertEquals("栏位：胸饰",
+                    translations.get("tooltip.goetyarkham.slot.body")
+                            .getAsString(),
+                    "Chinese body slot label");
+            assertEquals("皮大衣",
+                    translations.get("item.goetyarkham.leather_coat")
+                            .getAsString(),
+                    "Chinese Leather Coat name");
+            assertEquals("防弹衣",
+                    translations.get("item.goetyarkham.bulletproof_vest")
+                            .getAsString(),
+                    "Chinese Bulletproof Vest name");
+            assertEquals("安奎娜的信物",
+                    translations.get("item.goetyarkham.aquinnahs_token")
+                            .getAsString(),
+                    "Chinese Aquinnah's Token name");
+            assertEquals("栏位：信物",
+                    translations.get("tooltip.goetyarkham.slot.token")
+                            .getAsString(),
+                    "Chinese token slot label");
+            assertEquals(
+                    "受到生物的直接攻击时，安奎娜的信物失去1点耐久，并将这次攻击转移给攻击者",
+                    translations.get("tooltip.goetyarkham.aquinnahs_token.effect")
+                            .getAsString(),
+                    "Chinese Aquinnah's Token effect tooltip");
+            assertEquals("耐久已耗尽",
+                    translations.get("tooltip.goetyarkham.aquinnahs_token.depleted")
+                            .getAsString(),
+                    "Chinese Aquinnah's Token depleted tooltip");
             assertEquals("专属弱点：",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)
@@ -478,6 +599,11 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get(CurioTooltipHelper.ATTRIBUTE_BONUS_TRANSLATION_KEY)
                             .getAsString(),
                     "English shared attribute bonus format");
+            assertEquals("+%1$s%% %2$s",
+                    translations.get(
+                            CurioTooltipHelper.ATTRIBUTE_BONUS_PERCENT_TRANSLATION_KEY)
+                            .getAsString(),
+                    "English shared percent attribute bonus format");
             assertEquals("Holy Rosary",
                     translations.get("item.goetyarkham.holy_rosary").getAsString(),
                     "English Holy Rosary name");
@@ -562,6 +688,37 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.slot.weakness")
                             .getAsString(),
                     "English weakness slot label");
+            assertEquals("Slot: Body",
+                    translations.get("tooltip.goetyarkham.slot.body")
+                            .getAsString(),
+                    "English body slot label");
+            assertEquals("Leather Coat",
+                    translations.get("item.goetyarkham.leather_coat")
+                            .getAsString(),
+                    "English Leather Coat name");
+            assertEquals("Bulletproof Vest",
+                    translations.get("item.goetyarkham.bulletproof_vest")
+                            .getAsString(),
+                    "English Bulletproof Vest name");
+            assertEquals("Aquinnah's Token",
+                    translations.get("item.goetyarkham.aquinnahs_token")
+                            .getAsString(),
+                    "English Aquinnah's Token name");
+            assertEquals("Slot: Token",
+                    translations.get("tooltip.goetyarkham.slot.token")
+                            .getAsString(),
+                    "English token slot label");
+            assertEquals(
+                    "When directly attacked by a living entity, Aquinnah's"
+                            + " Token loses 1 durability and redirects the"
+                            + " attack to the attacker.",
+                    translations.get("tooltip.goetyarkham.aquinnahs_token.effect")
+                            .getAsString(),
+                    "English Aquinnah's Token effect tooltip");
+            assertEquals("Durability depleted",
+                    translations.get("tooltip.goetyarkham.aquinnahs_token.depleted")
+                            .getAsString(),
+                    "English Aquinnah's Token depleted tooltip");
             assertEquals("Signature Weakness:",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)

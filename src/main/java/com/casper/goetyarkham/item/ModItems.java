@@ -56,6 +56,18 @@ public final class ModItems {
     public static final RegistryObject<PoliceBadgeItem> POLICE_BADGE =
             ITEMS.register("police_badge", PoliceBadgeItem::new);
 
+    public static final RegistryObject<ElderSignAmuletItem> ELDER_SIGN_AMULET =
+            ITEMS.register("elder_sign_amulet", ElderSignAmuletItem::new);
+
+    public static final RegistryObject<LeatherCoatItem> LEATHER_COAT =
+            ITEMS.register("leather_coat", LeatherCoatItem::new);
+
+    public static final RegistryObject<BulletproofVestItem> BULLETPROOF_VEST =
+            ITEMS.register("bulletproof_vest", BulletproofVestItem::new);
+
+    public static final RegistryObject<AquinnahsTokenItem> AQUINNAHS_TOKEN =
+            ITEMS.register("aquinnahs_token", AquinnahsTokenItem::new);
+
     private ModItems() {
     }
 

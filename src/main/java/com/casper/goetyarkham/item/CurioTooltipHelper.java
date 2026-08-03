@@ -11,6 +11,8 @@ public final class CurioTooltipHelper {
             "tooltip.goetyarkham.when_worn";
     public static final String ATTRIBUTE_BONUS_TRANSLATION_KEY =
             "tooltip.goetyarkham.attribute_bonus";
+    public static final String ATTRIBUTE_BONUS_PERCENT_TRANSLATION_KEY =
+            "tooltip.goetyarkham.attribute_bonus_percent";
 
     private CurioTooltipHelper() {
     }
@@ -41,6 +43,13 @@ public final class CurioTooltipHelper {
         return Component.translatable(
                 ATTRIBUTE_BONUS_TRANSLATION_KEY,
                 amount,
+                Component.translatable(attributeTranslationKey));
+    }
+
+    public static Component attributeBonusPercent(int percent, String attributeTranslationKey) {
+        return Component.translatable(
+                ATTRIBUTE_BONUS_PERCENT_TRANSLATION_KEY,
+                percent,
                 Component.translatable(attributeTranslationKey));
     }
 }

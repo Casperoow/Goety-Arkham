@@ -5,8 +5,11 @@ import com.mojang.authlib.GameProfile;
 import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.attribute.ModAttributes;
 import com.casper.goetyarkham.illager_treachery.GrotesqueStatueProtectionService;
+import com.casper.goetyarkham.item.ElderSignAmuletItem;
 import com.casper.goetyarkham.item.GrotesqueStatueItem;
 import com.casper.goetyarkham.item.HolyRosaryItem;
+import com.casper.goetyarkham.item.BulletproofVestItem;
+import com.casper.goetyarkham.item.LeatherCoatItem;
 import com.casper.goetyarkham.item.CurioTooltipHelper;
 import com.casper.goetyarkham.item.DiscOfItzamnaEffectService;
 import com.casper.goetyarkham.item.DiscOfItzamnaItem;
@@ -127,6 +130,9 @@ public final class CurioSlotGameTests {
         verifyDiscRuntimeWiring(helper);
         verifyHolyRosaryRuntimeWiring(helper);
         verifyRabbitFootRuntimeWiring(helper);
+        verifyElderSignAmuletRuntimeWiring(helper);
+        verifyLeatherCoatRuntimeWiring(helper);
+        verifyBulletproofVestRuntimeWiring(helper);
         verifyCreativeTabContents(helper);
         helper.succeed();
     }
@@ -670,6 +676,478 @@ public final class CurioSlotGameTests {
                             .map(stats -> stats.get(StatType.STRENGTH).base())
                             .orElse(0) == baseStrength,
                     "Rabbit's Foot changed stored base Strength");
+        } finally {
+            helper.getLevel().players().remove(wearer);
+            wearer.discard();
+        }
+    }
+
+    private static void verifyElderSignAmuletRuntimeWiring(GameTestHelper helper) {
+        ResourceLocation expectedId = ResourceLocation.fromNamespaceAndPath(
+                GoetyArkham.MOD_ID, "elder_sign_amulet");
+        helper.assertTrue(expectedId.equals(ForgeRegistries.ITEMS.getKey(
+                        ModItems.ELDER_SIGN_AMULET.get())),
+                "Elder Sign Amulet registry ID mismatch");
+
+        ElderSignAmuletItem item = ModItems.ELDER_SIGN_AMULET.get();
+        ItemStack stack = new ItemStack(item);
+        helper.assertTrue(stack.getMaxStackSize() == 1,
+                "Elder Sign Amulet must not stack");
+
+        List<Component> tooltip = new ArrayList<>();
+        item.appendHoverText(stack, helper.getLevel(), tooltip,
+                net.minecraft.world.item.TooltipFlag.NORMAL);
+        helper.assertTrue(tooltip.size() == 3,
+                "Elder Sign Amulet tooltip line count mismatch");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(0).getStyle().getColor()),
+                "Elder Sign Amulet slot line is not gray");
+        helper.assertTrue(tooltip.get(1).getContents()
+                        instanceof TranslatableContents heading
+                        && CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY
+                        .equals(heading.getKey()),
+                "Elder Sign Amulet does not use the shared when-worn heading");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.YELLOW)
+                        .equals(tooltip.get(1).getStyle().getColor()),
+                "Elder Sign Amulet when-worn heading is not yellow");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(2).getStyle().getColor()),
+                "Elder Sign Amulet effect line is not gray");
+        helper.assertTrue("Slot: Necklace".equals(tooltip.get(0).getString())
+                        && "When worn:".equals(tooltip.get(1).getString())
+                        && "+4 Max Sanity".equals(tooltip.get(2).getString()),
+                "Elder Sign Amulet English tooltip text mismatch");
+
+        Map<String, ISlotType> acceptedSlots =
+                CuriosApi.getItemStackSlots(stack, helper.getLevel());
+        helper.assertTrue(acceptedSlots.keySet().equals(Set.of(
+                        CurioSlotIds.NECKLACE)),
+                "Elder Sign Amulet item tag must expose only the necklace slot");
+
+        ServerPlayer wearer = new PoolTestPlayer(
+                helper.getLevel(), "elder-sign-amulet-wearer");
+        helper.getLevel().players().add(wearer);
+        try {
+            ICurio curio = CuriosApi.getCurio(stack).resolve().orElse(null);
+            helper.assertTrue(curio != null,
+                    "Elder Sign Amulet Curios capability was not registered");
+            SlotContext firstNecklace = new SlotContext(
+                    CurioSlotIds.NECKLACE, wearer, 0, false, true);
+            SlotContext secondNecklace = new SlotContext(
+                    CurioSlotIds.NECKLACE, wearer, 1, false, true);
+            SlotContext cosmeticNecklace = new SlotContext(
+                    CurioSlotIds.NECKLACE, wearer, 0, true, true);
+            helper.assertTrue(curio.canEquip(firstNecklace),
+                    "Elder Sign Amulet rejected the necklace slot");
+            helper.assertTrue(!curio.canEquip(new SlotContext(
+                            CurioSlotIds.HANDS, wearer, 0, false, true)),
+                    "Elder Sign Amulet accepted a non-necklace slot");
+            helper.assertTrue(item.getAttributeModifiers(
+                            cosmeticNecklace, UUID.randomUUID(), stack).isEmpty(),
+                    "Cosmetic necklace slot granted a maximum-sanity bonus");
+
+            var firstModifiers = curio.getAttributeModifiers(
+                    firstNecklace, UUID.randomUUID());
+            var secondModifiers = curio.getAttributeModifiers(
+                    secondNecklace, UUID.randomUUID());
+            AttributeModifier firstSanity = firstModifiers.get(
+                    ModAttributes.MAX_SANITY.get()).stream().findFirst().orElse(null);
+            AttributeModifier secondSanity = secondModifiers.get(
+                    ModAttributes.MAX_SANITY.get()).stream().findFirst().orElse(null);
+            helper.assertTrue(firstSanity != null
+                            && firstSanity.getAmount()
+                            == ElderSignAmuletItem.MAX_SANITY_BONUS
+                            && firstSanity.getOperation()
+                            == AttributeModifier.Operation.ADDITION,
+                    "Elder Sign Amulet maximum-sanity modifier mismatch");
+            helper.assertTrue(secondSanity != null
+                            && !firstSanity.getId().equals(secondSanity.getId()),
+                    "Two necklace slots do not receive distinct sanity modifier UUIDs");
+            AttributeModifier repeatSanity = curio.getAttributeModifiers(
+                            firstNecklace, UUID.randomUUID())
+                    .get(ModAttributes.MAX_SANITY.get())
+                    .stream().findFirst().orElse(null);
+            helper.assertTrue(repeatSanity != null
+                            && repeatSanity.getId().equals(firstSanity.getId()),
+                    "Refreshing the same necklace slot changed the sanity modifier UUID");
+
+            var necklace = CuriosApi.getCuriosInventory(wearer).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(
+                            CurioSlotIds.NECKLACE))
+                    .orElse(null);
+            helper.assertTrue(necklace != null,
+                    "Elder Sign Amulet test wearer is missing the necklace handler");
+
+            double baseMaximum = SanityService.getMaximumAttributeValue(wearer);
+            int baseMaximumSanity = SanityService.getMaximumSanity(wearer);
+            SanityService.setSanity(
+                    wearer, baseMaximumSanity, SanityChangeCause.COMMAND);
+
+            necklace.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(SanityService.getMaximumAttributeValue(wearer)
+                            == baseMaximum + ElderSignAmuletItem.MAX_SANITY_BONUS,
+                    "Elder Sign Amulet did not add exactly four maximum sanity");
+            helper.assertTrue(SanityService.getMaximumSanity(wearer)
+                            == baseMaximumSanity + ElderSignAmuletItem.MAX_SANITY_BONUS,
+                    "Elder Sign Amulet did not raise the effective maximum by four");
+            helper.assertTrue(SanityService.getCurrentSanity(wearer)
+                            == baseMaximumSanity,
+                    "Equipping Elder Sign Amulet incorrectly restored lost sanity");
+
+            EquipmentStatsService.refresh(wearer);
+            settleCurioChange(wearer);
+            helper.assertTrue(SanityService.getMaximumAttributeValue(wearer)
+                            == baseMaximum + ElderSignAmuletItem.MAX_SANITY_BONUS,
+                    "Repeated equipment refresh duplicated the Elder Sign Amulet bonus");
+
+            int equippedMaximum = SanityService.getMaximumSanity(wearer);
+            SanityService.setSanity(
+                    wearer, equippedMaximum, SanityChangeCause.COMMAND);
+            helper.assertTrue(SanityService.getCurrentSanity(wearer) == equippedMaximum,
+                    "Test setup could not fill current sanity to the equipped maximum");
+
+            helper.assertTrue(SanityService.getPermanentMaxLoss(wearer) == 0,
+                    "Test setup unexpectedly has permanent sanity loss");
+
+            necklace.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(SanityService.getMaximumAttributeValue(wearer)
+                            == baseMaximum,
+                    "Unequipping Elder Sign Amulet did not remove the"
+                            + " maximum-sanity bonus");
+            helper.assertTrue(SanityService.getMaximumSanity(wearer)
+                            == baseMaximumSanity,
+                    "Unequipping Elder Sign Amulet left a residual"
+                            + " maximum-sanity bonus");
+            helper.assertTrue(SanityService.getCurrentSanity(wearer)
+                            <= SanityService.getMaximumSanity(wearer),
+                    "Current sanity exceeded the lowered effective maximum"
+                            + " after unequip");
+            helper.assertTrue(SanityService.getCurrentSanity(wearer)
+                            == baseMaximumSanity,
+                    "Unequipping Elder Sign Amulet did not clamp current sanity"
+                            + " down to the new maximum");
+            helper.assertTrue(SanityService.getPermanentMaxLoss(wearer) == 0,
+                    "Elder Sign Amulet changed permanent sanity loss");
+        } finally {
+            helper.getLevel().players().remove(wearer);
+            wearer.discard();
+        }
+    }
+
+    private static void verifyLeatherCoatRuntimeWiring(GameTestHelper helper) {
+        ResourceLocation expectedId = ResourceLocation.fromNamespaceAndPath(
+                GoetyArkham.MOD_ID, "leather_coat");
+        helper.assertTrue(expectedId.equals(ForgeRegistries.ITEMS.getKey(
+                        ModItems.LEATHER_COAT.get())),
+                "Leather Coat registry ID mismatch");
+
+        LeatherCoatItem item = ModItems.LEATHER_COAT.get();
+        ItemStack stack = new ItemStack(item);
+        helper.assertTrue(stack.getMaxStackSize() == 1,
+                "Leather Coat must not stack");
+
+        List<Component> tooltip = new ArrayList<>();
+        item.appendHoverText(stack, helper.getLevel(), tooltip,
+                net.minecraft.world.item.TooltipFlag.NORMAL);
+        helper.assertTrue(tooltip.size() == 3,
+                "Leather Coat tooltip line count mismatch");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(0).getStyle().getColor()),
+                "Leather Coat slot line is not gray");
+        helper.assertTrue(tooltip.get(1).getContents()
+                        instanceof TranslatableContents heading
+                        && CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY
+                        .equals(heading.getKey()),
+                "Leather Coat does not use the shared when-worn heading");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.YELLOW)
+                        .equals(tooltip.get(1).getStyle().getColor()),
+                "Leather Coat when-worn heading is not yellow");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(2).getStyle().getColor()),
+                "Leather Coat effect line is not gray");
+        helper.assertTrue("Slot: Body".equals(tooltip.get(0).getString())
+                        && "When worn:".equals(tooltip.get(1).getString())
+                        && "+20% Max Health".equals(tooltip.get(2).getString()),
+                "Leather Coat English tooltip text mismatch");
+
+        Map<String, ISlotType> acceptedSlots =
+                CuriosApi.getItemStackSlots(stack, helper.getLevel());
+        helper.assertTrue(acceptedSlots.keySet().equals(Set.of(
+                        CurioSlotIds.BODY)),
+                "Leather Coat item tag must expose only the body slot");
+
+        ServerPlayer wearer = new PoolTestPlayer(
+                helper.getLevel(), "leather-coat-wearer");
+        helper.getLevel().players().add(wearer);
+        UUID otherEffectId = UUID.randomUUID();
+        try {
+            ICurio curio = CuriosApi.getCurio(stack).resolve().orElse(null);
+            helper.assertTrue(curio != null,
+                    "Leather Coat Curios capability was not registered");
+            SlotContext firstBody = new SlotContext(
+                    CurioSlotIds.BODY, wearer, 0, false, true);
+            SlotContext cosmeticBody = new SlotContext(
+                    CurioSlotIds.BODY, wearer, 0, true, true);
+            helper.assertTrue(curio.canEquip(firstBody),
+                    "Leather Coat rejected the body slot");
+            helper.assertTrue(!curio.canEquip(new SlotContext(
+                            CurioSlotIds.NECKLACE, wearer, 0, false, true)),
+                    "Leather Coat accepted a non-body slot");
+            helper.assertTrue(item.getAttributeModifiers(
+                            cosmeticBody, UUID.randomUUID(), stack).isEmpty(),
+                    "Cosmetic body slot granted a maximum-health bonus");
+
+            var firstModifiers = curio.getAttributeModifiers(
+                    firstBody, UUID.randomUUID());
+            AttributeModifier firstHealth = firstModifiers.get(
+                    Attributes.MAX_HEALTH).stream().findFirst().orElse(null);
+            helper.assertTrue(firstHealth != null
+                            && firstHealth.getAmount()
+                            == LeatherCoatItem.MAX_HEALTH_MULTIPLIER
+                            && firstHealth.getOperation()
+                            == AttributeModifier.Operation.MULTIPLY_TOTAL,
+                    "Leather Coat maximum-health modifier mismatch");
+            AttributeModifier repeatHealth = curio.getAttributeModifiers(
+                            firstBody, UUID.randomUUID())
+                    .get(Attributes.MAX_HEALTH)
+                    .stream().findFirst().orElse(null);
+            helper.assertTrue(repeatHealth != null
+                            && repeatHealth.getId().equals(firstHealth.getId()),
+                    "Refreshing the same body slot changed the max-health modifier UUID");
+
+            var body = CuriosApi.getCuriosInventory(wearer).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(
+                            CurioSlotIds.BODY))
+                    .orElse(null);
+            helper.assertTrue(body != null,
+                    "Leather Coat test wearer is missing the body handler");
+
+            double baseMaximum = wearer.getAttribute(Attributes.MAX_HEALTH).getValue();
+            helper.assertTrue(baseMaximum == 20.0D,
+                    "Test setup expected the default 20 maximum health");
+            wearer.setHealth(15.0F);
+
+            body.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == baseMaximum * 1.2D,
+                    "Leather Coat did not raise 20 maximum health to 24");
+            helper.assertTrue(wearer.getHealth() == 15.0F,
+                    "Equipping the Leather Coat incorrectly changed current health");
+
+            EquipmentStatsService.refresh(wearer);
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == baseMaximum * 1.2D,
+                    "Repeated equipment refresh duplicated the Leather Coat bonus");
+
+            wearer.setHealth((float) wearer.getAttribute(Attributes.MAX_HEALTH).getValue());
+            body.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == baseMaximum,
+                    "Unequipping the Leather Coat did not remove the maximum-health bonus");
+            helper.assertTrue(wearer.getHealth() == (float) baseMaximum,
+                    "Unequipping the Leather Coat did not clamp current health down"
+                            + " to the restored maximum");
+
+            body.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            body.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            body.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            body.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == baseMaximum,
+                    "Repeated equip/unequip cycles left a residual Leather Coat bonus"
+                            + " (28/32-style drift)");
+
+            wearer.getAttribute(Attributes.MAX_HEALTH).addTransientModifier(
+                    new AttributeModifier(
+                            otherEffectId,
+                            "test:other_max_health_effect",
+                            20.0D,
+                            AttributeModifier.Operation.ADDITION));
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == 40.0D,
+                    "Test setup could not raise maximum health to 40 via another effect");
+
+            body.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == 48.0D,
+                    "Leather Coat did not raise an already-boosted 40 maximum health to 48");
+
+            body.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == 40.0D,
+                    "Unequipping the Leather Coat did not fully remove its 20% bonus"
+                            + " on top of another effect");
+            wearer.getAttribute(Attributes.MAX_HEALTH).removeModifier(otherEffectId);
+        } finally {
+            helper.getLevel().players().remove(wearer);
+            wearer.discard();
+        }
+    }
+
+    private static void verifyBulletproofVestRuntimeWiring(GameTestHelper helper) {
+        ResourceLocation expectedId = ResourceLocation.fromNamespaceAndPath(
+                GoetyArkham.MOD_ID, "bulletproof_vest");
+        helper.assertTrue(expectedId.equals(ForgeRegistries.ITEMS.getKey(
+                        ModItems.BULLETPROOF_VEST.get())),
+                "Bulletproof Vest registry ID mismatch");
+
+        BulletproofVestItem item = ModItems.BULLETPROOF_VEST.get();
+        ItemStack stack = new ItemStack(item);
+        helper.assertTrue(stack.getMaxStackSize() == 1,
+                "Bulletproof Vest must not stack");
+
+        List<Component> tooltip = new ArrayList<>();
+        item.appendHoverText(stack, helper.getLevel(), tooltip,
+                net.minecraft.world.item.TooltipFlag.NORMAL);
+        helper.assertTrue(tooltip.size() == 3,
+                "Bulletproof Vest tooltip line count mismatch");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(0).getStyle().getColor()),
+                "Bulletproof Vest slot line is not gray");
+        helper.assertTrue(tooltip.get(1).getContents()
+                        instanceof TranslatableContents heading
+                        && CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY
+                        .equals(heading.getKey()),
+                "Bulletproof Vest does not use the shared when-worn heading");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.YELLOW)
+                        .equals(tooltip.get(1).getStyle().getColor()),
+                "Bulletproof Vest when-worn heading is not yellow");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                        .equals(tooltip.get(2).getStyle().getColor()),
+                "Bulletproof Vest effect line is not gray");
+        helper.assertTrue("Slot: Body".equals(tooltip.get(0).getString())
+                        && "When worn:".equals(tooltip.get(1).getString())
+                        && "+40% Max Health".equals(tooltip.get(2).getString()),
+                "Bulletproof Vest English tooltip text mismatch");
+
+        Map<String, ISlotType> acceptedSlots =
+                CuriosApi.getItemStackSlots(stack, helper.getLevel());
+        helper.assertTrue(acceptedSlots.keySet().equals(Set.of(
+                        CurioSlotIds.BODY)),
+                "Bulletproof Vest item tag must expose only the body slot");
+
+        ServerPlayer wearer = new PoolTestPlayer(
+                helper.getLevel(), "bulletproof-vest-wearer");
+        helper.getLevel().players().add(wearer);
+        UUID otherEffectId = UUID.randomUUID();
+        try {
+            ICurio curio = CuriosApi.getCurio(stack).resolve().orElse(null);
+            helper.assertTrue(curio != null,
+                    "Bulletproof Vest Curios capability was not registered");
+            SlotContext firstBody = new SlotContext(
+                    CurioSlotIds.BODY, wearer, 0, false, true);
+            SlotContext cosmeticBody = new SlotContext(
+                    CurioSlotIds.BODY, wearer, 0, true, true);
+            helper.assertTrue(curio.canEquip(firstBody),
+                    "Bulletproof Vest rejected the body slot");
+            helper.assertTrue(!curio.canEquip(new SlotContext(
+                            CurioSlotIds.NECKLACE, wearer, 0, false, true)),
+                    "Bulletproof Vest accepted a non-body slot");
+            helper.assertTrue(item.getAttributeModifiers(
+                            cosmeticBody, UUID.randomUUID(), stack).isEmpty(),
+                    "Cosmetic body slot granted a maximum-health bonus");
+
+            var firstModifiers = curio.getAttributeModifiers(
+                    firstBody, UUID.randomUUID());
+            AttributeModifier firstHealth = firstModifiers.get(
+                    Attributes.MAX_HEALTH).stream().findFirst().orElse(null);
+            helper.assertTrue(firstHealth != null
+                            && firstHealth.getAmount()
+                            == BulletproofVestItem.MAX_HEALTH_MULTIPLIER
+                            && firstHealth.getOperation()
+                            == AttributeModifier.Operation.MULTIPLY_TOTAL,
+                    "Bulletproof Vest maximum-health modifier mismatch");
+            AttributeModifier repeatHealth = curio.getAttributeModifiers(
+                            firstBody, UUID.randomUUID())
+                    .get(Attributes.MAX_HEALTH)
+                    .stream().findFirst().orElse(null);
+            helper.assertTrue(repeatHealth != null
+                            && repeatHealth.getId().equals(firstHealth.getId()),
+                    "Refreshing the same body slot changed the max-health modifier UUID");
+
+            var body = CuriosApi.getCuriosInventory(wearer).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(
+                            CurioSlotIds.BODY))
+                    .orElse(null);
+            helper.assertTrue(body != null,
+                    "Bulletproof Vest test wearer is missing the body handler");
+
+            double baseMaximum = wearer.getAttribute(Attributes.MAX_HEALTH).getValue();
+            helper.assertTrue(baseMaximum == 20.0D,
+                    "Test setup expected the default 20 maximum health");
+            wearer.setHealth(15.0F);
+
+            body.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == baseMaximum * 1.4D,
+                    "Bulletproof Vest did not raise 20 maximum health to 28");
+            helper.assertTrue(wearer.getHealth() == 15.0F,
+                    "Equipping the Bulletproof Vest incorrectly changed current health");
+
+            EquipmentStatsService.refresh(wearer);
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == baseMaximum * 1.4D,
+                    "Repeated equipment refresh duplicated the Bulletproof Vest bonus");
+
+            wearer.setHealth((float) wearer.getAttribute(Attributes.MAX_HEALTH).getValue());
+            body.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == baseMaximum,
+                    "Unequipping the Bulletproof Vest did not remove the maximum-health bonus");
+            helper.assertTrue(wearer.getHealth() == (float) baseMaximum,
+                    "Unequipping the Bulletproof Vest did not clamp current health down"
+                            + " to the restored maximum");
+
+            body.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            body.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            body.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            body.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == baseMaximum,
+                    "Repeated equip/unequip cycles left a residual Bulletproof Vest bonus"
+                            + " (28/39.2-style drift)");
+
+            wearer.getAttribute(Attributes.MAX_HEALTH).addTransientModifier(
+                    new AttributeModifier(
+                            otherEffectId,
+                            "test:other_max_health_effect",
+                            20.0D,
+                            AttributeModifier.Operation.ADDITION));
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == 40.0D,
+                    "Test setup could not raise maximum health to 40 via another effect");
+
+            body.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == 56.0D,
+                    "Bulletproof Vest did not raise an already-boosted 40 maximum health to 56");
+
+            body.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(wearer.getAttribute(Attributes.MAX_HEALTH).getValue()
+                            == 40.0D,
+                    "Unequipping the Bulletproof Vest did not fully remove its 40% bonus"
+                            + " on top of another effect");
+            wearer.getAttribute(Attributes.MAX_HEALTH).removeModifier(otherEffectId);
         } finally {
             helper.getLevel().players().remove(wearer);
             wearer.discard();

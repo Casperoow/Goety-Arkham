@@ -96,6 +96,12 @@ public final class CuriosForgeEvents {
         EquipmentStatsService.refresh(player);
         SanityService.refreshMaximum(player);
         SanityService.sync(player);
+        // Curios has already applied/removed max-health modifiers (e.g. the
+        // Leather Coat's) by this point, but vanilla never re-clamps current
+        // health down when an attribute reduces the maximum on its own.
+        if (player.getHealth() > player.getMaxHealth()) {
+            player.setHealth(player.getMaxHealth());
+        }
     }
 
     @SubscribeEvent
