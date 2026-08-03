@@ -67,7 +67,6 @@ public final class AbandonedAndAloneItem extends Item implements
             List<Component> tooltip,
             TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
-        CurioTooltipHelper.appendSlot(tooltip, "tooltip.goetyarkham.slot.weakness");
         if (ShiftTooltipHelper.isShiftDown()) {
             tooltip.add(Component.translatable(
                             "tooltip.goetyarkham.abandoned_and_alone.effect",

@@ -37,7 +37,6 @@ public final class WendysAmuletItem extends Item implements ICurioItem {
             List<Component> tooltip,
             TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
-        CurioTooltipHelper.appendSlot(tooltip, "tooltip.goetyarkham.slot.charm");
         CurioTooltipHelper.appendWhenWorn(
                 tooltip,
                 Component.translatable(
