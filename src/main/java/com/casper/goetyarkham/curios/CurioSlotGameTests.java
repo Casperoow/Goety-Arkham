@@ -12,6 +12,7 @@ import com.casper.goetyarkham.item.DiscOfItzamnaEffectService;
 import com.casper.goetyarkham.item.DiscOfItzamnaItem;
 import com.casper.goetyarkham.item.ModCreativeModeTabs;
 import com.casper.goetyarkham.item.ModItems;
+import com.casper.goetyarkham.item.RabbitFootItem;
 import com.casper.goetyarkham.sanity.SanityChangeCause;
 import com.casper.goetyarkham.sanity.SanityMath;
 import com.casper.goetyarkham.sanity.SanityService;
@@ -36,6 +37,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -124,6 +126,7 @@ public final class CurioSlotGameTests {
         verifyGrotesqueStatueRuntimeWiring(helper);
         verifyDiscRuntimeWiring(helper);
         verifyHolyRosaryRuntimeWiring(helper);
+        verifyRabbitFootRuntimeWiring(helper);
         verifyCreativeTabContents(helper);
         helper.succeed();
     }
@@ -480,6 +483,193 @@ public final class CurioSlotGameTests {
                             .map(stats -> stats.get(StatType.WILLPOWER).base())
                             .orElse(0) == baseWill,
                     "Holy Rosary changed stored base Will");
+        } finally {
+            helper.getLevel().players().remove(wearer);
+            wearer.discard();
+        }
+    }
+
+    private static void verifyRabbitFootRuntimeWiring(GameTestHelper helper) {
+        ResourceLocation expectedId = ResourceLocation.fromNamespaceAndPath(
+                GoetyArkham.MOD_ID, "rabbit_foot");
+        helper.assertTrue(expectedId.equals(ForgeRegistries.ITEMS.getKey(
+                        ModItems.RABBIT_FOOT.get())),
+                "Rabbit's Foot registry ID mismatch");
+
+        RabbitFootItem item = ModItems.RABBIT_FOOT.get();
+        ItemStack stack = new ItemStack(item);
+        helper.assertTrue(stack.getMaxStackSize() == 1,
+                "Rabbit's Foot must not stack");
+
+        List<Component> tooltip = new ArrayList<>();
+        item.appendHoverText(stack, helper.getLevel(), tooltip,
+                net.minecraft.world.item.TooltipFlag.NORMAL);
+        helper.assertTrue(tooltip.size() == 6,
+                "Rabbit's Foot tooltip line count mismatch");
+        helper.assertTrue(tooltip.get(0).getContents()
+                        instanceof TranslatableContents heading
+                        && CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY
+                        .equals(heading.getKey()),
+                "Rabbit's Foot does not use the shared when-worn heading");
+        helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.YELLOW)
+                        .equals(tooltip.get(0).getStyle().getColor()),
+                "Rabbit's Foot when-worn heading is not yellow");
+        for (int i = 1; i <= 5; i++) {
+            helper.assertTrue(TextColor.fromLegacyFormat(ChatFormatting.GRAY)
+                            .equals(tooltip.get(i).getStyle().getColor()),
+                    "Rabbit's Foot effect line " + i + " is not gray");
+        }
+        helper.assertTrue("When worn:".equals(tooltip.get(0).getString())
+                        && "+1 Strength".equals(tooltip.get(1).getString())
+                        && "+1 Agility".equals(tooltip.get(2).getString())
+                        && "+1 Will".equals(tooltip.get(3).getString())
+                        && "+1 Intellect".equals(tooltip.get(4).getString())
+                        && "+1 Luck".equals(tooltip.get(5).getString()),
+                "Rabbit's Foot English tooltip text mismatch");
+
+        Map<String, ISlotType> acceptedSlots =
+                CuriosApi.getItemStackSlots(stack, helper.getLevel());
+        helper.assertTrue(acceptedSlots.keySet().equals(Set.of(
+                        CurioSlotIds.NECKLACE)),
+                "Rabbit's Foot item tag must expose only the necklace slot");
+
+        ServerPlayer wearer = new PoolTestPlayer(
+                helper.getLevel(), "rabbit-foot-wearer");
+        helper.getLevel().players().add(wearer);
+        try {
+            ICurio curio = CuriosApi.getCurio(stack).resolve().orElse(null);
+            helper.assertTrue(curio != null,
+                    "Rabbit's Foot Curios capability was not registered");
+            SlotContext firstNecklace = new SlotContext(
+                    CurioSlotIds.NECKLACE, wearer, 0, false, true);
+            SlotContext secondNecklace = new SlotContext(
+                    CurioSlotIds.NECKLACE, wearer, 1, false, true);
+            SlotContext cosmeticNecklace = new SlotContext(
+                    CurioSlotIds.NECKLACE, wearer, 0, true, true);
+            helper.assertTrue(curio.canEquip(firstNecklace),
+                    "Rabbit's Foot rejected the necklace slot");
+            helper.assertTrue(!curio.canEquip(new SlotContext(
+                            CurioSlotIds.HANDS, wearer, 0, false, true)),
+                    "Rabbit's Foot accepted a non-necklace slot");
+
+            for (StatType stat : StatType.values()) {
+                helper.assertTrue(item.getEquipmentStatModifier(
+                                stat, cosmeticNecklace, stack) == 0,
+                        "Cosmetic necklace slot granted a " + stat + " bonus");
+            }
+            helper.assertTrue(item.getAttributeModifiers(
+                            cosmeticNecklace, UUID.randomUUID(), stack).isEmpty(),
+                    "Cosmetic necklace slot granted a Luck bonus");
+
+            var firstModifiers = curio.getAttributeModifiers(
+                    firstNecklace, UUID.randomUUID());
+            var secondModifiers = curio.getAttributeModifiers(
+                    secondNecklace, UUID.randomUUID());
+            AttributeModifier firstLuck = firstModifiers.get(
+                    Attributes.LUCK).stream().findFirst().orElse(null);
+            AttributeModifier secondLuck = secondModifiers.get(
+                    Attributes.LUCK).stream().findFirst().orElse(null);
+            helper.assertTrue(firstLuck != null
+                            && firstLuck.getAmount() == RabbitFootItem.LUCK_BONUS
+                            && firstLuck.getOperation()
+                            == AttributeModifier.Operation.ADDITION,
+                    "Rabbit's Foot Luck modifier mismatch");
+            helper.assertTrue(secondLuck != null
+                            && !firstLuck.getId().equals(secondLuck.getId()),
+                    "Two necklace slots do not receive distinct Luck modifier UUIDs");
+
+            var necklace = CuriosApi.getCuriosInventory(wearer).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(
+                            CurioSlotIds.NECKLACE))
+                    .orElse(null);
+            helper.assertTrue(necklace != null,
+                    "Rabbit's Foot test wearer is missing the necklace handler");
+
+            int baseStrength = PlayerStatsService.getFinalValue(
+                    wearer, StatType.STRENGTH);
+            int baseAgility = PlayerStatsService.getFinalValue(
+                    wearer, StatType.AGILITY);
+            int baseWillpower = PlayerStatsService.getFinalValue(
+                    wearer, StatType.WILLPOWER);
+            int baseIntellect = PlayerStatsService.getFinalValue(
+                    wearer, StatType.INTELLECT);
+            double baseLuck = wearer.getAttribute(Attributes.LUCK).getValue();
+
+            necklace.getStacks().setStackInSlot(0, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.STRENGTH) == baseStrength + 1,
+                    "One Rabbit's Foot did not add exactly one final Strength");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.AGILITY) == baseAgility + 1,
+                    "One Rabbit's Foot did not add exactly one final Agility");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.WILLPOWER) == baseWillpower + 1,
+                    "One Rabbit's Foot did not add exactly one final Will");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.INTELLECT) == baseIntellect + 1,
+                    "One Rabbit's Foot did not add exactly one final Intellect");
+            helper.assertTrue(wearer.getAttribute(Attributes.LUCK).getValue()
+                            == baseLuck + 1.0D,
+                    "One Rabbit's Foot did not add exactly one Luck");
+
+            necklace.getStacks().setStackInSlot(1, stack.copy());
+            settleCurioChange(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.STRENGTH) == baseStrength + 2,
+                    "Two Rabbit's Feet did not stack final Strength");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.AGILITY) == baseAgility + 2,
+                    "Two Rabbit's Feet did not stack final Agility");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.WILLPOWER) == baseWillpower + 2,
+                    "Two Rabbit's Feet did not stack final Will");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.INTELLECT) == baseIntellect + 2,
+                    "Two Rabbit's Feet did not stack final Intellect");
+            helper.assertTrue(wearer.getAttribute(Attributes.LUCK).getValue()
+                            == baseLuck + 2.0D,
+                    "Two Rabbit's Feet did not stack Luck");
+
+            EquipmentStatsService.refresh(wearer);
+            settleCurioChange(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.STRENGTH) == baseStrength + 2,
+                    "Repeated equipment refresh duplicated Strength");
+            helper.assertTrue(wearer.getAttribute(Attributes.LUCK).getValue()
+                            == baseLuck + 2.0D,
+                    "Repeated equipment refresh duplicated Luck");
+
+            necklace.getStacks().setStackInSlot(1, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.STRENGTH) == baseStrength + 1,
+                    "Unequipping one Rabbit's Foot did not remove one Strength");
+            helper.assertTrue(wearer.getAttribute(Attributes.LUCK).getValue()
+                            == baseLuck + 1.0D,
+                    "Unequipping one Rabbit's Foot did not remove one Luck");
+
+            necklace.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.STRENGTH) == baseStrength,
+                    "Unequipping the last Rabbit's Foot left a residual Strength bonus");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.AGILITY) == baseAgility,
+                    "Unequipping the last Rabbit's Foot left a residual Agility bonus");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.WILLPOWER) == baseWillpower,
+                    "Unequipping the last Rabbit's Foot left a residual Will bonus");
+            helper.assertTrue(PlayerStatsService.getFinalValue(
+                            wearer, StatType.INTELLECT) == baseIntellect,
+                    "Unequipping the last Rabbit's Foot left a residual Intellect bonus");
+            helper.assertTrue(wearer.getAttribute(Attributes.LUCK).getValue()
+                            == baseLuck,
+                    "Unequipping the last Rabbit's Foot left a residual Luck bonus");
+            helper.assertTrue(PlayerStatsService.get(wearer)
+                            .map(stats -> stats.get(StatType.STRENGTH).base())
+                            .orElse(0) == baseStrength,
+                    "Rabbit's Foot changed stored base Strength");
         } finally {
             helper.getLevel().players().remove(wearer);
             wearer.discard();

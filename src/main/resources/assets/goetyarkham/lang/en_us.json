@@ -109,5 +109,6 @@
   "item.goetyarkham.dark_memory": "Dark Memory",
   "tooltip.goetyarkham.dark_memory.hold_shift": "Hold Shift to view the weakness effect",
   "tooltip.goetyarkham.dark_memory.effect.treachery": "All players immediately trigger one Illager Treachery.",
-  "tooltip.goetyarkham.dark_memory.effect.sanity": "Lose 2 Sanity."
+  "tooltip.goetyarkham.dark_memory.effect.sanity": "Lose 2 Sanity.",
+  "item.goetyarkham.rabbit_foot": "Rabbit’s Foot"
 }

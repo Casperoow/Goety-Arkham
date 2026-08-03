@@ -143,10 +143,12 @@ public final class CurioSlotDefinitionsSelfTest {
                 "/data/curios/tags/items/necklace.json");
         assertFalse(necklace.get("replace").getAsBoolean(),
                 "necklace item tag must merge without replace");
-        assertEquals(List.of("goetyarkham:heirloom_of_hyperborea"),
+        assertEquals(List.of(
+                        "goetyarkham:heirloom_of_hyperborea",
+                        "goetyarkham:rabbit_foot"),
                 necklace.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
-                "Heirloom necklace tag entries");
+                "Necklace tag entries");
 
         JsonObject weakness = readJson(
                 "/data/curios/tags/items/weakness.json");
@@ -162,6 +164,9 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:heirloom_of_hyperborea");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:rabbit_foot");
             }
             if (!CurioSlotIds.WEAKNESS.equals(slotId)) {
                 assertResourceValueAbsent(
@@ -230,6 +235,18 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Dark Memory model texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/dark_memory.png");
+
+        JsonObject rabbitFootModel = readJson(
+                "/assets/goetyarkham/models/item/rabbit_foot.json");
+        assertEquals("minecraft:item/generated",
+                rabbitFootModel.get("parent").getAsString(),
+                "Rabbit's Foot model parent");
+        assertEquals("goetyarkham:item/rabbit_food",
+                rabbitFootModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Rabbit's Foot model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/rabbit_food.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -357,6 +374,10 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.dark_memory.effect.sanity")
                             .getAsString(),
                     "Chinese Dark Memory sanity text");
+            assertEquals("幸运兔脚",
+                    translations.get("item.goetyarkham.rabbit_foot")
+                            .getAsString(),
+                    "Chinese Rabbit's Foot name");
         } else if ("en_us".equals(language)) {
             assertEquals("Goety: Arkham",
                     translations.get("creativetab.goetyarkham.goety_arkham")
@@ -442,6 +463,10 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.dark_memory.effect.sanity")
                             .getAsString(),
                     "English Dark Memory sanity text");
+            assertEquals("Rabbit’s Foot",
+                    translations.get("item.goetyarkham.rabbit_foot")
+                            .getAsString(),
+                    "English Rabbit's Foot name");
         }
     }
 

@@ -44,6 +44,9 @@ public final class ModItems {
     public static final RegistryObject<DarkMemoryItem> DARK_MEMORY =
             ITEMS.register("dark_memory", DarkMemoryItem::new);
 
+    public static final RegistryObject<RabbitFootItem> RABBIT_FOOT =
+            ITEMS.register("rabbit_foot", RabbitFootItem::new);
+
     private ModItems() {
     }
 

@@ -109,5 +109,6 @@
   "item.goetyarkham.dark_memory": "黑暗回忆",
   "tooltip.goetyarkham.dark_memory.hold_shift": "按住 Shift 查看弱点效果",
   "tooltip.goetyarkham.dark_memory.effect.treachery": "所有人立即触发一次灾厄诡计。",
-  "tooltip.goetyarkham.dark_memory.effect.sanity": "失去2点理智"
+  "tooltip.goetyarkham.dark_memory.effect.sanity": "失去2点理智",
+  "item.goetyarkham.rabbit_foot": "幸运兔脚"
 }
