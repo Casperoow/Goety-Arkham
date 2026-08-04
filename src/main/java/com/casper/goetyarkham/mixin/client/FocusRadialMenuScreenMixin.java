@@ -29,12 +29,25 @@ import java.util.Arrays;
  * loaded client-only (see the {@code client} list in goetyarkham.mixins.json)
  * since {@code FocusRadialMenuScreen} itself only ever loads client-side.
  *
- * <p>Every injection point below was confirmed against the decompiled
- * bytecode of {@code goety-2.5.55.4.jar} (methods keep their obfuscated
- * runtime names, e.g. {@code m_86600_} = {@code Screen.tick()},
- * {@code m_88315_} = {@code Screen.render(GuiGraphics, int, int, float)});
- * {@code remap = false} matches this project's existing convention for
- * mixing into third-party mod classes (see {@code DarkWandFocusSpendMixin}).</p>
+ * <p>{@code remap = false} matches this project's existing convention for
+ * mixing into third-party mod classes (see {@code DarkWandFocusSpendMixin}):
+ * Goety's own declared methods (e.g. {@code TotemFinder.canOpenWandCircle})
+ * keep the same literal name in every copy of the jar, so remap=false with
+ * that literal name is always correct. Overridden vanilla members are
+ * different: {@code libs/goety-2.5.55.4.jar} (the raw, as-shipped jar) has
+ * them compiled under obfuscated runtime names (e.g. {@code m_86600_} for
+ * {@code Screen.tick()}), but this project depends on Goety via
+ * {@code fg.deobf(...)}, which produces and actually loads a
+ * <em>deobfuscated</em> copy at both compile- and run-time (see
+ * {@code goety-2.5.55.4_mapped_official_1.20.1.jar} in the crash log for
+ * 2026-08-04). In that loaded copy, overridden members carry their normal
+ * official names ({@code tick}, {@code render}, {@code isEmpty}, ...), so
+ * targets below use those names literally, not the obfuscated ones from the
+ * raw jar. This project's own {@code mixin.env.remapRefMap} /
+ * {@code refMapRemappingFile} setup in build.gradle only remaps mixins
+ * targeting <em>vanilla</em> classes (default {@code remap=true}); it has no
+ * bearing on remap=false mixins targeting a separately-built third-party
+ * mod jar like this one.</p>
  */
 @Mixin(value = FocusRadialMenuScreen.class, remap = false)
 public abstract class FocusRadialMenuScreenMixin {
@@ -59,10 +72,11 @@ public abstract class FocusRadialMenuScreenMixin {
                 this.menu, Component.translatable("tooltip.goetyarkham.focus_slot.store"));
     }
 
-    // Screen.tick(): detect Curios focus-slot content changes (e.g. after our
-    // own swap/store packets round-trip) and force the existing rebuild path
-    // to run, the same way vanilla forces it when the bag ItemStack changes.
-    @Inject(method = "m_86600_", at = @At("HEAD"), require = 1)
+    // Screen.tick() (deobfuscated name "tick", see class javadoc): detect
+    // Curios focus-slot content changes (e.g. after our own swap/store
+    // packets round-trip) and force the existing rebuild path to run, the
+    // same way vanilla forces it when the bag ItemStack changes.
+    @Inject(method = "tick", at = @At("HEAD"), require = 1)
     private void goetyarkham$detectCurioFocusChange(CallbackInfo callback) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) {
@@ -85,8 +99,8 @@ public abstract class FocusRadialMenuScreenMixin {
     // still a focus somewhere" so the screen no longer auto-closes when only
     // a Curios slot holds a focus.
     @Redirect(
-            method = "m_86600_",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;m_41619_()Z"),
+            method = "tick",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z"),
             require = 2)
     private boolean goetyarkham$treatCurioFocusAsPresentOnTick(ItemStack wandFocus) {
         return goetyarkham$isEmptyConsideringCurioSlots(wandFocus);
@@ -97,8 +111,8 @@ public abstract class FocusRadialMenuScreenMixin {
     // later occurrences (insert/extract button visibility, central item) must
     // keep describing the wand's actual contents, so only ordinal 0 is redirected.
     @Redirect(
-            method = "m_88315_",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;m_41619_()Z", ordinal = 0),
+            method = "render",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 0),
             require = 1)
     private boolean goetyarkham$treatCurioFocusAsPresentOnRender(ItemStack wandFocus) {
         return goetyarkham$isEmptyConsideringCurioSlots(wandFocus);
@@ -118,7 +132,7 @@ public abstract class FocusRadialMenuScreenMixin {
     // needsRecheckStacks was true), append one ItemStackRadialMenuItem per
     // non-empty Curios focus slot and the "Slot" text item.
     @Inject(
-            method = "m_88315_",
+            method = "render",
             at = @At(
                     value = "INVOKE",
                     target = "Lcom/Polarice3/Goety/client/gui/radial/GenericRadialMenu;add(Lcom/Polarice3/Goety/client/gui/radial/RadialMenuItem;)V",
@@ -150,7 +164,7 @@ public abstract class FocusRadialMenuScreenMixin {
     // insertMenuItem/extractMenuItem.setVisible(...) calls, which run
     // unconditionally right before menu.draw(...), not only on rebuild passes.
     @Inject(
-            method = "m_88315_",
+            method = "render",
             at = @At(
                     value = "INVOKE",
                     target = "Lcom/Polarice3/Goety/client/gui/radial/GenericRadialMenu;draw(Lnet/minecraft/client/gui/GuiGraphics;FII)V",
