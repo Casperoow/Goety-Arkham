@@ -127,6 +127,8 @@
   "tooltip.goetyarkham.beat_cops_token.stack_gain": "Gain 1 stack of Beat Cop's Retaliation for each point of damage taken, up to 3 stacks",
   "tooltip.goetyarkham.beat_cops_token.stack_consume": "Your next successful melee attack deals 2 bonus damage per stack and consumes all stacks",
   "tooltip.goetyarkham.beat_cops_token.current_stacks": "Current retaliation: %1$s/%2$s",
+  "item.goetyarkham.arcane_initiates_token": "Arcane Initiate’s Token",
+  "tooltip.goetyarkham.arcane_initiates_token.focus_slot": "Gain 1 additional Focus slot",
   "tooltip.goetyarkham.slot.charm": "Slot: Charm",
   "tooltip.goetyarkham.slot.weakness": "Slot: Weakness",
   "tooltip.goetyarkham.slot.necklace": "Slot: Necklace",

@@ -71,6 +71,9 @@ public final class ModItems {
     public static final RegistryObject<BeatCopsTokenItem> BEAT_COPS_TOKEN =
             ITEMS.register("beat_cops_token", BeatCopsTokenItem::new);
 
+    public static final RegistryObject<ArcaneInitiatesTokenItem> ARCANE_INITIATES_TOKEN =
+            ITEMS.register("arcane_initiates_token", ArcaneInitiatesTokenItem::new);
+
     private ModItems() {
     }
 

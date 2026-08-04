@@ -2,6 +2,7 @@ package com.casper.goetyarkham.curios;
 
 import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.CuriosCommand;
+import com.casper.goetyarkham.item.ArcaneInitiatesTokenService;
 import com.casper.goetyarkham.item.HeirloomOfHyperboreaService;
 import com.casper.goetyarkham.item.ModItems;
 import com.casper.goetyarkham.item.WendysAmuletService;
@@ -30,6 +31,8 @@ public final class CuriosForgeEvents {
     private static final Set<UUID> PENDING_HEIRLOOM_RECONCILE =
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_WENDYS_AMULET_RECONCILE =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_ARCANE_TOKEN_RECONCILE =
             ConcurrentHashMap.newKeySet();
 
     private CuriosForgeEvents() {
@@ -63,6 +66,7 @@ public final class CuriosForgeEvents {
             DIRTY_EQUIPMENT.add(player.getUUID());
             handleHeirloomTransition(player, event);
             handleWendysAmuletTransition(player, event);
+            handleArcaneInitiatesTokenTransition(player, event);
         }
     }
 
@@ -90,6 +94,9 @@ public final class CuriosForgeEvents {
         if (PENDING_WENDYS_AMULET_RECONCILE.remove(player.getUUID())) {
             WendysAmuletService.reconcile(player);
         }
+        if (PENDING_ARCANE_TOKEN_RECONCILE.remove(player.getUUID())) {
+            ArcaneInitiatesTokenService.reconcile(player);
+        }
         if (!DIRTY_EQUIPMENT.remove(player.getUUID())) {
             return;
         }
@@ -110,6 +117,7 @@ public final class CuriosForgeEvents {
             DIRTY_EQUIPMENT.remove(player.getUUID());
             PENDING_HEIRLOOM_RECONCILE.remove(player.getUUID());
             PENDING_WENDYS_AMULET_RECONCILE.remove(player.getUUID());
+            PENDING_ARCANE_TOKEN_RECONCILE.remove(player.getUUID());
         }
     }
 
@@ -142,6 +150,26 @@ public final class CuriosForgeEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             PENDING_HEIRLOOM_RECONCILE.add(player.getUUID());
             PENDING_WENDYS_AMULET_RECONCILE.add(player.getUUID());
+            PENDING_ARCANE_TOKEN_RECONCILE.add(player.getUUID());
+        }
+    }
+
+    /**
+     * The extra focus slot is never auto-filled with a generated item, so
+     * unlike {@link #handleHeirloomTransition} / {@link
+     * #handleWendysAmuletTransition} there is no one-time side effect to
+     * guard against replaying: {@link ArcaneInitiatesTokenService#reconcile}
+     * is idempotent and can simply be called on every observed token slot
+     * change.
+     */
+    private static void handleArcaneInitiatesTokenTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.TOKEN.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.ARCANE_INITIATES_TOKEN.get())
+                || event.getTo().is(ModItems.ARCANE_INITIATES_TOKEN.get())) {
+            ArcaneInitiatesTokenService.reconcile(player);
         }
     }
 

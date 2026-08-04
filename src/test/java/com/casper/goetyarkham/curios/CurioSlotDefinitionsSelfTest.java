@@ -184,7 +184,8 @@ public final class CurioSlotDefinitionsSelfTest {
                 "token item tag must merge without replace");
         assertEquals(List.of(
                         "goetyarkham:aquinnahs_token",
-                        "goetyarkham:beat_cops_token"),
+                        "goetyarkham:beat_cops_token",
+                        "goetyarkham:arcane_initiates_token"),
                 token.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Token tag entries");
@@ -196,6 +197,9 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:beat_cops_token");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:arcane_initiates_token");
             }
         }
         assertResourceValueAbsent(
@@ -204,6 +208,9 @@ public final class CurioSlotDefinitionsSelfTest {
         assertResourceValueAbsent(
                 "data/curios/tags/items/charm.json",
                 "goetyarkham:beat_cops_token");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:arcane_initiates_token");
     }
 
     private static void verifyHeirloomItemTags() throws IOException {
@@ -421,6 +428,18 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Beat Cop's Token model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/beat_cops_token.png");
+
+        JsonObject arcaneInitiatesTokenModel = readJson(
+                "/assets/goetyarkham/models/item/arcane_initiates_token.json");
+        assertEquals("minecraft:item/generated",
+                arcaneInitiatesTokenModel.get("parent").getAsString(),
+                "Arcane Initiate's Token model parent");
+        assertEquals("goetyarkham:item/arcane_initiates_token",
+                arcaneInitiatesTokenModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Arcane Initiate's Token model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/arcane_initiates_token.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -629,6 +648,25 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.beat_cops_token.current_stacks")
                             .getAsString(),
                     "Chinese Beat Cop's Token current-stacks tooltip");
+            assertEquals("新晋术士的信物",
+                    translations.get("item.goetyarkham.arcane_initiates_token")
+                            .getAsString(),
+                    "Chinese Arcane Initiate's Token name");
+            assertEquals("获得额外1个聚晶栏位",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_initiates_token.focus_slot")
+                            .getAsString(),
+                    "Chinese Arcane Initiate's Token focus-slot tooltip");
+            assertEquals("+2 最大理智",
+                    attributeBonusText(
+                            translations, 2,
+                            "attribute.name.goetyarkham.max_sanity"),
+                    "Chinese Arcane Initiate's Token maximum-sanity tooltip");
+            assertEquals("+2 意志",
+                    attributeBonusText(
+                            translations, 2,
+                            "attribute.name.goetyarkham.willpower"),
+                    "Chinese Arcane Initiate's Token Will tooltip");
             assertEquals("专属弱点：",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)
@@ -826,6 +864,25 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.beat_cops_token.current_stacks")
                             .getAsString(),
                     "English Beat Cop's Token current-stacks tooltip");
+            assertEquals("Arcane Initiate’s Token",
+                    translations.get("item.goetyarkham.arcane_initiates_token")
+                            .getAsString(),
+                    "English Arcane Initiate's Token name");
+            assertEquals("Gain 1 additional Focus slot",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_initiates_token.focus_slot")
+                            .getAsString(),
+                    "English Arcane Initiate's Token focus-slot tooltip");
+            assertEquals("+2 Max Sanity",
+                    attributeBonusText(
+                            translations, 2,
+                            "attribute.name.goetyarkham.max_sanity"),
+                    "English Arcane Initiate's Token maximum-sanity tooltip");
+            assertEquals("+2 Will",
+                    attributeBonusText(
+                            translations, 2,
+                            "attribute.name.goetyarkham.willpower"),
+                    "English Arcane Initiate's Token Will tooltip");
             assertEquals("Signature Weakness:",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)

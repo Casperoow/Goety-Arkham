@@ -127,6 +127,8 @@
   "tooltip.goetyarkham.beat_cops_token.stack_gain": "每受到1点伤害，获得1层“巡警反击”，最多3层",
   "tooltip.goetyarkham.beat_cops_token.stack_consume": "下一次成功的近战攻击每层额外造成2点伤害，并消耗全部层数",
   "tooltip.goetyarkham.beat_cops_token.current_stacks": "当前巡警反击：%1$s/%2$s层",
+  "item.goetyarkham.arcane_initiates_token": "新晋术士的信物",
+  "tooltip.goetyarkham.arcane_initiates_token.focus_slot": "获得额外1个聚晶栏位",
   "tooltip.goetyarkham.slot.charm": "栏位：护符",
   "tooltip.goetyarkham.slot.weakness": "栏位：弱点",
   "tooltip.goetyarkham.slot.necklace": "栏位：项链",
