@@ -78,6 +78,14 @@ public final class ModNetwork {
                 StoreWandFocusInCurioSlotPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER)
         );
+        CHANNEL.registerMessage(
+                messageId++,
+                ServerboundUseMedicalTextsPacket.class,
+                ServerboundUseMedicalTextsPacket::encode,
+                ServerboundUseMedicalTextsPacket::decode,
+                ServerboundUseMedicalTextsPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER)
+        );
     }
 
     /** Client-only: request a swap between the wand's focus and a Curios focus slot. */
@@ -88,6 +96,11 @@ public final class ModNetwork {
     /** Client-only: request storing the wand's focus into the first empty Curios focus slot. */
     public static void sendStoreFocusInCurioSlot() {
         CHANNEL.sendToServer(new StoreWandFocusInCurioSlotPacket());
+    }
+
+    /** Client-only: request use of the Medical Texts ability. */
+    public static void sendUseMedicalTexts() {
+        CHANNEL.sendToServer(new ServerboundUseMedicalTextsPacket());
     }
 
     public static boolean sendStats(

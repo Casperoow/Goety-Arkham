@@ -79,6 +79,7 @@
   "entity.goetyarkham.young_deep_one": "年幼的深潜者",
   "item.goetyarkham.young_deep_one_spawn_egg": "年幼的深潜者刷怪蛋",
   "curios.identifier.token": "信物",
+  "curios.identifier.book": "书籍",
   "curios.identifier.focus": "聚晶",
   "curios.identifier.tarot": "塔罗牌",
   "curios.identifier.asset": "资产",
@@ -129,6 +130,12 @@
   "tooltip.goetyarkham.beat_cops_token.current_stacks": "当前巡警反击：%1$s/%2$s层",
   "item.goetyarkham.arcane_initiates_token": "新晋术士的信物",
   "tooltip.goetyarkham.arcane_initiates_token.focus_slot": "获得额外1个聚晶栏位",
+  "item.goetyarkham.leo_de_lucas_token": "里奥·德·卢卡的信物",
+  "item.goetyarkham.rita_chandlers_token": "丽塔·钱德勒的信物",
+  "tooltip.goetyarkham.rita_chandlers_token.hold_shift": "按住 Shift 查看详细效果",
+  "tooltip.goetyarkham.rita_chandlers_token.aura_effect": "你半径10格内的玩家获得+1力量，并使其造成的伤害+2。",
+  "tooltip.goetyarkham.rita_chandlers_token.aura_self": "该范围包括你自己。",
+  "effect.goetyarkham.rita_chandlers_blessing": "丽塔·钱德勒的祝福",
   "tooltip.goetyarkham.slot.charm": "栏位：护符",
   "tooltip.goetyarkham.slot.weakness": "栏位：弱点",
   "tooltip.goetyarkham.slot.necklace": "栏位：项链",
@@ -139,5 +146,10 @@
   "tooltip.goetyarkham.signature_weakness": "专属弱点：",
   "tooltip.goetyarkham.hold_shift": "按住 Shift 查看",
   "tooltip.goetyarkham.abandoned_and_alone.effect": "%s/5，当\"孤单\"达到5层时，移除所有\"孤单\"。失去2点理智",
-  "tooltip.goetyarkham.focus_slot.store": "栏位"
+  "tooltip.goetyarkham.focus_slot.store": "栏位",
+  "key.categories.goetyarkham": "诡厄巫法：阿卡姆",
+  "key.goetyarkham.medical_texts_ability": "使用医学教科书",
+  "item.goetyarkham.medical_texts": "医学教科书",
+  "tooltip.goetyarkham.medical_texts.slot": "栏位：手饰、书籍",
+  "tooltip.goetyarkham.medical_texts.effect": "按下%s键进行一次智慧检定（2）。如果成功，则获得瞬间治疗 I；如果失败，则受到1点伤害。"
 }

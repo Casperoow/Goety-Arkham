@@ -14,6 +14,10 @@ public final class ModEffects {
     public static final RegistryObject<MobEffect> DREAMS_OF_RLYEH =
             EFFECTS.register("dreams_of_rlyeh", DreamsOfRlyehEffect::new);
 
+    public static final RegistryObject<MobEffect> RITA_CHANDLERS_BLESSING =
+            EFFECTS.register(
+                    "rita_chandlers_blessing", RitaChandlersBlessingEffect::new);
+
     private ModEffects() {
     }
 

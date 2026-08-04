@@ -33,6 +33,12 @@ public final class PlayerStatsService {
                     com.casper.goetyarkham.effect.DreamsOfRlyehEffectService
                             .willpowerModifier(player));
         }
+        if (stat == StatType.STRENGTH) {
+            return saturatingAdd(
+                    storedFinal,
+                    com.casper.goetyarkham.effect.RitaChandlersAuraEffectService
+                            .strengthModifier(player));
+        }
         return storedFinal;
     }
 

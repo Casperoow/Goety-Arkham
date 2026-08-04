@@ -74,6 +74,15 @@ public final class ModItems {
     public static final RegistryObject<ArcaneInitiatesTokenItem> ARCANE_INITIATES_TOKEN =
             ITEMS.register("arcane_initiates_token", ArcaneInitiatesTokenItem::new);
 
+    public static final RegistryObject<LeoDeLucasTokenItem> LEO_DE_LUCAS_TOKEN =
+            ITEMS.register("leo_de_lucas_token", LeoDeLucasTokenItem::new);
+
+    public static final RegistryObject<RitaChandlersTokenItem> RITA_CHANDLERS_TOKEN =
+            ITEMS.register("rita_chandlers_token", RitaChandlersTokenItem::new);
+
+    public static final RegistryObject<MedicalTextsItem> MEDICAL_TEXTS =
+            ITEMS.register("medical_texts", MedicalTextsItem::new);
+
     private ModItems() {
     }
 

@@ -16,6 +16,8 @@ public final class CurioSlotIds {
     public static final String BODY = "body";
     public static final String TOKEN = "token";
     public static final String HANDS = "hands";
+    /** Extra slot granted only by other items' dynamic modifiers; base size is 0. */
+    public static final String BOOK = "book";
     public static final String FOCUS = "focus";
     public static final String TAROT = "tarot";
     public static final String ASSET = "asset";
@@ -27,6 +29,7 @@ public final class CurioSlotIds {
             BODY,
             TOKEN,
             HANDS,
+            BOOK,
             FOCUS,
             TAROT,
             ASSET,
@@ -39,6 +42,7 @@ public final class CurioSlotIds {
             BODY, 1,
             TOKEN, 1,
             HANDS, 2,
+            BOOK, 0,
             FOCUS, 2,
             TAROT, 1,
             ASSET, 4,

@@ -29,6 +29,7 @@ import net.minecraft.network.chat.TextColor;
 public final class CurioSlotDefinitionsSelfTest {
     private static final Map<String, String> ENGLISH_NAMES = Map.of(
             CurioSlotIds.TOKEN, "Token",
+            CurioSlotIds.BOOK, "Book",
             CurioSlotIds.FOCUS, "Focus",
             CurioSlotIds.TAROT, "Tarot Card",
             CurioSlotIds.ASSET, "Asset",
@@ -38,6 +39,7 @@ public final class CurioSlotDefinitionsSelfTest {
 
     private static final Map<String, String> CHINESE_NAMES = Map.of(
             CurioSlotIds.TOKEN, "信物",
+            CurioSlotIds.BOOK, "书籍",
             CurioSlotIds.FOCUS, "聚晶",
             CurioSlotIds.TAROT, "塔罗牌",
             CurioSlotIds.ASSET, "资产",
@@ -58,6 +60,7 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyTokenItemTag();
         verifyHeirloomItemTags();
         verifyFocusItemTag();
+        verifyBookItemTag();
         verifyBossOrEliteTag();
         verifyItemResources();
         verifySharedTooltipFormatting();
@@ -134,15 +137,24 @@ public final class CurioSlotDefinitionsSelfTest {
         JsonObject hands = readJson("/data/curios/tags/items/hands.json");
         assertFalse(hands.get("replace").getAsBoolean(),
                 "hands item tag must merge without replace");
-        JsonArray values = hands.getAsJsonArray("values");
-        assertEquals(1, values.size(), "Holy Rosary hands tag entry count");
-        assertEquals("goetyarkham:holy_rosary", values.get(0).getAsString(),
-                "Holy Rosary is tagged for hands");
+        assertEquals(List.of(
+                        "goetyarkham:holy_rosary",
+                        "goetyarkham:medical_texts"),
+                hands.getAsJsonArray("values").asList().stream()
+                        .map(element -> element.getAsString()).toList(),
+                "Hands tag entries");
         for (String slotId : CurioSlotIds.ALL) {
             if (!CurioSlotIds.HANDS.equals(slotId)) {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:holy_rosary");
+            }
+            // Medical Texts is deliberately dual-tagged: it must appear in
+            // hands and book, and nowhere else.
+            if (!CurioSlotIds.HANDS.equals(slotId) && !CurioSlotIds.BOOK.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:medical_texts");
             }
         }
         assertResourceValueAbsent(
@@ -185,7 +197,9 @@ public final class CurioSlotDefinitionsSelfTest {
         assertEquals(List.of(
                         "goetyarkham:aquinnahs_token",
                         "goetyarkham:beat_cops_token",
-                        "goetyarkham:arcane_initiates_token"),
+                        "goetyarkham:arcane_initiates_token",
+                        "goetyarkham:leo_de_lucas_token",
+                        "goetyarkham:rita_chandlers_token"),
                 token.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Token tag entries");
@@ -200,6 +214,12 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:arcane_initiates_token");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:leo_de_lucas_token");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:rita_chandlers_token");
             }
         }
         assertResourceValueAbsent(
@@ -211,6 +231,12 @@ public final class CurioSlotDefinitionsSelfTest {
         assertResourceValueAbsent(
                 "data/curios/tags/items/charm.json",
                 "goetyarkham:arcane_initiates_token");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:leo_de_lucas_token");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:rita_chandlers_token");
     }
 
     private static void verifyHeirloomItemTags() throws IOException {
@@ -283,6 +309,22 @@ public final class CurioSlotDefinitionsSelfTest {
         Set<String> expectedFocusItems = Set.of();
         assertEquals(expectedFocusItems, arkhamEntries,
                 "goetyarkham:focuses currently has no IFocus implementers");
+    }
+
+    /**
+     * The Curios {@code book} slot has base size 0 and only appears once
+     * another item's dynamic slot modifier grants it. Medical Texts is the
+     * first Goety: Arkham item to carry the tag, alongside {@code hands} -
+     * it is equippable in either slot, never both at once.
+     */
+    private static void verifyBookItemTag() throws IOException {
+        JsonObject book = readJson("/data/curios/tags/items/book.json");
+        assertFalse(book.get("replace").getAsBoolean(),
+                "book item tag must merge without replace");
+        assertEquals(List.of("goetyarkham:medical_texts"),
+                book.getAsJsonArray("values").asList().stream()
+                        .map(element -> element.getAsString()).toList(),
+                "Book tag entries");
     }
 
     private static void verifyBossOrEliteTag() throws IOException {
@@ -440,6 +482,42 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Arcane Initiate's Token model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/arcane_initiates_token.png");
+
+        JsonObject leoDeLucasTokenModel = readJson(
+                "/assets/goetyarkham/models/item/leo_de_lucas_token.json");
+        assertEquals("minecraft:item/generated",
+                leoDeLucasTokenModel.get("parent").getAsString(),
+                "Leo De Luca's Token model parent");
+        assertEquals("goetyarkham:item/leo_de_lucas_token",
+                leoDeLucasTokenModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Leo De Luca's Token model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/leo_de_lucas_token.png");
+
+        JsonObject ritaChandlersTokenModel = readJson(
+                "/assets/goetyarkham/models/item/rita_chandlers_token.json");
+        assertEquals("minecraft:item/generated",
+                ritaChandlersTokenModel.get("parent").getAsString(),
+                "Rita Chandler's Token model parent");
+        assertEquals("goetyarkham:item/rita_chandlers_token",
+                ritaChandlersTokenModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Rita Chandler's Token model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/rita_chandlers_token.png");
+
+        JsonObject medicalTextsModel = readJson(
+                "/assets/goetyarkham/models/item/medical_texts.json");
+        assertEquals("minecraft:item/generated",
+                medicalTextsModel.get("parent").getAsString(),
+                "Medical Texts model parent");
+        assertEquals("goetyarkham:item/medical_texts",
+                medicalTextsModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Medical Texts model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/medical_texts.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -667,6 +745,64 @@ public final class CurioSlotDefinitionsSelfTest {
                             translations, 2,
                             "attribute.name.goetyarkham.willpower"),
                     "Chinese Arcane Initiate's Token Will tooltip");
+            assertEquals("里奥·德·卢卡的信物",
+                    translations.get("item.goetyarkham.leo_de_lucas_token")
+                            .getAsString(),
+                    "Chinese Leo De Luca's Token name");
+            assertEquals("+2 最大理智",
+                    attributeBonusText(
+                            translations, 2,
+                            "attribute.name.goetyarkham.max_sanity"),
+                    "Chinese Leo De Luca's Token maximum-sanity tooltip");
+            assertEquals("丽塔·钱德勒的信物",
+                    translations.get("item.goetyarkham.rita_chandlers_token")
+                            .getAsString(),
+                    "Chinese Rita Chandler's Token name");
+            assertEquals("+1 力量",
+                    attributeBonusText(
+                            translations, 1,
+                            "attribute.name.goetyarkham.strength"),
+                    "Chinese Rita Chandler's Token Strength tooltip");
+            assertEquals("按住 Shift 查看详细效果",
+                    translations.get(
+                            "tooltip.goetyarkham.rita_chandlers_token.hold_shift")
+                            .getAsString(),
+                    "Chinese Rita Chandler's Token Shift hint");
+            assertEquals("你半径10格内的玩家获得+1力量，并使其造成的伤害+2。",
+                    translations.get(
+                            "tooltip.goetyarkham.rita_chandlers_token.aura_effect")
+                            .getAsString(),
+                    "Chinese Rita Chandler's Token aura tooltip");
+            assertEquals("该范围包括你自己。",
+                    translations.get(
+                            "tooltip.goetyarkham.rita_chandlers_token.aura_self")
+                            .getAsString(),
+                    "Chinese Rita Chandler's Token aura self-inclusion tooltip");
+            assertEquals("丽塔·钱德勒的祝福",
+                    translations.get("effect.goetyarkham.rita_chandlers_blessing")
+                            .getAsString(),
+                    "Chinese Rita Chandler's Blessing effect name");
+            assertEquals("诡厄巫法：阿卡姆",
+                    translations.get("key.categories.goetyarkham")
+                            .getAsString(),
+                    "Chinese key category name");
+            assertEquals("使用医学教科书",
+                    translations.get("key.goetyarkham.medical_texts_ability")
+                            .getAsString(),
+                    "Chinese Medical Texts key name");
+            assertEquals("医学教科书",
+                    translations.get("item.goetyarkham.medical_texts")
+                            .getAsString(),
+                    "Chinese Medical Texts name");
+            assertEquals("栏位：手饰、书籍",
+                    translations.get("tooltip.goetyarkham.medical_texts.slot")
+                            .getAsString(),
+                    "Chinese Medical Texts slot label");
+            assertEquals(
+                    "按下%s键进行一次智慧检定（2）。如果成功，则获得瞬间治疗 I；如果失败，则受到1点伤害。",
+                    translations.get("tooltip.goetyarkham.medical_texts.effect")
+                            .getAsString(),
+                    "Chinese Medical Texts effect tooltip");
             assertEquals("专属弱点：",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)
@@ -883,6 +1019,66 @@ public final class CurioSlotDefinitionsSelfTest {
                             translations, 2,
                             "attribute.name.goetyarkham.willpower"),
                     "English Arcane Initiate's Token Will tooltip");
+            assertEquals("Leo De Luca’s Token",
+                    translations.get("item.goetyarkham.leo_de_lucas_token")
+                            .getAsString(),
+                    "English Leo De Luca's Token name");
+            assertEquals("+2 Max Sanity",
+                    attributeBonusText(
+                            translations, 2,
+                            "attribute.name.goetyarkham.max_sanity"),
+                    "English Leo De Luca's Token maximum-sanity tooltip");
+            assertEquals("Rita Chandler’s Token",
+                    translations.get("item.goetyarkham.rita_chandlers_token")
+                            .getAsString(),
+                    "English Rita Chandler's Token name");
+            assertEquals("+1 Strength",
+                    attributeBonusText(
+                            translations, 1,
+                            "attribute.name.goetyarkham.strength"),
+                    "English Rita Chandler's Token Strength tooltip");
+            assertEquals("Hold Shift for details",
+                    translations.get(
+                            "tooltip.goetyarkham.rita_chandlers_token.hold_shift")
+                            .getAsString(),
+                    "English Rita Chandler's Token Shift hint");
+            assertEquals(
+                    "Players within 10 blocks of you gain +1 Strength and deal +2 damage.",
+                    translations.get(
+                            "tooltip.goetyarkham.rita_chandlers_token.aura_effect")
+                            .getAsString(),
+                    "English Rita Chandler's Token aura tooltip");
+            assertEquals("This includes you.",
+                    translations.get(
+                            "tooltip.goetyarkham.rita_chandlers_token.aura_self")
+                            .getAsString(),
+                    "English Rita Chandler's Token aura self-inclusion tooltip");
+            assertEquals("Rita Chandler’s Blessing",
+                    translations.get("effect.goetyarkham.rita_chandlers_blessing")
+                            .getAsString(),
+                    "English Rita Chandler's Blessing effect name");
+            assertEquals("Goety: Arkham",
+                    translations.get("key.categories.goetyarkham")
+                            .getAsString(),
+                    "English key category name");
+            assertEquals("Use Medical Texts",
+                    translations.get("key.goetyarkham.medical_texts_ability")
+                            .getAsString(),
+                    "English Medical Texts key name");
+            assertEquals("Medical Texts",
+                    translations.get("item.goetyarkham.medical_texts")
+                            .getAsString(),
+                    "English Medical Texts name");
+            assertEquals("Slot: Hands, Book",
+                    translations.get("tooltip.goetyarkham.medical_texts.slot")
+                            .getAsString(),
+                    "English Medical Texts slot label");
+            assertEquals(
+                    "Press %s to perform an Intellect test (2). If successful,"
+                            + " gain Instant Health I; if failed, take 1 damage.",
+                    translations.get("tooltip.goetyarkham.medical_texts.effect")
+                            .getAsString(),
+                    "English Medical Texts effect tooltip");
             assertEquals("Signature Weakness:",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)

@@ -79,6 +79,7 @@
   "entity.goetyarkham.young_deep_one": "Young Deep One",
   "item.goetyarkham.young_deep_one_spawn_egg": "Young Deep One Spawn Egg",
   "curios.identifier.token": "Token",
+  "curios.identifier.book": "Book",
   "curios.identifier.focus": "Focus",
   "curios.identifier.tarot": "Tarot Card",
   "curios.identifier.asset": "Asset",
@@ -129,6 +130,12 @@
   "tooltip.goetyarkham.beat_cops_token.current_stacks": "Current retaliation: %1$s/%2$s",
   "item.goetyarkham.arcane_initiates_token": "Arcane Initiate’s Token",
   "tooltip.goetyarkham.arcane_initiates_token.focus_slot": "Gain 1 additional Focus slot",
+  "item.goetyarkham.leo_de_lucas_token": "Leo De Luca’s Token",
+  "item.goetyarkham.rita_chandlers_token": "Rita Chandler’s Token",
+  "tooltip.goetyarkham.rita_chandlers_token.hold_shift": "Hold Shift for details",
+  "tooltip.goetyarkham.rita_chandlers_token.aura_effect": "Players within 10 blocks of you gain +1 Strength and deal +2 damage.",
+  "tooltip.goetyarkham.rita_chandlers_token.aura_self": "This includes you.",
+  "effect.goetyarkham.rita_chandlers_blessing": "Rita Chandler’s Blessing",
   "tooltip.goetyarkham.slot.charm": "Slot: Charm",
   "tooltip.goetyarkham.slot.weakness": "Slot: Weakness",
   "tooltip.goetyarkham.slot.necklace": "Slot: Necklace",
@@ -139,5 +146,10 @@
   "tooltip.goetyarkham.signature_weakness": "Signature Weakness:",
   "tooltip.goetyarkham.hold_shift": "Hold Shift for details",
   "tooltip.goetyarkham.abandoned_and_alone.effect": "%s/5. When Loneliness reaches 5, remove all Loneliness and lose 2 Sanity.",
-  "tooltip.goetyarkham.focus_slot.store": "Slot"
+  "tooltip.goetyarkham.focus_slot.store": "Slot",
+  "key.categories.goetyarkham": "Goety: Arkham",
+  "key.goetyarkham.medical_texts_ability": "Use Medical Texts",
+  "item.goetyarkham.medical_texts": "Medical Texts",
+  "tooltip.goetyarkham.medical_texts.slot": "Slot: Hands, Book",
+  "tooltip.goetyarkham.medical_texts.effect": "Press %s to perform an Intellect test (2). If successful, gain Instant Health I; if failed, take 1 damage."
 }

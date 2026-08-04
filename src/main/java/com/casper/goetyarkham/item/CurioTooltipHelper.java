@@ -46,6 +46,20 @@ public final class CurioTooltipHelper {
                 Component.translatable(attributeTranslationKey));
     }
 
+    public static Component attributeBonus(double amount, String attributeTranslationKey) {
+        return Component.translatable(
+                ATTRIBUTE_BONUS_TRANSLATION_KEY,
+                formatAmount(amount),
+                Component.translatable(attributeTranslationKey));
+    }
+
+    private static String formatAmount(double amount) {
+        if (amount == Math.rint(amount)) {
+            return String.valueOf((long) amount);
+        }
+        return String.valueOf(amount);
+    }
+
     public static Component attributeBonusPercent(int percent, String attributeTranslationKey) {
         return Component.translatable(
                 ATTRIBUTE_BONUS_PERCENT_TRANSLATION_KEY,
