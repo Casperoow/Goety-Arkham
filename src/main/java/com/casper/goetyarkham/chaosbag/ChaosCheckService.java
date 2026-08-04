@@ -1,5 +1,6 @@
 package com.casper.goetyarkham.chaosbag;
 
+import com.casper.goetyarkham.item.LockpicksDurabilityService;
 import com.casper.goetyarkham.soul.SoulEnergyPoolService;
 import com.casper.goetyarkham.stats.PlayerStatsService;
 import net.minecraft.resources.ResourceLocation;
@@ -56,6 +57,7 @@ public final class ChaosCheckService {
         player.sendSystemMessage(ChaosCheckText.summary(result));
         ChaosCheckText.notices(result).forEach(player::sendSystemMessage);
         applyConsequences(player, result);
+        LockpicksDurabilityService.onCheckResolved(player, result);
         return result;
     }
 

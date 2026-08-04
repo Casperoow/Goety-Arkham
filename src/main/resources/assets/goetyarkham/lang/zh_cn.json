@@ -151,5 +151,16 @@
   "key.goetyarkham.medical_texts_ability": "使用医学教科书",
   "item.goetyarkham.medical_texts": "医学教科书",
   "tooltip.goetyarkham.medical_texts.slot": "栏位：手饰、书籍",
-  "tooltip.goetyarkham.medical_texts.effect": "按下%s键进行一次智慧检定（2）。如果成功，则获得瞬间治疗 I；如果失败，则受到1点伤害。"
+  "tooltip.goetyarkham.medical_texts.effect": "按下%s键进行一次智慧检定（2）。如果成功，则获得瞬间治疗 I；如果失败，则受到1点伤害。",
+  "item.goetyarkham.book_of_shadows": "影之书",
+  "tooltip.goetyarkham.book_of_shadows.slot": "栏位：手饰、书籍",
+  "tooltip.goetyarkham.book_of_shadows.focus_slot": "获得额外1个聚晶栏位",
+  "item.goetyarkham.lockpicks": "撬锁工具",
+  "tooltip.goetyarkham.lockpicks.slot": "栏位：手饰",
+  "tooltip.goetyarkham.lockpicks.effect": "将你的敏捷加入你的智慧",
+  "tooltip.goetyarkham.lockpicks.durability_effect": "当你进行智慧检定时，如果成功且未超过难度2点，失去1点耐久",
+  "tooltip.goetyarkham.lockpicks.durability": "耐久：%s",
+  "tooltip.goetyarkham.lockpicks.hold_shift": "按住 Shift 查看详细效果",
+  "item.goetyarkham.magnifying_glass": "放大镜",
+  "tooltip.goetyarkham.magnifying_glass.slot": "栏位：手饰"
 }

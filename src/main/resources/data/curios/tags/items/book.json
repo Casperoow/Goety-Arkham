@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "goetyarkham:medical_texts"
+    "goetyarkham:medical_texts",
+    "goetyarkham:book_of_shadows"
   ]
 }

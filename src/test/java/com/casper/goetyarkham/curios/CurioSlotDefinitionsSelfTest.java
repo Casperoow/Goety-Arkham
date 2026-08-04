@@ -139,7 +139,10 @@ public final class CurioSlotDefinitionsSelfTest {
                 "hands item tag must merge without replace");
         assertEquals(List.of(
                         "goetyarkham:holy_rosary",
-                        "goetyarkham:medical_texts"),
+                        "goetyarkham:medical_texts",
+                        "goetyarkham:book_of_shadows",
+                        "goetyarkham:lockpicks",
+                        "goetyarkham:magnifying_glass"),
                 hands.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Hands tag entries");
@@ -148,18 +151,33 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:holy_rosary");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:lockpicks");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:magnifying_glass");
             }
-            // Medical Texts is deliberately dual-tagged: it must appear in
-            // hands and book, and nowhere else.
+            // Medical Texts and the Book of Shadows are deliberately
+            // dual-tagged: each must appear in hands and book, and nowhere else.
             if (!CurioSlotIds.HANDS.equals(slotId) && !CurioSlotIds.BOOK.equals(slotId)) {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:medical_texts");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:book_of_shadows");
             }
         }
         assertResourceValueAbsent(
                 "data/curios/tags/items/charm.json",
                 "goetyarkham:holy_rosary");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:lockpicks");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:magnifying_glass");
     }
 
     private static void verifyBodyItemTag() throws IOException {
@@ -313,15 +331,15 @@ public final class CurioSlotDefinitionsSelfTest {
 
     /**
      * The Curios {@code book} slot has base size 0 and only appears once
-     * another item's dynamic slot modifier grants it. Medical Texts is the
-     * first Goety: Arkham item to carry the tag, alongside {@code hands} -
-     * it is equippable in either slot, never both at once.
+     * another item's dynamic slot modifier grants it. Medical Texts and the
+     * Book of Shadows both carry the tag, alongside {@code hands} - each is
+     * equippable in either slot, never both at once.
      */
     private static void verifyBookItemTag() throws IOException {
         JsonObject book = readJson("/data/curios/tags/items/book.json");
         assertFalse(book.get("replace").getAsBoolean(),
                 "book item tag must merge without replace");
-        assertEquals(List.of("goetyarkham:medical_texts"),
+        assertEquals(List.of("goetyarkham:medical_texts", "goetyarkham:book_of_shadows"),
                 book.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Book tag entries");
@@ -518,6 +536,42 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Medical Texts model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/medical_texts.png");
+
+        JsonObject bookOfShadowsModel = readJson(
+                "/assets/goetyarkham/models/item/book_of_shadows.json");
+        assertEquals("minecraft:item/generated",
+                bookOfShadowsModel.get("parent").getAsString(),
+                "Book of Shadows model parent");
+        assertEquals("goetyarkham:item/book_of_shadows",
+                bookOfShadowsModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Book of Shadows model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/book_of_shadows.png");
+
+        JsonObject lockpicksModel = readJson(
+                "/assets/goetyarkham/models/item/lockpicks.json");
+        assertEquals("minecraft:item/generated",
+                lockpicksModel.get("parent").getAsString(),
+                "Lockpicks model parent");
+        assertEquals("goetyarkham:item/lockpicks",
+                lockpicksModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Lockpicks model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/lockpicks.png");
+
+        JsonObject magnifyingGlassModel = readJson(
+                "/assets/goetyarkham/models/item/magnifying_glass.json");
+        assertEquals("minecraft:item/generated",
+                magnifyingGlassModel.get("parent").getAsString(),
+                "Magnifying Glass model parent");
+        assertEquals("goetyarkham:item/magnifying_glass",
+                magnifyingGlassModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Magnifying Glass model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/magnifying_glass.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -803,6 +857,57 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.medical_texts.effect")
                             .getAsString(),
                     "Chinese Medical Texts effect tooltip");
+            assertEquals("影之书",
+                    translations.get("item.goetyarkham.book_of_shadows")
+                            .getAsString(),
+                    "Chinese Book of Shadows name");
+            assertEquals("栏位：手饰、书籍",
+                    translations.get("tooltip.goetyarkham.book_of_shadows.slot")
+                            .getAsString(),
+                    "Chinese Book of Shadows slot label");
+            assertEquals("获得额外1个聚晶栏位",
+                    translations.get(
+                            "tooltip.goetyarkham.book_of_shadows.focus_slot")
+                            .getAsString(),
+                    "Chinese Book of Shadows focus-slot tooltip");
+            assertEquals("撬锁工具",
+                    translations.get("item.goetyarkham.lockpicks")
+                            .getAsString(),
+                    "Chinese Lockpicks name");
+            assertEquals("栏位：手饰",
+                    translations.get("tooltip.goetyarkham.lockpicks.slot")
+                            .getAsString(),
+                    "Chinese Lockpicks slot label");
+            assertEquals("将你的敏捷加入你的智慧",
+                    translations.get("tooltip.goetyarkham.lockpicks.effect")
+                            .getAsString(),
+                    "Chinese Lockpicks effect tooltip");
+            assertEquals("当你进行智慧检定时，如果成功且未超过难度2点，失去1点耐久",
+                    translations.get(
+                            "tooltip.goetyarkham.lockpicks.durability_effect")
+                            .getAsString(),
+                    "Chinese Lockpicks durability-consumption tooltip");
+            assertEquals("耐久：%s",
+                    translations.get("tooltip.goetyarkham.lockpicks.durability")
+                            .getAsString(),
+                    "Chinese Lockpicks durability tooltip format");
+            assertEquals("按住 Shift 查看详细效果",
+                    translations.get("tooltip.goetyarkham.lockpicks.hold_shift")
+                            .getAsString(),
+                    "Chinese Lockpicks Shift hint");
+            assertEquals("放大镜",
+                    translations.get("item.goetyarkham.magnifying_glass")
+                            .getAsString(),
+                    "Chinese Magnifying Glass name");
+            assertEquals("栏位：手饰",
+                    translations.get("tooltip.goetyarkham.magnifying_glass.slot")
+                            .getAsString(),
+                    "Chinese Magnifying Glass slot label");
+            assertEquals("+1 智慧",
+                    attributeBonusText(
+                            translations, 1,
+                            "attribute.name.goetyarkham.intellect"),
+                    "Chinese Magnifying Glass Intellect tooltip");
             assertEquals("专属弱点：",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)
@@ -1079,6 +1184,59 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.medical_texts.effect")
                             .getAsString(),
                     "English Medical Texts effect tooltip");
+            assertEquals("Book of Shadows",
+                    translations.get("item.goetyarkham.book_of_shadows")
+                            .getAsString(),
+                    "English Book of Shadows name");
+            assertEquals("Slot: Hands, Book",
+                    translations.get("tooltip.goetyarkham.book_of_shadows.slot")
+                            .getAsString(),
+                    "English Book of Shadows slot label");
+            assertEquals("Gain 1 additional Focus slot",
+                    translations.get(
+                            "tooltip.goetyarkham.book_of_shadows.focus_slot")
+                            .getAsString(),
+                    "English Book of Shadows focus-slot tooltip");
+            assertEquals("Lockpicks",
+                    translations.get("item.goetyarkham.lockpicks")
+                            .getAsString(),
+                    "English Lockpicks name");
+            assertEquals("Slot: Hands",
+                    translations.get("tooltip.goetyarkham.lockpicks.slot")
+                            .getAsString(),
+                    "English Lockpicks slot label");
+            assertEquals("Add your Agility to your Intellect.",
+                    translations.get("tooltip.goetyarkham.lockpicks.effect")
+                            .getAsString(),
+                    "English Lockpicks effect tooltip");
+            assertEquals(
+                    "When making an Intellect test, if you succeed by no more"
+                            + " than 2, lose 1 durability.",
+                    translations.get(
+                            "tooltip.goetyarkham.lockpicks.durability_effect")
+                            .getAsString(),
+                    "English Lockpicks durability-consumption tooltip");
+            assertEquals("Durability: %s",
+                    translations.get("tooltip.goetyarkham.lockpicks.durability")
+                            .getAsString(),
+                    "English Lockpicks durability tooltip format");
+            assertEquals("Hold Shift for details",
+                    translations.get("tooltip.goetyarkham.lockpicks.hold_shift")
+                            .getAsString(),
+                    "English Lockpicks Shift hint");
+            assertEquals("Magnifying Glass",
+                    translations.get("item.goetyarkham.magnifying_glass")
+                            .getAsString(),
+                    "English Magnifying Glass name");
+            assertEquals("Slot: Hands",
+                    translations.get("tooltip.goetyarkham.magnifying_glass.slot")
+                            .getAsString(),
+                    "English Magnifying Glass slot label");
+            assertEquals("+1 Intellect",
+                    attributeBonusText(
+                            translations, 1,
+                            "attribute.name.goetyarkham.intellect"),
+                    "English Magnifying Glass Intellect tooltip");
             assertEquals("Signature Weakness:",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)

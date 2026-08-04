@@ -151,5 +151,16 @@
   "key.goetyarkham.medical_texts_ability": "Use Medical Texts",
   "item.goetyarkham.medical_texts": "Medical Texts",
   "tooltip.goetyarkham.medical_texts.slot": "Slot: Hands, Book",
-  "tooltip.goetyarkham.medical_texts.effect": "Press %s to perform an Intellect test (2). If successful, gain Instant Health I; if failed, take 1 damage."
+  "tooltip.goetyarkham.medical_texts.effect": "Press %s to perform an Intellect test (2). If successful, gain Instant Health I; if failed, take 1 damage.",
+  "item.goetyarkham.book_of_shadows": "Book of Shadows",
+  "tooltip.goetyarkham.book_of_shadows.slot": "Slot: Hands, Book",
+  "tooltip.goetyarkham.book_of_shadows.focus_slot": "Gain 1 additional Focus slot",
+  "item.goetyarkham.lockpicks": "Lockpicks",
+  "tooltip.goetyarkham.lockpicks.slot": "Slot: Hands",
+  "tooltip.goetyarkham.lockpicks.effect": "Add your Agility to your Intellect.",
+  "tooltip.goetyarkham.lockpicks.durability_effect": "When making an Intellect test, if you succeed by no more than 2, lose 1 durability.",
+  "tooltip.goetyarkham.lockpicks.durability": "Durability: %s",
+  "tooltip.goetyarkham.lockpicks.hold_shift": "Hold Shift for details",
+  "item.goetyarkham.magnifying_glass": "Magnifying Glass",
+  "tooltip.goetyarkham.magnifying_glass.slot": "Slot: Hands"
 }

@@ -9,43 +9,45 @@ import java.util.UUID;
 
 /**
  * Owns the single +1 {@link CurioSlotIds#FOCUS} Curios slot granted by an
- * equipped Arcane Initiate's Token, worn in {@link CurioSlotIds#TOKEN}. The
- * actual slot-modifier lifecycle is {@link FocusSlotContributionService},
- * shared with every other Goety: Arkham item that grants an extra focus
- * slot (e.g. the Book of Shadows via {@link BookOfShadowsService}).
+ * equipped Book of Shadows, worn in either {@link CurioSlotIds#HANDS} or
+ * {@link CurioSlotIds#BOOK}. Reuses the same {@link
+ * FocusSlotContributionService} slot-modifier lifecycle as the Arcane
+ * Initiate's Token, so both items' contributions stack additively without
+ * either one interfering with the other.
  */
-public final class ArcaneInitiatesTokenService {
+public final class BookOfShadowsService {
     public static final UUID FOCUS_SLOT_MODIFIER_ID = UUID.fromString(
-            "a3c1f2e7-8b4d-4e6a-9f21-7d5c3a8b4e60");
+            "67bdbbcc-8b10-4336-b20a-452de1d05c8a");
     public static final String FOCUS_SLOT_MODIFIER_NAME =
-            "goetyarkham:arcane_initiates_token";
-    private static final List<String> WORN_SLOTS = List.of(CurioSlotIds.TOKEN);
+            "goetyarkham:book_of_shadows";
+    private static final List<String> WORN_SLOTS =
+            List.of(CurioSlotIds.HANDS, CurioSlotIds.BOOK);
 
-    private ArcaneInitiatesTokenService() {
+    private BookOfShadowsService() {
     }
 
     /**
      * Login/clone/dimension/sync-safe repair. Stateless: it only looks at
-     * whether the token is currently worn, so calling it repeatedly (or out
-     * of order with any other reconcile call) never duplicates or loses the
-     * slot modifier.
+     * whether the book is currently worn (in either supported slot), so
+     * calling it repeatedly (or out of order with any other reconcile call)
+     * never duplicates or loses the slot modifier.
      */
     public static void reconcile(ServerPlayer player) {
         FocusSlotContributionService.reconcile(
                 player,
                 FOCUS_SLOT_MODIFIER_ID,
                 FOCUS_SLOT_MODIFIER_NAME,
-                ModItems.ARCANE_INITIATES_TOKEN::get,
+                ModItems.BOOK_OF_SHADOWS::get,
                 WORN_SLOTS);
     }
 
     public static boolean isWearing(ServerPlayer player) {
         return FocusSlotContributionService.isWearing(
-                player, ModItems.ARCANE_INITIATES_TOKEN.get(), WORN_SLOTS);
+                player, ModItems.BOOK_OF_SHADOWS.get(), WORN_SLOTS);
     }
 
     public static int equippedCount(ServerPlayer player) {
         return FocusSlotContributionService.equippedCount(
-                player, ModItems.ARCANE_INITIATES_TOKEN.get(), WORN_SLOTS);
+                player, ModItems.BOOK_OF_SHADOWS.get(), WORN_SLOTS);
     }
 }

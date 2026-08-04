@@ -2,6 +2,9 @@
   "replace": false,
   "values": [
     "goetyarkham:holy_rosary",
-    "goetyarkham:medical_texts"
+    "goetyarkham:medical_texts",
+    "goetyarkham:book_of_shadows",
+    "goetyarkham:lockpicks",
+    "goetyarkham:magnifying_glass"
   ]
 }

@@ -39,6 +39,12 @@ public final class PlayerStatsService {
                     com.casper.goetyarkham.effect.RitaChandlersAuraEffectService
                             .strengthModifier(player));
         }
+        if (stat == StatType.INTELLECT) {
+            return saturatingAdd(
+                    storedFinal,
+                    com.casper.goetyarkham.item.LockpicksIntellectBonusService
+                            .intellectModifier(player));
+        }
         return storedFinal;
     }
 

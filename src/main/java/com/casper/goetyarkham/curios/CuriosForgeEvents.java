@@ -3,6 +3,7 @@ package com.casper.goetyarkham.curios;
 import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.CuriosCommand;
 import com.casper.goetyarkham.item.ArcaneInitiatesTokenService;
+import com.casper.goetyarkham.item.BookOfShadowsService;
 import com.casper.goetyarkham.item.HeirloomOfHyperboreaService;
 import com.casper.goetyarkham.item.ModItems;
 import com.casper.goetyarkham.item.WendysAmuletService;
@@ -33,6 +34,8 @@ public final class CuriosForgeEvents {
     private static final Set<UUID> PENDING_WENDYS_AMULET_RECONCILE =
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_ARCANE_TOKEN_RECONCILE =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_BOOK_OF_SHADOWS_RECONCILE =
             ConcurrentHashMap.newKeySet();
 
     private CuriosForgeEvents() {
@@ -67,6 +70,7 @@ public final class CuriosForgeEvents {
             handleHeirloomTransition(player, event);
             handleWendysAmuletTransition(player, event);
             handleArcaneInitiatesTokenTransition(player, event);
+            handleBookOfShadowsTransition(player, event);
         }
     }
 
@@ -97,6 +101,9 @@ public final class CuriosForgeEvents {
         if (PENDING_ARCANE_TOKEN_RECONCILE.remove(player.getUUID())) {
             ArcaneInitiatesTokenService.reconcile(player);
         }
+        if (PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(player.getUUID())) {
+            BookOfShadowsService.reconcile(player);
+        }
         if (!DIRTY_EQUIPMENT.remove(player.getUUID())) {
             return;
         }
@@ -118,6 +125,7 @@ public final class CuriosForgeEvents {
             PENDING_HEIRLOOM_RECONCILE.remove(player.getUUID());
             PENDING_WENDYS_AMULET_RECONCILE.remove(player.getUUID());
             PENDING_ARCANE_TOKEN_RECONCILE.remove(player.getUUID());
+            PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(player.getUUID());
         }
     }
 
@@ -151,6 +159,7 @@ public final class CuriosForgeEvents {
             PENDING_HEIRLOOM_RECONCILE.add(player.getUUID());
             PENDING_WENDYS_AMULET_RECONCILE.add(player.getUUID());
             PENDING_ARCANE_TOKEN_RECONCILE.add(player.getUUID());
+            PENDING_BOOK_OF_SHADOWS_RECONCILE.add(player.getUUID());
         }
     }
 
@@ -170,6 +179,24 @@ public final class CuriosForgeEvents {
         if (event.getFrom().is(ModItems.ARCANE_INITIATES_TOKEN.get())
                 || event.getTo().is(ModItems.ARCANE_INITIATES_TOKEN.get())) {
             ArcaneInitiatesTokenService.reconcile(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handleArcaneInitiatesTokenTransition}: the
+     * extra focus slot is never auto-filled, so {@link
+     * BookOfShadowsService#reconcile} is idempotent and safe to call on
+     * every observed change to either supported slot.
+     */
+    private static void handleBookOfShadowsTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.HANDS.equals(event.getIdentifier())
+                && !CurioSlotIds.BOOK.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.BOOK_OF_SHADOWS.get())
+                || event.getTo().is(ModItems.BOOK_OF_SHADOWS.get())) {
+            BookOfShadowsService.reconcile(player);
         }
     }
 

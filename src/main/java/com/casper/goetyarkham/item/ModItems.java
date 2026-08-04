@@ -83,6 +83,15 @@ public final class ModItems {
     public static final RegistryObject<MedicalTextsItem> MEDICAL_TEXTS =
             ITEMS.register("medical_texts", MedicalTextsItem::new);
 
+    public static final RegistryObject<BookOfShadowsItem> BOOK_OF_SHADOWS =
+            ITEMS.register("book_of_shadows", BookOfShadowsItem::new);
+
+    public static final RegistryObject<LockpicksItem> LOCKPICKS =
+            ITEMS.register("lockpicks", LockpicksItem::new);
+
+    public static final RegistryObject<MagnifyingGlassItem> MAGNIFYING_GLASS =
+            ITEMS.register("magnifying_glass", MagnifyingGlassItem::new);
+
     private ModItems() {
     }
 
