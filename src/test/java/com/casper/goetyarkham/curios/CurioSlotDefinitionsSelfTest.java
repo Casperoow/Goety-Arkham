@@ -57,6 +57,7 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyBodyItemTag();
         verifyTokenItemTag();
         verifyHeirloomItemTags();
+        verifyFocusItemTag();
         verifyBossOrEliteTag();
         verifyItemResources();
         verifySharedTooltipFormatting();
@@ -247,6 +248,34 @@ public final class CurioSlotDefinitionsSelfTest {
                         "goetyarkham:abandoned_and_alone");
             }
         }
+    }
+
+    /**
+     * The Curios {@code focus} slot must only accept items tagged as a
+     * focus, and the addon's own focus tag collects every Goety: Arkham item
+     * that implements {@code IFocus}. No such item exists yet, so the
+     * addon-owned tag is currently empty; when one is added, both this set
+     * and {@code data/goetyarkham/tags/items/focuses.json} must be updated
+     * together.
+     */
+    private static void verifyFocusItemTag() throws IOException {
+        JsonObject focus = readJson("/data/curios/tags/items/focus.json");
+        assertFalse(focus.get("replace").getAsBoolean(),
+                "focus item tag must merge without replace");
+        Set<String> entries = new HashSet<>();
+        focus.getAsJsonArray("values").forEach(element -> entries.add(element.getAsString()));
+        assertEquals(Set.of("#goety:focuses", "#goetyarkham:focuses"),
+                entries, "focus item tag entries");
+
+        JsonObject arkhamFocuses = readJson("/data/goetyarkham/tags/items/focuses.json");
+        assertFalse(arkhamFocuses.get("replace").getAsBoolean(),
+                "goetyarkham:focuses tag must merge without replace");
+        Set<String> arkhamEntries = new HashSet<>();
+        arkhamFocuses.getAsJsonArray("values")
+                .forEach(element -> arkhamEntries.add(element.getAsString()));
+        Set<String> expectedFocusItems = Set.of();
+        assertEquals(expectedFocusItems, arkhamEntries,
+                "goetyarkham:focuses currently has no IFocus implementers");
     }
 
     private static void verifyBossOrEliteTag() throws IOException {

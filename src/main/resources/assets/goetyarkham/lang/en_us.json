@@ -136,5 +136,6 @@
   "tooltip.goetyarkham.wendys_amulet.weakness_slot": "+1 Weakness Slot",
   "tooltip.goetyarkham.signature_weakness": "Signature Weakness:",
   "tooltip.goetyarkham.hold_shift": "Hold Shift for details",
-  "tooltip.goetyarkham.abandoned_and_alone.effect": "%s/5. When Loneliness reaches 5, remove all Loneliness and lose 2 Sanity."
+  "tooltip.goetyarkham.abandoned_and_alone.effect": "%s/5. When Loneliness reaches 5, remove all Loneliness and lose 2 Sanity.",
+  "tooltip.goetyarkham.focus_slot.store": "Slot"
 }

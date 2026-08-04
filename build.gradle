@@ -335,6 +335,14 @@ tasks.register('lonelinessSelfTest', JavaExec) {
     mainClass = 'com.casper.goetyarkham.loneliness.LonelinessSelfTest'
 }
 
+tasks.register('focusSlotExchangeSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs deterministic pure-logic tests for the focus Curio slot exchange rules.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.curios.FocusSlotExchangeSelfTest'
+}
+
 tasks.register('signatureWeaknessTooltipSelfTest', JavaExec) {
     group = 'verification'
     description = 'Runs deterministic tests for the shared signature-weakness Shift tooltip helper.'

@@ -136,5 +136,6 @@
   "tooltip.goetyarkham.wendys_amulet.weakness_slot": "+1弱点栏位",
   "tooltip.goetyarkham.signature_weakness": "专属弱点：",
   "tooltip.goetyarkham.hold_shift": "按住 Shift 查看",
-  "tooltip.goetyarkham.abandoned_and_alone.effect": "%s/5，当\"孤单\"达到5层时，移除所有\"孤单\"。失去2点理智"
+  "tooltip.goetyarkham.abandoned_and_alone.effect": "%s/5，当\"孤单\"达到5层时，移除所有\"孤单\"。失去2点理智",
+  "tooltip.goetyarkham.focus_slot.store": "栏位"
 }

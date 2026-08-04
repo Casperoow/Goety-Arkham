@@ -62,6 +62,32 @@ public final class ModNetwork {
                 ClientboundLonelinessPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT)
         );
+        CHANNEL.registerMessage(
+                messageId++,
+                SwapWandFocusWithCurioSlotPacket.class,
+                SwapWandFocusWithCurioSlotPacket::encode,
+                SwapWandFocusWithCurioSlotPacket::decode,
+                SwapWandFocusWithCurioSlotPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER)
+        );
+        CHANNEL.registerMessage(
+                messageId++,
+                StoreWandFocusInCurioSlotPacket.class,
+                StoreWandFocusInCurioSlotPacket::encode,
+                StoreWandFocusInCurioSlotPacket::decode,
+                StoreWandFocusInCurioSlotPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER)
+        );
+    }
+
+    /** Client-only: request a swap between the wand's focus and a Curios focus slot. */
+    public static void sendSwapFocusWithCurioSlot(int slotIndex) {
+        CHANNEL.sendToServer(new SwapWandFocusWithCurioSlotPacket(slotIndex));
+    }
+
+    /** Client-only: request storing the wand's focus into the first empty Curios focus slot. */
+    public static void sendStoreFocusInCurioSlot() {
+        CHANNEL.sendToServer(new StoreWandFocusInCurioSlotPacket());
     }
 
     public static boolean sendStats(

@@ -12,11 +12,13 @@
     "GoetyRitualCompletionMixin",
     "RaidCreationMixin",
     "RaidsCreationContextMixin",
-    "SEHelperMixin"
+    "SEHelperMixin",
+    "TotemFinderCanOpenWandCircleMixin"
   ],
   "client": [
     "client.ChatComponentMixin",
     "client.CursedCageBlockEntityClientMixin",
+    "client.FocusRadialMenuScreenMixin",
     "client.SEHelperClientMixin",
     "client.SoulEnergyGuiMixin"
   ],
