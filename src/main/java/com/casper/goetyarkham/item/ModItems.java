@@ -68,6 +68,9 @@ public final class ModItems {
     public static final RegistryObject<AquinnahsTokenItem> AQUINNAHS_TOKEN =
             ITEMS.register("aquinnahs_token", AquinnahsTokenItem::new);
 
+    public static final RegistryObject<BeatCopsTokenItem> BEAT_COPS_TOKEN =
+            ITEMS.register("beat_cops_token", BeatCopsTokenItem::new);
+
     private ModItems() {
     }
 

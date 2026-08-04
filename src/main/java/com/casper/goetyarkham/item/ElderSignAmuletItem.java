@@ -62,7 +62,6 @@ public final class ElderSignAmuletItem extends Item implements ICurioItem {
             List<Component> tooltip,
             TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
-        CurioTooltipHelper.appendSlot(tooltip, "tooltip.goetyarkham.slot.necklace");
         CurioTooltipHelper.appendWhenWorn(
                 tooltip,
                 CurioTooltipHelper.attributeBonus(

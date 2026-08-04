@@ -181,7 +181,9 @@ public final class CurioSlotDefinitionsSelfTest {
         JsonObject token = readJson("/data/curios/tags/items/token.json");
         assertFalse(token.get("replace").getAsBoolean(),
                 "token item tag must merge without replace");
-        assertEquals(List.of("goetyarkham:aquinnahs_token"),
+        assertEquals(List.of(
+                        "goetyarkham:aquinnahs_token",
+                        "goetyarkham:beat_cops_token"),
                 token.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Token tag entries");
@@ -190,11 +192,17 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:aquinnahs_token");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:beat_cops_token");
             }
         }
         assertResourceValueAbsent(
                 "data/curios/tags/items/charm.json",
                 "goetyarkham:aquinnahs_token");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:beat_cops_token");
     }
 
     private static void verifyHeirloomItemTags() throws IOException {
@@ -372,6 +380,18 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Aquinnah's Token model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/aquinnahs_token.png");
+
+        JsonObject beatCopsTokenModel = readJson(
+                "/assets/goetyarkham/models/item/beat_cops_token.json");
+        assertEquals("minecraft:item/generated",
+                beatCopsTokenModel.get("parent").getAsString(),
+                "Beat Cop's Token model parent");
+        assertEquals("goetyarkham:item/beat_cops_token",
+                beatCopsTokenModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Beat Cop's Token model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/beat_cops_token.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -544,8 +564,12 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.slot.token")
                             .getAsString(),
                     "Chinese token slot label");
+            assertEquals("按住 Shift 查看详细效果",
+                    translations.get("tooltip.goetyarkham.aquinnahs_token.hold_shift")
+                            .getAsString(),
+                    "Chinese Aquinnah's Token Shift hint");
             assertEquals(
-                    "受到生物的直接攻击时，安奎娜的信物失去1点耐久，并将这次攻击转移给攻击者",
+                    "受到生物的直接攻击时，信物失去1点耐久，取消本次伤害，并将伤害转移给攻击者",
                     translations.get("tooltip.goetyarkham.aquinnahs_token.effect")
                             .getAsString(),
                     "Chinese Aquinnah's Token effect tooltip");
@@ -553,6 +577,29 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.aquinnahs_token.depleted")
                             .getAsString(),
                     "Chinese Aquinnah's Token depleted tooltip");
+            assertEquals("巡警的信物",
+                    translations.get("item.goetyarkham.beat_cops_token")
+                            .getAsString(),
+                    "Chinese Beat Cop's Token name");
+            assertEquals("按住 Shift 查看详细效果",
+                    translations.get("tooltip.goetyarkham.beat_cops_token.hold_shift")
+                            .getAsString(),
+                    "Chinese Beat Cop's Token Shift hint");
+            assertEquals("每受到1点伤害，获得1层“巡警反击”，最多3层",
+                    translations.get(
+                            "tooltip.goetyarkham.beat_cops_token.stack_gain")
+                            .getAsString(),
+                    "Chinese Beat Cop's Token stack-gain tooltip");
+            assertEquals("下一次成功的近战攻击每层额外造成2点伤害，并消耗全部层数",
+                    translations.get(
+                            "tooltip.goetyarkham.beat_cops_token.stack_consume")
+                            .getAsString(),
+                    "Chinese Beat Cop's Token stack-consume tooltip");
+            assertEquals("当前巡警反击：%1$s/%2$s层",
+                    translations.get(
+                            "tooltip.goetyarkham.beat_cops_token.current_stacks")
+                            .getAsString(),
+                    "Chinese Beat Cop's Token current-stacks tooltip");
             assertEquals("专属弱点：",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)
@@ -708,10 +755,14 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.slot.token")
                             .getAsString(),
                     "English token slot label");
+            assertEquals("Hold Shift for details",
+                    translations.get("tooltip.goetyarkham.aquinnahs_token.hold_shift")
+                            .getAsString(),
+                    "English Aquinnah's Token Shift hint");
             assertEquals(
-                    "When directly attacked by a living entity, Aquinnah's"
-                            + " Token loses 1 durability and redirects the"
-                            + " attack to the attacker.",
+                    "When directly attacked by a creature, loses 1"
+                            + " durability, negates the attack, and redirects"
+                            + " the damage to the attacker",
                     translations.get("tooltip.goetyarkham.aquinnahs_token.effect")
                             .getAsString(),
                     "English Aquinnah's Token effect tooltip");
@@ -719,6 +770,33 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.aquinnahs_token.depleted")
                             .getAsString(),
                     "English Aquinnah's Token depleted tooltip");
+            assertEquals("Beat Cop’s Token",
+                    translations.get("item.goetyarkham.beat_cops_token")
+                            .getAsString(),
+                    "English Beat Cop's Token name");
+            assertEquals("Hold Shift for details",
+                    translations.get("tooltip.goetyarkham.beat_cops_token.hold_shift")
+                            .getAsString(),
+                    "English Beat Cop's Token Shift hint");
+            assertEquals(
+                    "Gain 1 stack of Beat Cop's Retaliation for each point"
+                            + " of damage taken, up to 3 stacks",
+                    translations.get(
+                            "tooltip.goetyarkham.beat_cops_token.stack_gain")
+                            .getAsString(),
+                    "English Beat Cop's Token stack-gain tooltip");
+            assertEquals(
+                    "Your next successful melee attack deals 2 bonus damage"
+                            + " per stack and consumes all stacks",
+                    translations.get(
+                            "tooltip.goetyarkham.beat_cops_token.stack_consume")
+                            .getAsString(),
+                    "English Beat Cop's Token stack-consume tooltip");
+            assertEquals("Current retaliation: %1$s/%2$s",
+                    translations.get(
+                            "tooltip.goetyarkham.beat_cops_token.current_stacks")
+                            .getAsString(),
+                    "English Beat Cop's Token current-stacks tooltip");
             assertEquals("Signature Weakness:",
                     translations.get(
                             SignatureWeaknessTooltipHelper.HEADING_TRANSLATION_KEY)

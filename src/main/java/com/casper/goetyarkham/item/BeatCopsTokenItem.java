@@ -10,6 +10,7 @@ import com.google.common.collect.Multimap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -27,26 +28,28 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * A token-slot Curio granting +2 Max Health, +4 Max Sanity, +1 Agility, and
- * +1 Willpower while worn. It also carries 4 points of vanilla durability:
- * whenever its wearer is directly attacked by a living entity, the token
- * consumes 1 durability (subject to Unbreaking) and redirects that attack to
- * the attacker instead. See {@link AquinnahsTokenEffectEvents} for the
- * server-side redirect logic.
+ * A token-slot Curio granting +1 Strength, +1 Agility, +6 Max Health, and +2
+ * Max Sanity while worn. Taking damage builds up to 3 stacks of "Beat Cop's
+ * Retaliation" on this exact stack's NBT; the wearer's next successful direct
+ * melee attack consumes all stacks for +2 bonus damage each. See
+ * {@link BeatCopsTokenEffectEvents} for the server-side stack/damage logic.
  */
-public final class AquinnahsTokenItem extends Item
+public final class BeatCopsTokenItem extends Item
         implements ICurioItem, EquipmentStatModifier {
-    public static final int MAX_HEALTH_BONUS = 2;
-    public static final int MAX_SANITY_BONUS = 4;
+    public static final int STRENGTH_BONUS = 1;
     public static final int AGILITY_BONUS = 1;
-    public static final int WILLPOWER_BONUS = 1;
-    public static final int MAX_DURABILITY = 4;
+    public static final int MAX_HEALTH_BONUS = 6;
+    public static final int MAX_SANITY_BONUS = 2;
+    public static final int MAX_STACKS = 3;
+    public static final int DAMAGE_PER_STACK = 2;
+
+    private static final String STACKS_TAG_KEY = "BeatCopStacks";
     private static final ResourceLocation ITEM_ID =
             ResourceLocation.fromNamespaceAndPath(
-                    GoetyArkham.MOD_ID, "aquinnahs_token");
+                    GoetyArkham.MOD_ID, "beat_cops_token");
 
-    public AquinnahsTokenItem() {
-        super(new Item.Properties().stacksTo(1).durability(MAX_DURABILITY));
+    public BeatCopsTokenItem() {
+        super(new Item.Properties().stacksTo(1));
     }
 
     @Override
@@ -68,9 +71,9 @@ public final class AquinnahsTokenItem extends Item
             return 0;
         }
         return switch (stat) {
+            case STRENGTH -> STRENGTH_BONUS;
             case AGILITY -> AGILITY_BONUS;
-            case WILLPOWER -> WILLPOWER_BONUS;
-            case STRENGTH, INTELLECT -> 0;
+            case WILLPOWER, INTELLECT -> 0;
         };
     }
 
@@ -94,9 +97,7 @@ public final class AquinnahsTokenItem extends Item
      * slot identity (identifier + index), so repeated refreshes of the same
      * slot (equip-state sync, login, dimension change, respawn) reuse the
      * same id instead of stacking, and Curios removes the modifier cleanly
-     * on unequip. The bonus is a flat addition in raw Max Health attribute
-     * points (the same unit vanilla uses for effects like Health Boost),
-     * not a percentage like the Leather Coat or Bulletproof Vest.
+     * on unequip.
      */
     private static AttributeModifier maxHealthModifier(SlotContext slotContext) {
         String identity = GoetyArkham.MOD_ID
@@ -115,6 +116,50 @@ public final class AquinnahsTokenItem extends Item
                 AttributeModifier.Operation.ADDITION);
     }
 
+    /** Current Beat Cop's Retaliation stacks stored on this exact stack, clamped to [0, {@link #MAX_STACKS}]. */
+    public static int getStacks(ItemStack stack) {
+        if (!stack.hasTag()) {
+            return 0;
+        }
+        return Mth.clamp(stack.getOrCreateTag().getInt(STACKS_TAG_KEY), 0, MAX_STACKS);
+    }
+
+    public static void setStacks(ItemStack stack, int stacks) {
+        int clamped = Mth.clamp(stacks, 0, MAX_STACKS);
+        if (clamped == 0) {
+            if (stack.hasTag()) {
+                stack.getTag().remove(STACKS_TAG_KEY);
+            }
+        } else {
+            stack.getOrCreateTag().putInt(STACKS_TAG_KEY, clamped);
+        }
+    }
+
+    public static int addStacks(ItemStack stack, int amount) {
+        int updated = Mth.clamp(getStacks(stack) + amount, 0, MAX_STACKS);
+        setStacks(stack, updated);
+        return updated;
+    }
+
+    public static void clearStacks(ItemStack stack) {
+        setStacks(stack, 0);
+    }
+
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return getStacks(stack) > 0;
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        return Math.round(getStacks(stack) * 13.0F / MAX_STACKS);
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        return 0x3070E0;
+    }
+
     @Override
     public void appendHoverText(
             ItemStack stack,
@@ -125,26 +170,29 @@ public final class AquinnahsTokenItem extends Item
         CurioTooltipHelper.appendWhenWorn(
                 tooltip,
                 CurioTooltipHelper.attributeBonus(
-                        MAX_HEALTH_BONUS, "attribute.name.generic.max_health"),
-                CurioTooltipHelper.attributeBonus(
-                        MAX_SANITY_BONUS, "attribute.name.goetyarkham.max_sanity"),
+                        STRENGTH_BONUS, "attribute.name.goetyarkham.strength"),
                 CurioTooltipHelper.attributeBonus(
                         AGILITY_BONUS, "attribute.name.goetyarkham.agility"),
                 CurioTooltipHelper.attributeBonus(
-                        WILLPOWER_BONUS, "attribute.name.goetyarkham.willpower")
+                        MAX_HEALTH_BONUS, "attribute.name.generic.max_health"),
+                CurioTooltipHelper.attributeBonus(
+                        MAX_SANITY_BONUS, "attribute.name.goetyarkham.max_sanity")
         );
         if (ShiftTooltipHelper.isShiftDown()) {
             tooltip.add(Component.translatable(
-                            "tooltip.goetyarkham.aquinnahs_token.effect")
+                            "tooltip.goetyarkham.beat_cops_token.stack_gain")
                     .withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable(
+                            "tooltip.goetyarkham.beat_cops_token.stack_consume")
+                    .withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable(
+                            "tooltip.goetyarkham.beat_cops_token.current_stacks",
+                            getStacks(stack),
+                            MAX_STACKS)
+                    .withStyle(ChatFormatting.DARK_GRAY));
         } else {
             tooltip.add(Component.translatable(
-                            "tooltip.goetyarkham.aquinnahs_token.hold_shift")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
-        if (stack.getDamageValue() >= stack.getMaxDamage()) {
-            tooltip.add(Component.translatable(
-                            "tooltip.goetyarkham.aquinnahs_token.depleted")
+                            "tooltip.goetyarkham.beat_cops_token.hold_shift")
                     .withStyle(ChatFormatting.DARK_GRAY));
         }
     }
