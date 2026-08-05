@@ -141,6 +141,7 @@ public final class CurioSlotDefinitionsSelfTest {
                         "goetyarkham:holy_rosary",
                         "goetyarkham:medical_texts",
                         "goetyarkham:book_of_shadows",
+                        "goetyarkham:old_book_of_lore",
                         "goetyarkham:lockpicks",
                         "goetyarkham:magnifying_glass"),
                 hands.getAsJsonArray("values").asList().stream()
@@ -158,8 +159,9 @@ public final class CurioSlotDefinitionsSelfTest {
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:magnifying_glass");
             }
-            // Medical Texts and the Book of Shadows are deliberately
-            // dual-tagged: each must appear in hands and book, and nowhere else.
+            // Medical Texts, the Book of Shadows, and the Old Book of Lore
+            // are deliberately dual-tagged: each must appear in hands and
+            // book, and nowhere else.
             if (!CurioSlotIds.HANDS.equals(slotId) && !CurioSlotIds.BOOK.equals(slotId)) {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
@@ -167,6 +169,9 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:book_of_shadows");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:old_book_of_lore");
             }
         }
         assertResourceValueAbsent(
@@ -331,15 +336,18 @@ public final class CurioSlotDefinitionsSelfTest {
 
     /**
      * The Curios {@code book} slot has base size 0 and only appears once
-     * another item's dynamic slot modifier grants it. Medical Texts and the
-     * Book of Shadows both carry the tag, alongside {@code hands} - each is
-     * equippable in either slot, never both at once.
+     * another item's dynamic slot modifier grants it. Medical Texts, the
+     * Book of Shadows, and the Old Book of Lore all carry the tag, alongside
+     * {@code hands} - each is equippable in either slot, never both at once.
      */
     private static void verifyBookItemTag() throws IOException {
         JsonObject book = readJson("/data/curios/tags/items/book.json");
         assertFalse(book.get("replace").getAsBoolean(),
                 "book item tag must merge without replace");
-        assertEquals(List.of("goetyarkham:medical_texts", "goetyarkham:book_of_shadows"),
+        assertEquals(List.of(
+                        "goetyarkham:medical_texts",
+                        "goetyarkham:book_of_shadows",
+                        "goetyarkham:old_book_of_lore"),
                 book.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Book tag entries");
@@ -548,6 +556,18 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Book of Shadows model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/book_of_shadows.png");
+
+        JsonObject oldBookOfLoreModel = readJson(
+                "/assets/goetyarkham/models/item/old_book_of_lore.json");
+        assertEquals("minecraft:item/generated",
+                oldBookOfLoreModel.get("parent").getAsString(),
+                "Old Book of Lore model parent");
+        assertEquals("goetyarkham:item/old_book_of_lore",
+                oldBookOfLoreModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Old Book of Lore model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/old_book_of_lore.png");
 
         JsonObject lockpicksModel = readJson(
                 "/assets/goetyarkham/models/item/lockpicks.json");
@@ -870,6 +890,23 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.book_of_shadows.focus_slot")
                             .getAsString(),
                     "Chinese Book of Shadows focus-slot tooltip");
+            assertEquals("智慧古书",
+                    translations.get("item.goetyarkham.old_book_of_lore")
+                            .getAsString(),
+                    "Chinese Old Book of Lore name");
+            assertEquals("栏位：手饰、书籍",
+                    translations.get("tooltip.goetyarkham.old_book_of_lore.slot")
+                            .getAsString(),
+                    "Chinese Old Book of Lore slot label");
+            assertEquals(
+                    "施法后，聚晶不会进入冷却，改为使智慧古书进入相同时间的冷却",
+                    translations.get("tooltip.goetyarkham.old_book_of_lore.redirect")
+                            .getAsString(),
+                    "Chinese Old Book of Lore redirect tooltip");
+            assertEquals("智慧古书冷却期间，该效果不会触发",
+                    translations.get("tooltip.goetyarkham.old_book_of_lore.gate")
+                            .getAsString(),
+                    "Chinese Old Book of Lore gate tooltip");
             assertEquals("撬锁工具",
                     translations.get("item.goetyarkham.lockpicks")
                             .getAsString(),
@@ -1197,6 +1234,25 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.book_of_shadows.focus_slot")
                             .getAsString(),
                     "English Book of Shadows focus-slot tooltip");
+            assertEquals("Old Book of Lore",
+                    translations.get("item.goetyarkham.old_book_of_lore")
+                            .getAsString(),
+                    "English Old Book of Lore name");
+            assertEquals("Slots: Hands, Book",
+                    translations.get("tooltip.goetyarkham.old_book_of_lore.slot")
+                            .getAsString(),
+                    "English Old Book of Lore slot label");
+            assertEquals(
+                    "After casting, the focus does not enter cooldown. Old Book"
+                            + " of Lore enters cooldown for the same duration instead",
+                    translations.get("tooltip.goetyarkham.old_book_of_lore.redirect")
+                            .getAsString(),
+                    "English Old Book of Lore redirect tooltip");
+            assertEquals(
+                    "This effect does not activate while Old Book of Lore is on cooldown",
+                    translations.get("tooltip.goetyarkham.old_book_of_lore.gate")
+                            .getAsString(),
+                    "English Old Book of Lore gate tooltip");
             assertEquals("Lockpicks",
                     translations.get("item.goetyarkham.lockpicks")
                             .getAsString(),

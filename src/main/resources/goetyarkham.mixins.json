@@ -10,6 +10,7 @@
     "DarkWandFocusSpendMixin",
     "GoetyIllagerAssaultMixin",
     "GoetyRitualCompletionMixin",
+    "OldBookOfLoreCooldownMixin",
     "RaidCreationMixin",
     "RaidsCreationContextMixin",
     "SEHelperMixin",

@@ -92,6 +92,9 @@ public final class ModItems {
     public static final RegistryObject<MagnifyingGlassItem> MAGNIFYING_GLASS =
             ITEMS.register("magnifying_glass", MagnifyingGlassItem::new);
 
+    public static final RegistryObject<OldBookOfLoreItem> OLD_BOOK_OF_LORE =
+            ITEMS.register("old_book_of_lore", OldBookOfLoreItem::new);
+
     private ModItems() {
     }
 
