@@ -1,5 +1,6 @@
 package com.casper.goetyarkham.stats;
 
+import com.casper.goetyarkham.curios.CurioSlotIds;
 import com.casper.goetyarkham.soul.SoulEnergyPoolService;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -57,17 +58,33 @@ public final class EquipmentStatsService {
             String slotId,
             ICurioStacksHandler handler,
             Map<StatType, Integer> totals) {
+        boolean isEncyclopediaSkillSlot = CurioSlotIds.ENCYCLOPEDIA_SKILL.equals(slotId);
         for (int slot = 0; slot < handler.getStacks().getSlots(); slot++) {
             ItemStack stack = handler.getStacks().getStackInSlot(slot);
-            if (stack.isEmpty()
-                    || !(stack.getItem() instanceof EquipmentStatModifier modifier)) {
+            if (stack.isEmpty()) {
                 continue;
             }
-            addContribution(
-                    totals,
-                    modifier,
-                    new SlotContext(slotId, player, slot, false, true),
-                    stack);
+            if (isEncyclopediaSkillSlot) {
+                addEncyclopediaSkillContribution(totals, stack);
+                continue;
+            }
+            if (stack.getItem() instanceof EquipmentStatModifier modifier) {
+                addContribution(
+                        totals,
+                        modifier,
+                        new SlotContext(slotId, player, slot, false, true),
+                        stack);
+            }
+        }
+    }
+
+    private static void addEncyclopediaSkillContribution(
+            Map<StatType, Integer> totals, ItemStack stack) {
+        for (StatType stat : StatType.values()) {
+            int contribution = EncyclopediaSkillStatContribution.getBonus(stat, stack);
+            totals.compute(stat, (ignored, current) -> saturatingAdd(
+                    current == null ? 0 : current,
+                    contribution));
         }
     }
 

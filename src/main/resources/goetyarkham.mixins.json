@@ -8,6 +8,7 @@
     "CurioStacksHandlerMixin",
     "CursedCageBlockEntityMixin",
     "DarkWandFocusSpendMixin",
+    "EncyclopediaSkillSlotHandlerMixin",
     "GoetyIllagerAssaultMixin",
     "GoetyRitualCompletionMixin",
     "OldBookOfLoreCooldownMixin",

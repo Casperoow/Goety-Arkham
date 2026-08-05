@@ -4,6 +4,7 @@ import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.CuriosCommand;
 import com.casper.goetyarkham.item.ArcaneInitiatesTokenService;
 import com.casper.goetyarkham.item.BookOfShadowsService;
+import com.casper.goetyarkham.item.EncyclopediaService;
 import com.casper.goetyarkham.item.HeirloomOfHyperboreaService;
 import com.casper.goetyarkham.item.ModItems;
 import com.casper.goetyarkham.item.WendysAmuletService;
@@ -37,6 +38,8 @@ public final class CuriosForgeEvents {
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_BOOK_OF_SHADOWS_RECONCILE =
             ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_ENCYCLOPEDIA_RECONCILE =
+            ConcurrentHashMap.newKeySet();
 
     private CuriosForgeEvents() {
     }
@@ -62,6 +65,23 @@ public final class CuriosForgeEvents {
         }
     }
 
+    /**
+     * Same pre-equip gate pattern as {@link #preventDuplicateGoetyArkhamCurio},
+     * restricted to the {@link CurioSlotIds#ENCYCLOPEDIA_SKILL} slot: only
+     * the four items in {@link EncyclopediaSkillContentPolicy} may enter, and
+     * only as a stack of exactly 1. This covers every route Curios itself
+     * funnels through {@code isItemValid} (drag-and-drop, shift-click quick
+     * move, right-click auto-equip, and creative-mode placement).
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void restrictEncyclopediaSkillContent(CurioEquipEvent event) {
+        if (CurioSlotIds.ENCYCLOPEDIA_SKILL.equals(event.getSlotContext().identifier())
+                && !EncyclopediaSkillContentPolicy.canEquip(
+                        event.getSlotContext(), event.getStack())) {
+            event.setResult(net.minecraftforge.eventbus.api.Event.Result.DENY);
+        }
+    }
+
     /** Curios posts this event before applying its attribute add/remove operation. */
     @SubscribeEvent
     public static void curioChanged(CurioChangeEvent event) {
@@ -71,6 +91,7 @@ public final class CuriosForgeEvents {
             handleWendysAmuletTransition(player, event);
             handleArcaneInitiatesTokenTransition(player, event);
             handleBookOfShadowsTransition(player, event);
+            handleEncyclopediaTransition(player, event);
         }
     }
 
@@ -104,6 +125,10 @@ public final class CuriosForgeEvents {
         if (PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(player.getUUID())) {
             BookOfShadowsService.reconcile(player);
         }
+        if (PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID())) {
+            EncyclopediaService.reconcile(player);
+        }
+        EncyclopediaSkillContentPolicy.enforce(player);
         if (!DIRTY_EQUIPMENT.remove(player.getUUID())) {
             return;
         }
@@ -126,6 +151,7 @@ public final class CuriosForgeEvents {
             PENDING_WENDYS_AMULET_RECONCILE.remove(player.getUUID());
             PENDING_ARCANE_TOKEN_RECONCILE.remove(player.getUUID());
             PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(player.getUUID());
+            PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID());
         }
     }
 
@@ -160,6 +186,7 @@ public final class CuriosForgeEvents {
             PENDING_WENDYS_AMULET_RECONCILE.add(player.getUUID());
             PENDING_ARCANE_TOKEN_RECONCILE.add(player.getUUID());
             PENDING_BOOK_OF_SHADOWS_RECONCILE.add(player.getUUID());
+            PENDING_ENCYCLOPEDIA_RECONCILE.add(player.getUUID());
         }
     }
 
@@ -197,6 +224,24 @@ public final class CuriosForgeEvents {
         if (event.getFrom().is(ModItems.BOOK_OF_SHADOWS.get())
                 || event.getTo().is(ModItems.BOOK_OF_SHADOWS.get())) {
             BookOfShadowsService.reconcile(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handleBookOfShadowsTransition}: the extra
+     * encyclopedia_skill slot is never auto-filled, so {@link
+     * EncyclopediaService#reconcile} is idempotent and safe to call on
+     * every observed change to either supported slot.
+     */
+    private static void handleEncyclopediaTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.HANDS.equals(event.getIdentifier())
+                && !CurioSlotIds.BOOK.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.ENCYCLOPEDIA.get())
+                || event.getTo().is(ModItems.ENCYCLOPEDIA.get())) {
+            EncyclopediaService.reconcile(player);
         }
     }
 

@@ -23,6 +23,8 @@ public final class CurioSlotIds {
     public static final String ASSET = "asset";
     public static final String TALENT = "talent";
     public static final String WEAKNESS = "weakness";
+    /** Extra slot granted only by other items' dynamic modifiers; base size is 0. */
+    public static final String ENCYCLOPEDIA_SKILL = "encyclopedia_skill";
 
     public static final List<String> ALL = List.of(
             NECKLACE,
@@ -34,20 +36,22 @@ public final class CurioSlotIds {
             TAROT,
             ASSET,
             TALENT,
-            WEAKNESS
+            WEAKNESS,
+            ENCYCLOPEDIA_SKILL
     );
 
-    public static final Map<String, Integer> BASE_SIZES = Map.of(
-            NECKLACE, 2,
-            BODY, 1,
-            TOKEN, 1,
-            HANDS, 2,
-            BOOK, 0,
-            FOCUS, 2,
-            TAROT, 1,
-            ASSET, 4,
-            TALENT, 2,
-            WEAKNESS, 1
+    public static final Map<String, Integer> BASE_SIZES = Map.ofEntries(
+            Map.entry(NECKLACE, 2),
+            Map.entry(BODY, 1),
+            Map.entry(TOKEN, 1),
+            Map.entry(HANDS, 2),
+            Map.entry(BOOK, 0),
+            Map.entry(FOCUS, 2),
+            Map.entry(TAROT, 1),
+            Map.entry(ASSET, 4),
+            Map.entry(TALENT, 2),
+            Map.entry(WEAKNESS, 1),
+            Map.entry(ENCYCLOPEDIA_SKILL, 0)
     );
 
     private CurioSlotIds() {

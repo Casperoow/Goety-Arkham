@@ -34,7 +34,8 @@ public final class CurioSlotDefinitionsSelfTest {
             CurioSlotIds.TAROT, "Tarot Card",
             CurioSlotIds.ASSET, "Asset",
             CurioSlotIds.TALENT, "Talent",
-            CurioSlotIds.WEAKNESS, "Weakness"
+            CurioSlotIds.WEAKNESS, "Weakness",
+            CurioSlotIds.ENCYCLOPEDIA_SKILL, "Encyclopedia Skill"
     );
 
     private static final Map<String, String> CHINESE_NAMES = Map.of(
@@ -44,7 +45,8 @@ public final class CurioSlotDefinitionsSelfTest {
             CurioSlotIds.TAROT, "塔罗牌",
             CurioSlotIds.ASSET, "资产",
             CurioSlotIds.TALENT, "天赋",
-            CurioSlotIds.WEAKNESS, "弱点"
+            CurioSlotIds.WEAKNESS, "弱点",
+            CurioSlotIds.ENCYCLOPEDIA_SKILL, "百科全书技能"
     );
 
     private CurioSlotDefinitionsSelfTest() {
@@ -53,6 +55,7 @@ public final class CurioSlotDefinitionsSelfTest {
     public static void main(String[] args) throws IOException {
         verifyCatalog();
         verifySlotDefinitions();
+        verifyEncyclopediaSkillSlotDefinition();
         verifyPlayerBinding();
         verifyCharmItemTag();
         verifyHandsItemTag();
@@ -61,6 +64,7 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyHeirloomItemTags();
         verifyFocusItemTag();
         verifyBookItemTag();
+        verifyEncyclopediaSkillItemTag();
         verifyBossOrEliteTag();
         verifyItemResources();
         verifySharedTooltipFormatting();
@@ -88,6 +92,15 @@ public final class CurioSlotDefinitionsSelfTest {
             assertEquals("SET", slot.get("operation").getAsString(), slotId + " size operation");
             assertFalse(slot.has("replace"), slotId + " must merge without replace");
         }
+    }
+
+    private static void verifyEncyclopediaSkillSlotDefinition() throws IOException {
+        JsonObject slot = readJson(
+                "/data/goetyarkham/curios/slots/encyclopedia_skill.json");
+        assertEquals(146, slot.get("order").getAsInt(),
+                "encyclopedia_skill slot order (after book at 145, before focus at 150)");
+        assertEquals("goetyarkham:slot/empty_encyclopedia_slot",
+                slot.get("icon").getAsString(), "encyclopedia_skill slot icon");
     }
 
     private static void verifyPlayerBinding() throws IOException {
@@ -143,7 +156,8 @@ public final class CurioSlotDefinitionsSelfTest {
                         "goetyarkham:book_of_shadows",
                         "goetyarkham:old_book_of_lore",
                         "goetyarkham:lockpicks",
-                        "goetyarkham:magnifying_glass"),
+                        "goetyarkham:magnifying_glass",
+                        "goetyarkham:encyclopedia"),
                 hands.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Hands tag entries");
@@ -159,9 +173,9 @@ public final class CurioSlotDefinitionsSelfTest {
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:magnifying_glass");
             }
-            // Medical Texts, the Book of Shadows, and the Old Book of Lore
-            // are deliberately dual-tagged: each must appear in hands and
-            // book, and nowhere else.
+            // Medical Texts, the Book of Shadows, the Old Book of Lore, and
+            // the Encyclopedia are deliberately dual-tagged: each must
+            // appear in hands and book, and nowhere else.
             if (!CurioSlotIds.HANDS.equals(slotId) && !CurioSlotIds.BOOK.equals(slotId)) {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
@@ -172,6 +186,9 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:old_book_of_lore");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:encyclopedia");
             }
         }
         assertResourceValueAbsent(
@@ -347,10 +364,37 @@ public final class CurioSlotDefinitionsSelfTest {
         assertEquals(List.of(
                         "goetyarkham:medical_texts",
                         "goetyarkham:book_of_shadows",
-                        "goetyarkham:old_book_of_lore"),
+                        "goetyarkham:old_book_of_lore",
+                        "goetyarkham:encyclopedia"),
                 book.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Book tag entries");
+    }
+
+    /**
+     * The Curios {@code encyclopedia_skill} slot has base size 0 and only
+     * appears once another item's dynamic slot modifier grants it (see
+     * {@link com.casper.goetyarkham.curios.DynamicCurioSlotContributionService}).
+     * Exactly four items may occupy it once granted: three vanilla items and
+     * Goety's Ectoplasm (its real registry ID, not a guess from its display
+     * name), each capped at a stack of 1 by server-side logic rather than the
+     * data-pack tag alone.
+     */
+    private static void verifyEncyclopediaSkillItemTag() throws IOException {
+        JsonObject tag = readJson("/data/curios/tags/items/encyclopedia_skill.json");
+        assertFalse(tag.get("replace").getAsBoolean(),
+                "encyclopedia_skill item tag must merge without replace");
+        Set<String> entries = new HashSet<>();
+        tag.getAsJsonArray("values").forEach(element -> entries.add(element.getAsString()));
+        assertEquals(Set.of(
+                        "minecraft:iron_ingot",
+                        "minecraft:rabbit_foot",
+                        "minecraft:book",
+                        "goety:ectoplasm"),
+                entries,
+                "encyclopedia_skill item tag entries");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/slot/empty_encyclopedia_slot.png");
     }
 
     private static void verifyBossOrEliteTag() throws IOException {
@@ -592,6 +636,18 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Magnifying Glass model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/magnifying_glass.png");
+
+        JsonObject encyclopediaModel = readJson(
+                "/assets/goetyarkham/models/item/encyclopedia.json");
+        assertEquals("minecraft:item/generated",
+                encyclopediaModel.get("parent").getAsString(),
+                "Encyclopedia model parent");
+        assertEquals("goetyarkham:item/encyclopedia",
+                encyclopediaModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Encyclopedia model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/encyclopedia.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -890,6 +946,39 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.book_of_shadows.focus_slot")
                             .getAsString(),
                     "Chinese Book of Shadows focus-slot tooltip");
+            assertEquals("百科全书",
+                    translations.get("item.goetyarkham.encyclopedia")
+                            .getAsString(),
+                    "Chinese Encyclopedia name");
+            assertEquals("栏位：手饰、书籍",
+                    translations.get("tooltip.goetyarkham.encyclopedia.slot")
+                            .getAsString(),
+                    "Chinese Encyclopedia slot label");
+            assertEquals("获得额外1个百科全书技能栏位",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.skill_slot")
+                            .getAsString(),
+                    "Chinese Encyclopedia skill-slot tooltip");
+            assertEquals("放置于该栏位的技能物品使你指定的技能+2",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.skill_bonus")
+                            .getAsString(),
+                    "Chinese Encyclopedia skill-bonus tooltip");
+            assertEquals("按住 Shift：",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.accepted_heading")
+                            .getAsString(),
+                    "Chinese Encyclopedia accepted-items heading");
+            assertEquals("可放入铁锭、兔子腿、书、灵质",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.accepted_items")
+                            .getAsString(),
+                    "Chinese Encyclopedia accepted-items tooltip");
+            assertEquals("按住 Shift 查看详细效果",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.hold_shift")
+                            .getAsString(),
+                    "Chinese Encyclopedia hold-shift tooltip");
             assertEquals("智慧古书",
                     translations.get("item.goetyarkham.old_book_of_lore")
                             .getAsString(),
@@ -1234,6 +1323,41 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.book_of_shadows.focus_slot")
                             .getAsString(),
                     "English Book of Shadows focus-slot tooltip");
+            assertEquals("Encyclopedia",
+                    translations.get("item.goetyarkham.encyclopedia")
+                            .getAsString(),
+                    "English Encyclopedia name");
+            assertEquals("Slot: Hands, Book",
+                    translations.get("tooltip.goetyarkham.encyclopedia.slot")
+                            .getAsString(),
+                    "English Encyclopedia slot label");
+            assertEquals("Gain 1 additional Encyclopedia Skill slot.",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.skill_slot")
+                            .getAsString(),
+                    "English Encyclopedia skill-slot tooltip");
+            assertEquals(
+                    "Skill items placed in this slot grant +2 to the selected skill.",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.skill_bonus")
+                            .getAsString(),
+                    "English Encyclopedia skill-bonus tooltip");
+            assertEquals("Hold Shift:",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.accepted_heading")
+                            .getAsString(),
+                    "English Encyclopedia accepted-items heading");
+            assertEquals(
+                    "Accepts Iron Ingots, Rabbit's Feet, Books, and Ectoplasm.",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.accepted_items")
+                            .getAsString(),
+                    "English Encyclopedia accepted-items tooltip");
+            assertEquals("Hold Shift for details",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.hold_shift")
+                            .getAsString(),
+                    "English Encyclopedia hold-shift tooltip");
             assertEquals("Old Book of Lore",
                     translations.get("item.goetyarkham.old_book_of_lore")
                             .getAsString(),

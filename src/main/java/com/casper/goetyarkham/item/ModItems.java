@@ -95,6 +95,9 @@ public final class ModItems {
     public static final RegistryObject<OldBookOfLoreItem> OLD_BOOK_OF_LORE =
             ITEMS.register("old_book_of_lore", OldBookOfLoreItem::new);
 
+    public static final RegistryObject<EncyclopediaItem> ENCYCLOPEDIA =
+            ITEMS.register("encyclopedia", EncyclopediaItem::new);
+
     private ModItems() {
     }
 
