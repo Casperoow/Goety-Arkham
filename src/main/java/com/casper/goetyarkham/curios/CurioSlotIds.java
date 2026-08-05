@@ -23,8 +23,17 @@ public final class CurioSlotIds {
     public static final String ASSET = "asset";
     public static final String TALENT = "talent";
     public static final String WEAKNESS = "weakness";
-    /** Extra slot granted only by other items' dynamic modifiers; base size is 0. */
-    public static final String ENCYCLOPEDIA_SKILL = "encyclopedia_skill";
+    /**
+     * Shared "Bonus Slot" pool: grants no capacity of its own (base size 0).
+     * Any number of Curios can each independently declare how many of these
+     * slots they grant while worn (see {@link SharedBonusSlotProvider}); the
+     * slot's actual capacity is the maximum declared by any one currently
+     * equipped, deduplicated-by-provider-ID contributor - never a sum - and
+     * every equipped contributor independently scores whatever skill items
+     * (Iron Ingot, Rabbit's Foot, Book, Goety's Ectoplasm) sit in these
+     * slots. See {@link SharedBonusSlotService}.
+     */
+    public static final String SKILL_BONUS = "skill_bonus";
 
     public static final List<String> ALL = List.of(
             NECKLACE,
@@ -35,9 +44,9 @@ public final class CurioSlotIds {
             FOCUS,
             TAROT,
             ASSET,
+            SKILL_BONUS,
             TALENT,
-            WEAKNESS,
-            ENCYCLOPEDIA_SKILL
+            WEAKNESS
     );
 
     public static final Map<String, Integer> BASE_SIZES = Map.ofEntries(
@@ -51,7 +60,7 @@ public final class CurioSlotIds {
             Map.entry(ASSET, 4),
             Map.entry(TALENT, 2),
             Map.entry(WEAKNESS, 1),
-            Map.entry(ENCYCLOPEDIA_SKILL, 0)
+            Map.entry(SKILL_BONUS, 0)
     );
 
     private CurioSlotIds() {

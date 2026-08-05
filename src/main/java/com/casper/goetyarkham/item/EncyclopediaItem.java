@@ -16,13 +16,13 @@ import java.util.List;
 
 /**
  * A Curio equippable in either the {@code hands} or {@code book} slot.
- * While worn, grants 1 additional {@link CurioSlotIds#ENCYCLOPEDIA_SKILL}
- * Curios slot via {@link EncyclopediaService}. This item never inspects the
- * contents of that slot itself - the {@code +2} skill bonus for whatever is
- * placed in it is already handled by the slot's own existing content policy
- * and stat contribution (see {@link
- * com.casper.goetyarkham.curios.EncyclopediaSkillContentPolicy} and {@link
- * com.casper.goetyarkham.stats.EncyclopediaSkillStatContribution}).
+ * While worn, grants 1 additional {@link CurioSlotIds#SKILL_BONUS} Curios
+ * slot via {@link EncyclopediaService} / {@link EncyclopediaBonusProvider}.
+ * This item never inspects the contents of that slot itself - content
+ * legality and the {@code +2} skill bonus for whatever is placed in it are
+ * already handled by the slot's own shared content policy and this item's
+ * {@link EncyclopediaBonusProvider} (see {@link
+ * com.casper.goetyarkham.curios.SharedBonusSlotContentPolicy}).
  */
 public final class EncyclopediaItem extends Item implements ICurioItem {
     public EncyclopediaItem() {

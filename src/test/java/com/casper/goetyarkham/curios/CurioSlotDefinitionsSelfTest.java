@@ -35,7 +35,7 @@ public final class CurioSlotDefinitionsSelfTest {
             CurioSlotIds.ASSET, "Asset",
             CurioSlotIds.TALENT, "Talent",
             CurioSlotIds.WEAKNESS, "Weakness",
-            CurioSlotIds.ENCYCLOPEDIA_SKILL, "Encyclopedia Skill"
+            CurioSlotIds.SKILL_BONUS, "Bonus Slot"
     );
 
     private static final Map<String, String> CHINESE_NAMES = Map.of(
@@ -46,7 +46,7 @@ public final class CurioSlotDefinitionsSelfTest {
             CurioSlotIds.ASSET, "资产",
             CurioSlotIds.TALENT, "天赋",
             CurioSlotIds.WEAKNESS, "弱点",
-            CurioSlotIds.ENCYCLOPEDIA_SKILL, "百科全书技能"
+            CurioSlotIds.SKILL_BONUS, "加成栏位"
     );
 
     private CurioSlotDefinitionsSelfTest() {
@@ -55,7 +55,7 @@ public final class CurioSlotDefinitionsSelfTest {
     public static void main(String[] args) throws IOException {
         verifyCatalog();
         verifySlotDefinitions();
-        verifyEncyclopediaSkillSlotDefinition();
+        verifySkillBonusSlotDefinition();
         verifyPlayerBinding();
         verifyCharmItemTag();
         verifyHandsItemTag();
@@ -64,7 +64,7 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyHeirloomItemTags();
         verifyFocusItemTag();
         verifyBookItemTag();
-        verifyEncyclopediaSkillItemTag();
+        verifySkillBonusItemTag();
         verifyBossOrEliteTag();
         verifyItemResources();
         verifySharedTooltipFormatting();
@@ -94,13 +94,13 @@ public final class CurioSlotDefinitionsSelfTest {
         }
     }
 
-    private static void verifyEncyclopediaSkillSlotDefinition() throws IOException {
+    private static void verifySkillBonusSlotDefinition() throws IOException {
         JsonObject slot = readJson(
-                "/data/goetyarkham/curios/slots/encyclopedia_skill.json");
-        assertEquals(146, slot.get("order").getAsInt(),
-                "encyclopedia_skill slot order (after book at 145, before focus at 150)");
-        assertEquals("goetyarkham:slot/empty_encyclopedia_slot",
-                slot.get("icon").getAsString(), "encyclopedia_skill slot icon");
+                "/data/goetyarkham/curios/slots/skill_bonus.json");
+        assertEquals(165, slot.get("order").getAsInt(),
+                "skill_bonus slot order (after asset at 160, before talent at 170)");
+        assertEquals("goetyarkham:slot/skill_bonus",
+                slot.get("icon").getAsString(), "skill_bonus slot icon");
     }
 
     private static void verifyPlayerBinding() throws IOException {
@@ -372,18 +372,20 @@ public final class CurioSlotDefinitionsSelfTest {
     }
 
     /**
-     * The Curios {@code encyclopedia_skill} slot has base size 0 and only
-     * appears once another item's dynamic slot modifier grants it (see
-     * {@link com.casper.goetyarkham.curios.DynamicCurioSlotContributionService}).
-     * Exactly four items may occupy it once granted: three vanilla items and
-     * Goety's Ectoplasm (its real registry ID, not a guess from its display
-     * name), each capped at a stack of 1 by server-side logic rather than the
+     * The Curios {@code skill_bonus} slot has base size 0 and only appears
+     * once some currently equipped {@link
+     * com.casper.goetyarkham.curios.SharedBonusSlotProvider} grants it
+     * capacity (see {@link
+     * com.casper.goetyarkham.curios.SharedBonusSlotService}). Exactly four
+     * items may occupy it once granted: three vanilla items and Goety's
+     * Ectoplasm (its real registry ID, not a guess from its display name),
+     * each capped at a stack of 1 by server-side logic rather than the
      * data-pack tag alone.
      */
-    private static void verifyEncyclopediaSkillItemTag() throws IOException {
-        JsonObject tag = readJson("/data/curios/tags/items/encyclopedia_skill.json");
+    private static void verifySkillBonusItemTag() throws IOException {
+        JsonObject tag = readJson("/data/curios/tags/items/skill_bonus.json");
         assertFalse(tag.get("replace").getAsBoolean(),
-                "encyclopedia_skill item tag must merge without replace");
+                "skill_bonus item tag must merge without replace");
         Set<String> entries = new HashSet<>();
         tag.getAsJsonArray("values").forEach(element -> entries.add(element.getAsString()));
         assertEquals(Set.of(
@@ -392,9 +394,13 @@ public final class CurioSlotDefinitionsSelfTest {
                         "minecraft:book",
                         "goety:ectoplasm"),
                 entries,
-                "encyclopedia_skill item tag entries");
+                "skill_bonus item tag entries");
         assertResourceExists(
+                "/assets/goetyarkham/textures/slot/skill_bonus.png");
+        assertResourceAbsent(
                 "/assets/goetyarkham/textures/slot/empty_encyclopedia_slot.png");
+        assertResourceAbsent("/data/curios/tags/items/encyclopedia_skill.json");
+        assertResourceAbsent("/data/goetyarkham/curios/slots/encyclopedia_skill.json");
     }
 
     private static void verifyBossOrEliteTag() throws IOException {
@@ -954,12 +960,12 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.encyclopedia.slot")
                             .getAsString(),
                     "Chinese Encyclopedia slot label");
-            assertEquals("获得额外1个百科全书技能栏位",
+            assertEquals("获得额外1个加成栏位",
                     translations.get(
                             "tooltip.goetyarkham.encyclopedia.skill_slot")
                             .getAsString(),
                     "Chinese Encyclopedia skill-slot tooltip");
-            assertEquals("放置于该栏位的技能物品使你指定的技能+2",
+            assertEquals("每个栏位中的技能物品使其对应技能+2",
                     translations.get(
                             "tooltip.goetyarkham.encyclopedia.skill_bonus")
                             .getAsString(),
@@ -1331,13 +1337,13 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.encyclopedia.slot")
                             .getAsString(),
                     "English Encyclopedia slot label");
-            assertEquals("Gain 1 additional Encyclopedia Skill slot.",
+            assertEquals("Gain 1 additional Bonus Slot",
                     translations.get(
                             "tooltip.goetyarkham.encyclopedia.skill_slot")
                             .getAsString(),
                     "English Encyclopedia skill-slot tooltip");
             assertEquals(
-                    "Skill items placed in this slot grant +2 to the selected skill.",
+                    "Each skill item in these slots grants +2 to its corresponding skill",
                     translations.get(
                             "tooltip.goetyarkham.encyclopedia.skill_bonus")
                             .getAsString(),
@@ -1491,6 +1497,15 @@ public final class CurioSlotDefinitionsSelfTest {
                 .getResourceAsStream(resourcePath)) {
             if (stream == null || stream.read() < 0) {
                 throw new AssertionError("Missing or empty resource: " + resourcePath);
+            }
+        }
+    }
+
+    private static void assertResourceAbsent(String resourcePath) throws IOException {
+        try (InputStream stream = CurioSlotDefinitionsSelfTest.class
+                .getResourceAsStream(resourcePath)) {
+            if (stream != null) {
+                throw new AssertionError("Resource must not exist: " + resourcePath);
             }
         }
     }

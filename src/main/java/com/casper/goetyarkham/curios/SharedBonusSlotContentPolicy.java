@@ -14,20 +14,27 @@ import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
 import java.util.Set;
 
 /**
- * The single source of truth for which items may occupy {@link
- * CurioSlotIds#ENCYCLOPEDIA_SKILL}, backing both the pre-equip {@code
+ * The single source of truth for which items may occupy any {@link
+ * CurioSlotIds#SKILL_BONUS} slot, backing both the pre-equip {@code
  * CurioEquipEvent} gate ({@link CuriosForgeEvents}) and a periodic
  * server-side sweep that catches content placed by means that bypass Curios
  * events entirely (commands, direct save-data edits, other mods writing to
  * the handler). The data-pack item tag ({@code
- * data/curios/tags/items/encyclopedia_skill.json}) mirrors this same item
- * set for Curios' own tag-based slot-type validity check.
+ * data/curios/tags/items/skill_bonus.json}) mirrors this same item set for
+ * Curios' own tag-based slot-type validity check.
+ *
+ * <p>This policy is intentionally agnostic to which - if any - {@link
+ * SharedBonusSlotProvider} is currently equipped: the four skill items are
+ * always legal content for any {@code skill_bonus} slot the player
+ * currently has, regardless of which provider(s) granted that capacity or
+ * whether a given provider even recognizes a particular item (see {@link
+ * SharedBonusSlotProvider#statBonus}).</p>
  *
  * <p>The slot holds at most one <em>item</em>, not necessarily a stack of
  * count 1 taken from the source - a player holding a stack of 64 Iron
  * Ingots may still place one into an empty slot, exactly like an item
  * frame. That count split is enforced structurally, not here: {@link
- * EncyclopediaSkillStackHandler#getSlotLimit} caps the underlying {@code
+ * SharedBonusSlotStackHandler#getSlotLimit} caps the underlying {@code
  * IDynamicStackHandler} to 1, so Forge's own {@code insertItem}/{@code
  * SlotItemHandler} machinery - which already backs every transfer path
  * (mouse pickup-and-place, right-click auto-equip, shift-click quick move,
@@ -36,8 +43,8 @@ import java.util.Set;
  * remainder in the source stack. Nothing here ever manually splits a
  * stack, so there is no risk of the source being decremented twice.</p>
  */
-public final class EncyclopediaSkillContentPolicy {
-    private EncyclopediaSkillContentPolicy() {
+public final class SharedBonusSlotContentPolicy {
+    private SharedBonusSlotContentPolicy() {
     }
 
     public static boolean isAllowedItem(Item item) {
@@ -74,7 +81,7 @@ public final class EncyclopediaSkillContentPolicy {
         }
         return CuriosApi.getCuriosInventory(slotContext.entity())
                 .resolve()
-                .flatMap(inventory -> inventory.getStacksHandler(CurioSlotIds.ENCYCLOPEDIA_SKILL))
+                .flatMap(inventory -> inventory.getStacksHandler(CurioSlotIds.SKILL_BONUS))
                 .map(handler -> isSlotAvailableFor(handler, slotContext.index(), incoming))
                 .orElse(false);
     }
@@ -98,21 +105,21 @@ public final class EncyclopediaSkillContentPolicy {
     }
 
     /**
-     * Server-side fallback for content that ends up in the slot without
+     * Server-side fallback for content that ends up in a slot without
      * passing through {@code CurioEquipEvent} at all (e.g. {@code /data
      * modify entity}, a corrupted save load, or another mod writing to the
      * handler directly). An illegal item type is pulled out entirely; a
      * legal item present in an illegally large count (only reachable by
      * such a bypass, since every normal transfer path is capped to 1 by
-     * {@link EncyclopediaSkillStackHandler}) is trimmed down to keep
-     * exactly 1 in the slot. Whatever is removed is safely returned to the
-     * wearer - inserted into their inventory, or dropped at their feet if
-     * it doesn't fit - never deleted.
+     * {@link SharedBonusSlotStackHandler}) is trimmed down to keep exactly
+     * 1 in the slot. Whatever is removed is safely returned to the wearer -
+     * inserted into their inventory, or dropped at their feet if it
+     * doesn't fit - never deleted.
      */
     public static void enforce(ServerPlayer player) {
         CuriosApi.getCuriosInventory(player).resolve().ifPresent(inventory -> {
             ICurioStacksHandler handler = inventory
-                    .getStacksHandler(CurioSlotIds.ENCYCLOPEDIA_SKILL)
+                    .getStacksHandler(CurioSlotIds.SKILL_BONUS)
                     .orElse(null);
             if (handler == null) {
                 return;

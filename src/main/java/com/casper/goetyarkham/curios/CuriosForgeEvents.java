@@ -67,16 +67,16 @@ public final class CuriosForgeEvents {
 
     /**
      * Same pre-equip gate pattern as {@link #preventDuplicateGoetyArkhamCurio},
-     * restricted to the {@link CurioSlotIds#ENCYCLOPEDIA_SKILL} slot: only
-     * the four items in {@link EncyclopediaSkillContentPolicy} may enter, and
-     * only as a stack of exactly 1. This covers every route Curios itself
-     * funnels through {@code isItemValid} (drag-and-drop, shift-click quick
-     * move, right-click auto-equip, and creative-mode placement).
+     * restricted to the {@link CurioSlotIds#SKILL_BONUS} slot: only the four
+     * items in {@link SharedBonusSlotContentPolicy} may enter, and only as a
+     * stack of exactly 1. This covers every route Curios itself funnels
+     * through {@code isItemValid} (drag-and-drop, shift-click quick move,
+     * right-click auto-equip, and creative-mode placement).
      */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void restrictEncyclopediaSkillContent(CurioEquipEvent event) {
-        if (CurioSlotIds.ENCYCLOPEDIA_SKILL.equals(event.getSlotContext().identifier())
-                && !EncyclopediaSkillContentPolicy.canEquip(
+    public static void restrictSharedBonusSlotContent(CurioEquipEvent event) {
+        if (CurioSlotIds.SKILL_BONUS.equals(event.getSlotContext().identifier())
+                && !SharedBonusSlotContentPolicy.canEquip(
                         event.getSlotContext(), event.getStack())) {
             event.setResult(net.minecraftforge.eventbus.api.Event.Result.DENY);
         }
@@ -128,7 +128,7 @@ public final class CuriosForgeEvents {
         if (PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID())) {
             EncyclopediaService.reconcile(player);
         }
-        EncyclopediaSkillContentPolicy.enforce(player);
+        SharedBonusSlotContentPolicy.enforce(player);
         if (!DIRTY_EQUIPMENT.remove(player.getUUID())) {
             return;
         }
@@ -228,10 +228,11 @@ public final class CuriosForgeEvents {
     }
 
     /**
-     * Same rationale as {@link #handleBookOfShadowsTransition}: the extra
-     * encyclopedia_skill slot is never auto-filled, so {@link
-     * EncyclopediaService#reconcile} is idempotent and safe to call on
-     * every observed change to either supported slot.
+     * Same rationale as {@link #handleBookOfShadowsTransition}: the shared
+     * {@link CurioSlotIds#SKILL_BONUS} slot's capacity is never auto-filled,
+     * so {@link EncyclopediaService#reconcile} (which recomputes that shared
+     * capacity from every registered provider) is idempotent and safe to
+     * call on every observed change to either supported slot.
      */
     private static void handleEncyclopediaTransition(
             ServerPlayer player, CurioChangeEvent event) {

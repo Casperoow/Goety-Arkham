@@ -25,13 +25,12 @@ import java.util.UUID;
 
 /**
  * Exercises the Encyclopedia item's use of {@link EncyclopediaService} /
- * {@link com.casper.goetyarkham.curios.EncyclopediaSkillSlotContributionService}
- * to grant {@link CurioSlotIds#ENCYCLOPEDIA_SKILL} slot capacity, mirroring
- * {@link BookOfShadowsGameTests}' coverage of the equivalent focus-slot
- * mechanism. It deliberately never re-tests the encyclopedia_skill slot's
- * own content restrictions or stat bonuses - those already have dedicated
- * coverage in {@code EncyclopediaSkillGameTests} and are not re-implemented
- * by this item.
+ * {@link EncyclopediaBonusProvider} to grant {@link
+ * CurioSlotIds#SKILL_BONUS} slot capacity, mirroring {@link
+ * BookOfShadowsGameTests}' coverage of the equivalent focus-slot mechanism.
+ * It deliberately never re-tests the skill_bonus slot's own content
+ * restrictions or stat bonuses - those already have dedicated coverage in
+ * {@code SharedBonusSlotGameTests} and are not re-implemented by this item.
  */
 @GameTestHolder(GoetyArkham.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -39,7 +38,7 @@ public final class EncyclopediaGameTests {
     /**
      * Isolates this suite from {@code defaultBatch}'s concurrently running
      * tests, matching the established fix for the pre-existing {@code
-     * defaultBatch} crash landmine (see {@code EncyclopediaSkillGameTests}).
+     * defaultBatch} crash landmine (see {@code SharedBonusSlotGameTests}).
      */
     private static final String ENCYCLOPEDIA_TEST_BATCH = "goetyarkham:encyclopedia";
 
@@ -68,27 +67,27 @@ public final class EncyclopediaGameTests {
         try {
             ICurioStacksHandler handsHandler = handler(wearer, CurioSlotIds.HANDS, helper);
             ICurioStacksHandler skillHandler =
-                    handler(wearer, CurioSlotIds.ENCYCLOPEDIA_SKILL, helper);
+                    handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
             int baseSkillSlots = skillHandler.getStacks().getSlots();
             helper.assertTrue(baseSkillSlots == 0,
-                    "encyclopedia_skill did not start at base size 0");
+                    "skill_bonus did not start at base size 0");
 
             handsHandler.getStacks().setStackInSlot(0, stack.copy());
             settleCurioChange(wearer);
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
-                    "Equipping in hands did not add exactly one encyclopedia_skill slot");
+                    "Equipping in hands did not add exactly one skill_bonus slot");
 
             // Repeated reconciliation (login/respawn/dimension-change stand-in)
             // must never duplicate the slot.
             EncyclopediaService.reconcile(wearer);
             EncyclopediaService.reconcile(wearer);
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
-                    "Repeated reconciliation duplicated the encyclopedia_skill slot (hands)");
+                    "Repeated reconciliation duplicated the skill_bonus slot (hands)");
 
             handsHandler.getStacks().setStackInSlot(0, ItemStack.EMPTY);
             settleCurioChange(wearer);
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots,
-                    "Unequipping from hands did not remove the granted encyclopedia_skill slot");
+                    "Unequipping from hands did not remove the granted skill_bonus slot");
 
             helper.succeed();
         } finally {
@@ -107,7 +106,7 @@ public final class EncyclopediaGameTests {
                     "Missing Curios inventory for book slot test");
             ICurioStacksHandler bookHandler = handler(wearer, CurioSlotIds.BOOK, helper);
             ICurioStacksHandler skillHandler =
-                    handler(wearer, CurioSlotIds.ENCYCLOPEDIA_SKILL, helper);
+                    handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
             int baseSkillSlots = skillHandler.getStacks().getSlots();
 
             // The book slot's base size is 0; it only exists once some
@@ -125,13 +124,13 @@ public final class EncyclopediaGameTests {
                     0, new ItemStack(ModItems.ENCYCLOPEDIA.get()));
             settleCurioChange(wearer);
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
-                    "Equipping in the book slot did not add exactly one encyclopedia_skill slot");
+                    "Equipping in the book slot did not add exactly one skill_bonus slot");
 
             bookHandler.getStacks().setStackInSlot(0, ItemStack.EMPTY);
             settleCurioChange(wearer);
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots,
                     "Unequipping from the book slot did not remove the granted"
-                            + " encyclopedia_skill slot");
+                            + " skill_bonus slot");
 
             helper.succeed();
         } finally {
@@ -156,14 +155,14 @@ public final class EncyclopediaGameTests {
             ICurioStacksHandler handsHandler = handler(wearer, CurioSlotIds.HANDS, helper);
             ICurioStacksHandler bookHandler = handler(wearer, CurioSlotIds.BOOK, helper);
             ICurioStacksHandler skillHandler =
-                    handler(wearer, CurioSlotIds.ENCYCLOPEDIA_SKILL, helper);
+                    handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
             int baseSkillSlots = skillHandler.getStacks().getSlots();
             ItemStack stack = new ItemStack(ModItems.ENCYCLOPEDIA.get());
 
             handsHandler.getStacks().setStackInSlot(0, stack.copy());
             settleCurioChange(wearer);
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
-                    "Equipping in hands did not add the encyclopedia_skill slot"
+                    "Equipping in hands did not add the skill_bonus slot"
                             + " before the move");
 
             // Move the same stack from hands to book in one settle window -
@@ -173,12 +172,12 @@ public final class EncyclopediaGameTests {
             settleCurioChange(wearer);
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
                     "Moving the Encyclopedia between slots changed the"
-                            + " encyclopedia_skill slot count");
+                            + " skill_bonus slot count");
 
             bookHandler.getStacks().setStackInSlot(0, ItemStack.EMPTY);
             settleCurioChange(wearer);
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots,
-                    "Unequipping after the move left a residual encyclopedia_skill slot");
+                    "Unequipping after the move left a residual skill_bonus slot");
 
             helper.succeed();
         } finally {
@@ -193,7 +192,7 @@ public final class EncyclopediaGameTests {
         try {
             ICurioStacksHandler handsHandler = handler(wearer, CurioSlotIds.HANDS, helper);
             ICurioStacksHandler skillHandler =
-                    handler(wearer, CurioSlotIds.ENCYCLOPEDIA_SKILL, helper);
+                    handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
             int baseSkillSlots = skillHandler.getStacks().getSlots();
             ItemStack stack = new ItemStack(ModItems.ENCYCLOPEDIA.get());
 
@@ -204,7 +203,7 @@ public final class EncyclopediaGameTests {
                 settleCurioChange(wearer);
             }
             helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots,
-                    "Repeated equip/unequip cycles left a residual encyclopedia_skill slot");
+                    "Repeated equip/unequip cycles left a residual skill_bonus slot");
 
             helper.succeed();
         } finally {
