@@ -233,6 +233,88 @@ public final class CurioSlotGameTests {
         }
     }
 
+    @GameTest(template = "empty")
+    public static void resourceSlotIsHiddenUntilDynamicallyGranted(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        ServerPlayer wearer = new PoolTestPlayer(level, "resource-slot-wearer");
+        level.players().add(wearer);
+        UUID modifierId = UUID.randomUUID();
+        try {
+            var resource = CuriosApi.getCuriosInventory(wearer).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(CurioSlotIds.RESOURCE))
+                    .orElse(null);
+            helper.assertTrue(resource != null,
+                    "Test wearer is missing the resource Curios handler");
+            helper.assertTrue(resource.getSlots() == 0,
+                    "resource slot must start hidden with zero capacity");
+
+            var hands = CuriosApi.getCuriosInventory(wearer).resolve()
+                    .flatMap(inventory -> inventory.getStacksHandler(CurioSlotIds.HANDS))
+                    .orElse(null);
+            helper.assertTrue(hands != null,
+                    "Test wearer is missing the hands Curios handler");
+            hands.getStacks().setStackInSlot(
+                    0, new ItemStack(ModItems.HOLY_ROSARY.get()));
+            settleCurioChange(wearer);
+
+            DynamicCurioSlotContributionService.reconcile(
+                    wearer,
+                    CurioSlotIds.RESOURCE,
+                    modifierId,
+                    "goetyarkham:test_resource_provider",
+                    ModItems.HOLY_ROSARY,
+                    List.of(CurioSlotIds.HANDS),
+                    1.0D);
+            helper.assertTrue(resource.getSlots() == 1,
+                    "resource slot did not become visible once a dynamic modifier"
+                            + " granted capacity");
+
+            resource.getStacks().setStackInSlot(
+                    0, new ItemStack(ModItems.HOLY_ROSARY.get()));
+            helper.assertTrue(!resource.getStacks().getStackInSlot(0).isEmpty(),
+                    "Could not place an item into the dynamically granted resource slot");
+
+            int inventoryCountBefore = countMatchingStacks(
+                    wearer, ModItems.HOLY_ROSARY.get());
+
+            hands.getStacks().setStackInSlot(0, ItemStack.EMPTY);
+            settleCurioChange(wearer);
+            DynamicCurioSlotContributionService.reconcile(
+                    wearer,
+                    CurioSlotIds.RESOURCE,
+                    modifierId,
+                    "goetyarkham:test_resource_provider",
+                    ModItems.HOLY_ROSARY,
+                    List.of(CurioSlotIds.HANDS),
+                    1.0D);
+
+            helper.assertTrue(resource.getSlots() == 0,
+                    "resource slot did not hide again once the dynamic modifier"
+                            + " was removed");
+            int inventoryCountAfter = countMatchingStacks(
+                    wearer, ModItems.HOLY_ROSARY.get());
+            helper.assertTrue(inventoryCountAfter == inventoryCountBefore + 1,
+                    "Item left in the shrinking resource slot was not safely"
+                            + " returned to the player");
+
+            helper.succeed();
+        } finally {
+            level.players().remove(wearer);
+            wearer.discard();
+        }
+    }
+
+    private static int countMatchingStacks(
+            ServerPlayer player, net.minecraft.world.item.Item item) {
+        int count = 0;
+        for (ItemStack stack : player.getInventory().items) {
+            if (stack.is(item)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
     private static void verifyGrotesqueStatueRuntimeWiring(GameTestHelper helper) {
         ResourceLocation expectedId = ResourceLocation.fromNamespaceAndPath(
                 GoetyArkham.MOD_ID, "grotesque_statue");

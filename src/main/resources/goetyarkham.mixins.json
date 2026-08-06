@@ -8,12 +8,12 @@
     "CurioStacksHandlerMixin",
     "CursedCageBlockEntityMixin",
     "DarkWandFocusSpendMixin",
-    "SharedBonusSlotHandlerMixin",
     "GoetyIllagerAssaultMixin",
     "GoetyRitualCompletionMixin",
     "OldBookOfLoreCooldownMixin",
     "RaidCreationMixin",
     "RaidsCreationContextMixin",
+    "ResourceSlotHandlerMixin",
     "SEHelperMixin",
     "TotemFinderCanOpenWandCircleMixin"
   ],

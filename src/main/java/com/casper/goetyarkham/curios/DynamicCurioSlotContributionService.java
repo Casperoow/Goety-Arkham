@@ -21,9 +21,9 @@ import java.util.function.Supplier;
  * Shared mechanism for any Curio that grants a fixed number of extra slots
  * on some other Curios slot while worn (e.g. the Arcane Initiate's Token and
  * the Book of Shadows granting {@link CurioSlotIds#FOCUS} slots). {@link
- * CurioSlotIds#SKILL_BONUS} uses the related {@link #reconcileSize} instead,
+ * CurioSlotIds#RESOURCE} uses the related {@link #reconcileSize} instead,
  * since its capacity must be the maximum declared by several deduplicated
- * providers rather than a sum - see {@link SharedBonusSlotService}.
+ * providers rather than a sum - see {@link ResourceSlotService}.
  * Each contributing item keeps its own permanent slot modifier, identified
  * by its own {@link UUID}, on the target slot's {@code ICurioStacksHandler};
  * Curios sums every active modifier's amount itself, so multiple
@@ -76,9 +76,9 @@ public final class DynamicCurioSlotContributionService {
      * own modifier and Curios sums them all, this is for a slot whose
      * capacity must equal a value computed some other way (e.g. the maximum
      * declared by several deduplicated contributors, as {@link
-     * SharedBonusSlotService} computes) - there is exactly one modifier
-     * under {@code modifierId}, and its amount is simply kept in sync with
-     * {@code targetSize}.
+     * ResourceSlotService} computes) - there is exactly one modifier under
+     * {@code modifierId}, and its amount is simply kept in sync with {@code
+     * targetSize}.
      *
      * <p>Idempotent: a call that finds the modifier already at {@code
      * targetSize} does nothing. Shrinking safely evacuates the
@@ -99,7 +99,7 @@ public final class DynamicCurioSlotContributionService {
         boolean handlerPresent = CuriosApi.getCuriosInventory(player).resolve().isPresent();
         if (!handlerPresent) {
             GoetyArkham.LOGGER.debug(
-                    "[SharedBonusSlot] No Curios handler yet player={} uuid={} slot={}"
+                    "[DynamicCurioSlot] No Curios handler yet player={} uuid={} slot={}"
                             + " mode={} source={} - skipping (not a shrink, nothing to evacuate)",
                     player.getGameProfile().getName(), player.getUUID(), targetSlotId, mode, source);
             return;
@@ -110,7 +110,7 @@ public final class DynamicCurioSlotContributionService {
                     .orElse(null);
             if (handler == null) {
                 GoetyArkham.LOGGER.debug(
-                        "[SharedBonusSlot] No handler for slot={} player={} mode={} source={}",
+                        "[DynamicCurioSlot] No handler for slot={} player={} mode={} source={}",
                         targetSlotId, player.getGameProfile().getName(), mode, source);
                 return;
             }
@@ -122,7 +122,7 @@ public final class DynamicCurioSlotContributionService {
             if (targetSize < currentAmount) {
                 if (!mode.allowsShrink()) {
                     GoetyArkham.LOGGER.debug(
-                            "[SharedBonusSlot] Blocking shrink player={} uuid={} slot={}"
+                            "[DynamicCurioSlot] Blocking shrink player={} uuid={} slot={}"
                                     + " current={} target={} mode={} source={} - restore-mode"
                                     + " reconcile never shrinks or evacuates",
                             player.getGameProfile().getName(), player.getUUID(), targetSlotId,
@@ -131,7 +131,7 @@ public final class DynamicCurioSlotContributionService {
                 }
                 int shrinkBy = (int) Math.round(currentAmount - targetSize);
                 GoetyArkham.LOGGER.debug(
-                        "[SharedBonusSlot] Shrinking player={} uuid={} slot={} current={}"
+                        "[DynamicCurioSlot] Shrinking player={} uuid={} slot={} current={}"
                                 + " target={} mode={} source={}",
                         player.getGameProfile().getName(), player.getUUID(), targetSlotId,
                         currentAmount, targetSize, mode, source);
@@ -283,8 +283,8 @@ public final class DynamicCurioSlotContributionService {
                 continue;
             }
             stacks.setStackInSlot(slot, ItemStack.EMPTY);
-            GoetyArkham.LOGGER.debug(
-                    "[SharedBonusSlot] Evacuating player={} uuid={} slot={} item={} count={}",
+            GoetyArkham.LOGGER.info(
+                    "[DynamicCurioSlot] EVACUATE player={} uuid={} slot={} item={} count={}",
                     player.getGameProfile().getName(), player.getUUID(), slot,
                     stack.getItem(), stack.getCount());
             ItemHandlerHelper.giveItemToPlayer(player, stack);

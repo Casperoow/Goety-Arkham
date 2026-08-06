@@ -8,23 +8,23 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Owns the {@link CurioSlotIds#SKILL_BONUS} slot's capacity: the maximum
- * {@linkplain SharedBonusSlotProvider#declaredSlotCount() declared count} of
+ * Owns the {@link CurioSlotIds#RESOURCE} slot's capacity: the maximum
+ * {@linkplain ResourceSlotProvider#declaredSlotCount() declared count} of
  * every currently equipped, distinct (by provider ID) {@link
- * SharedBonusSlotProvider} in {@link SharedBonusSlotProviderRegistry} - never
- * a sum, so three providers declaring {@code 1, 3, 3} yield a capacity of
+ * ResourceSlotProvider} in {@link ResourceSlotProviderRegistry} - never a
+ * sum, so three providers declaring {@code 1, 3, 3} yield a capacity of
  * {@code 3}, not {@code 7}. A single, service-owned slot modifier ({@link
  * DynamicCurioSlotContributionService#reconcileSize}) is kept in sync with
  * that value; nothing here is item-specific, so any future shared-slot
  * provider is picked up automatically the moment it registers itself.
  */
-public final class SharedBonusSlotService {
+public final class ResourceSlotService {
     private static final UUID CAPACITY_MODIFIER_ID = UUID.fromString(
             "7d9a4b1e-2c3f-4a5b-9c6d-1e2f3a4b5c6d");
     private static final String CAPACITY_MODIFIER_NAME =
-            "goetyarkham:skill_bonus_capacity";
+            "goetyarkham:resource_capacity";
 
-    private SharedBonusSlotService() {
+    private ResourceSlotService() {
     }
 
     /**
@@ -57,11 +57,11 @@ public final class SharedBonusSlotService {
     }
 
     private static void reconcile(ServerPlayer player, ReconcileMode mode, String source) {
-        List<SharedBonusSlotProvider> providers = SharedBonusSlotProviderRegistry.providers();
+        List<ResourceSlotProvider> providers = ResourceSlotProviderRegistry.providers();
         int target = computeCapacity(providers, player);
         if (GoetyArkham.LOGGER.isDebugEnabled()) {
             GoetyArkham.LOGGER.debug(
-                    "[SharedBonusSlot] Reconcile player={} uuid={} entityId={} mode={} source={}"
+                    "[ResourceSlot] Reconcile player={} uuid={} entityId={} mode={} source={}"
                             + " target={} providers={}",
                     player.getGameProfile().getName(), player.getUUID(), player.getId(), mode,
                     source, target,
@@ -73,7 +73,7 @@ public final class SharedBonusSlotService {
         }
         DynamicCurioSlotContributionService.reconcileSize(
                 player,
-                CurioSlotIds.SKILL_BONUS,
+                CurioSlotIds.RESOURCE,
                 CAPACITY_MODIFIER_ID,
                 CAPACITY_MODIFIER_NAME,
                 target,
@@ -82,13 +82,13 @@ public final class SharedBonusSlotService {
     }
 
     public static int targetCapacity(ServerPlayer player) {
-        return computeCapacity(SharedBonusSlotProviderRegistry.providers(), player);
+        return computeCapacity(ResourceSlotProviderRegistry.providers(), player);
     }
 
     /** Pure capacity math, exposed for direct testing with throwaway provider stand-ins. */
-    static int computeCapacity(List<SharedBonusSlotProvider> providers, ServerPlayer player) {
+    static int computeCapacity(List<ResourceSlotProvider> providers, ServerPlayer player) {
         int max = 0;
-        for (SharedBonusSlotProvider provider : providers) {
+        for (ResourceSlotProvider provider : providers) {
             if (provider.isEquipped(player)) {
                 max = Math.max(max, provider.declaredSlotCount());
             }

@@ -88,16 +88,16 @@ public final class CuriosForgeEvents {
 
     /**
      * Same pre-equip gate pattern as {@link #preventDuplicateGoetyArkhamCurio},
-     * restricted to the {@link CurioSlotIds#SKILL_BONUS} slot: only the four
-     * items in {@link SharedBonusSlotContentPolicy} may enter, and only as a
+     * restricted to the {@link CurioSlotIds#RESOURCE} slot: only the four
+     * items in {@link ResourceSlotContentPolicy} may enter, and only as a
      * stack of exactly 1. This covers every route Curios itself funnels
      * through {@code isItemValid} (drag-and-drop, shift-click quick move,
      * right-click auto-equip, and creative-mode placement).
      */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void restrictSharedBonusSlotContent(CurioEquipEvent event) {
-        if (CurioSlotIds.SKILL_BONUS.equals(event.getSlotContext().identifier())
-                && !SharedBonusSlotContentPolicy.canEquip(
+    public static void restrictResourceSlotContent(CurioEquipEvent event) {
+        if (CurioSlotIds.RESOURCE.equals(event.getSlotContext().identifier())
+                && !ResourceSlotContentPolicy.canEquip(
                         event.getSlotContext(), event.getStack())) {
             event.setResult(net.minecraftforge.eventbus.api.Event.Result.DENY);
         }
@@ -135,46 +135,47 @@ public final class CuriosForgeEvents {
         if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
-        if (PENDING_HEIRLOOM_RECONCILE.remove(player.getUUID())) {
+        UUID uuid = player.getUUID();
+        if (PENDING_HEIRLOOM_RECONCILE.remove(uuid)) {
             HeirloomOfHyperboreaService.reconcile(player);
         }
-        if (PENDING_WENDYS_AMULET_RECONCILE.remove(player.getUUID())) {
+        if (PENDING_WENDYS_AMULET_RECONCILE.remove(uuid)) {
             WendysAmuletService.reconcile(player);
         }
-        if (PENDING_ARCANE_TOKEN_RECONCILE.remove(player.getUUID())) {
+        if (PENDING_ARCANE_TOKEN_RECONCILE.remove(uuid)) {
             ArcaneInitiatesTokenService.reconcile(player);
         }
-        if (PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(player.getUUID())) {
+        if (PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(uuid)) {
             BookOfShadowsService.reconcile(player);
         }
-        if (PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID())) {
+        if (PENDING_ENCYCLOPEDIA_RECONCILE.remove(uuid)) {
             // Restore, not confirmed: the Curios handler for a just
             // (re)created player entity may not have finished settling its
             // equipped-item state yet, so this must never shrink/evacuate
-            // skill_bonus - only grow or leave it alone. See the follow-up
+            // resource - only grow or leave it alone. See the follow-up
             // confirmed pass scheduled right below and run once the restore
             // window elapses.
             EncyclopediaService.reconcileRestore(player);
-            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.put(player.getUUID(),
+            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.put(uuid,
                     player.tickCount + ENCYCLOPEDIA_RESTORE_CONFIRM_DELAY_TICKS);
         }
-        Integer confirmAtTick = ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.get(player.getUUID());
+        Integer confirmAtTick = ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.get(uuid);
         if (confirmAtTick != null && player.tickCount >= confirmAtTick) {
-            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(player.getUUID());
+            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(uuid);
             // The delay is only ever a secondary signal: this still
             // re-derives the real, current equip state before deciding
             // whether to shrink, so it can never wrongly evict a provider
             // that is genuinely still equipped, however long Curios took to
             // settle. It exists so a provider that really is gone (e.g. the
-            // save was edited between sessions) doesn't leave skill_bonus's
+            // save was edited between sessions) doesn't leave resource's
             // capacity permanently stuck inflated from the restore pass.
             EncyclopediaService.reconcile(player);
         }
-        if (PENDING_ROLAND_RECONCILE.remove(player.getUUID())) {
+        if (PENDING_ROLAND_RECONCILE.remove(uuid)) {
             RolandsThirtyEightSpecialService.reconcile(player);
         }
-        SharedBonusSlotContentPolicy.enforce(player);
-        if (!DIRTY_EQUIPMENT.remove(player.getUUID())) {
+        ResourceSlotContentPolicy.enforce(player);
+        if (!DIRTY_EQUIPMENT.remove(uuid)) {
             return;
         }
         EquipmentStatsService.refresh(player);
@@ -191,14 +192,15 @@ public final class CuriosForgeEvents {
     @SubscribeEvent
     public static void playerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            DIRTY_EQUIPMENT.remove(player.getUUID());
-            PENDING_HEIRLOOM_RECONCILE.remove(player.getUUID());
-            PENDING_WENDYS_AMULET_RECONCILE.remove(player.getUUID());
-            PENDING_ARCANE_TOKEN_RECONCILE.remove(player.getUUID());
-            PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(player.getUUID());
-            PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID());
-            PENDING_ROLAND_RECONCILE.remove(player.getUUID());
-            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(player.getUUID());
+            UUID uuid = player.getUUID();
+            DIRTY_EQUIPMENT.remove(uuid);
+            PENDING_HEIRLOOM_RECONCILE.remove(uuid);
+            PENDING_WENDYS_AMULET_RECONCILE.remove(uuid);
+            PENDING_ARCANE_TOKEN_RECONCILE.remove(uuid);
+            PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(uuid);
+            PENDING_ENCYCLOPEDIA_RECONCILE.remove(uuid);
+            PENDING_ROLAND_RECONCILE.remove(uuid);
+            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(uuid);
         }
     }
 
@@ -231,12 +233,13 @@ public final class CuriosForgeEvents {
 
     private static void queueReconcile(PlayerEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            PENDING_HEIRLOOM_RECONCILE.add(player.getUUID());
-            PENDING_WENDYS_AMULET_RECONCILE.add(player.getUUID());
-            PENDING_ARCANE_TOKEN_RECONCILE.add(player.getUUID());
-            PENDING_BOOK_OF_SHADOWS_RECONCILE.add(player.getUUID());
-            PENDING_ENCYCLOPEDIA_RECONCILE.add(player.getUUID());
-            PENDING_ROLAND_RECONCILE.add(player.getUUID());
+            UUID uuid = player.getUUID();
+            PENDING_HEIRLOOM_RECONCILE.add(uuid);
+            PENDING_WENDYS_AMULET_RECONCILE.add(uuid);
+            PENDING_ARCANE_TOKEN_RECONCILE.add(uuid);
+            PENDING_BOOK_OF_SHADOWS_RECONCILE.add(uuid);
+            PENDING_ENCYCLOPEDIA_RECONCILE.add(uuid);
+            PENDING_ROLAND_RECONCILE.add(uuid);
         }
     }
 
@@ -279,8 +282,8 @@ public final class CuriosForgeEvents {
 
     /**
      * Same rationale as {@link #handleBookOfShadowsTransition}: the shared
-     * {@link CurioSlotIds#SKILL_BONUS} slot's capacity is never auto-filled,
-     * so {@link EncyclopediaService#reconcile} (which recomputes that shared
+     * {@link CurioSlotIds#RESOURCE} slot's capacity is never auto-filled, so
+     * {@link EncyclopediaService#reconcile} (which recomputes that shared
      * capacity from every registered provider) is idempotent and safe to
      * call on every observed change to either supported slot.
      */

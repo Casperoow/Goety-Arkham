@@ -110,6 +110,12 @@ public final class ModItems {
     public static final RegistryObject<SwitchbladeItem> SWITCHBLADE =
             ITEMS.register("switchblade", SwitchbladeItem::new);
 
+    public static final RegistryObject<MacheteItem> MACHETE =
+            ITEMS.register("machete", MacheteItem::new);
+
+    public static final RegistryObject<BaseballBatItem> BASEBALL_BAT =
+            ITEMS.register("baseball_bat", BaseballBatItem::new);
+
     private ModItems() {
     }
 

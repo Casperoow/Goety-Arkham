@@ -5,7 +5,7 @@ import com.casper.goetyarkham.stats.StatType;
 import java.util.Map;
 
 /**
- * Read-only snapshot of the Encyclopedia's own live {@code skill_bonus}
+ * Read-only snapshot of the Encyclopedia's own live {@code resource}
  * contribution, for Shift-tooltip display only. Never mutates slot
  * contents, capacity, or player attributes.
  *
@@ -17,10 +17,10 @@ import java.util.Map;
  *                   ItemStack} instance being hovered - see {@link
  *                   EncyclopediaService#isWearing})
  * @param bonuses    this provider's own {@code +2}-per-item tally across the
- *                   player's current {@code skill_bonus} slot contents,
- *                   always containing every {@link StatType} (zero if
- *                   ungranted); when {@code equipped} is false this is the
- *                   same rule applied as a prediction, not an active bonus
+ *                   player's current {@code resource} slot contents, always
+ *                   containing every {@link StatType} (zero if ungranted);
+ *                   when {@code equipped} is false this is the same rule
+ *                   applied as a prediction, not an active bonus
  */
 public record EncyclopediaTooltipBonus(
         boolean available, boolean equipped, Map<StatType, Integer> bonuses) {

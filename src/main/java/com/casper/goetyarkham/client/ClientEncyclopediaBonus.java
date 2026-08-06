@@ -15,8 +15,8 @@ import java.util.List;
 
 /**
  * Kept in the client package so dedicated servers never load {@link
- * Minecraft}. Reads only - never touches the shared {@code skill_bonus}
- * slot's capacity, contents, or any player attribute.
+ * Minecraft}. Reads only - never touches the shared {@code resource} slot's
+ * capacity, contents, or any player attribute.
  */
 @OnlyIn(Dist.CLIENT)
 public final class ClientEncyclopediaBonus {
@@ -29,9 +29,9 @@ public final class ClientEncyclopediaBonus {
             return EncyclopediaTooltipBonus.UNAVAILABLE;
         }
         boolean equipped = EncyclopediaService.isWearing(player);
-        List<ItemStack> skillBonusContents = DynamicCurioSlotContributionService.slotContents(
-                player, CurioSlotIds.SKILL_BONUS);
+        List<ItemStack> resourceContents = DynamicCurioSlotContributionService.slotContents(
+                player, CurioSlotIds.RESOURCE);
         return new EncyclopediaTooltipBonus(
-                true, equipped, EncyclopediaBonusProvider.INSTANCE.computeBonus(skillBonusContents));
+                true, equipped, EncyclopediaBonusProvider.INSTANCE.computeBonus(resourceContents));
     }
 }

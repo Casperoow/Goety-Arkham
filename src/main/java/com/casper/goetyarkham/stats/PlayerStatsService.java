@@ -38,9 +38,17 @@ public final class PlayerStatsService {
                     storedFinal,
                     com.casper.goetyarkham.effect.RitaChandlersAuraEffectService
                             .strengthModifier(player));
-            return saturatingAdd(
+            int withRoland = saturatingAdd(
                     withAura,
                     com.casper.goetyarkham.item.RolandConditionalStrengthService
+                            .strengthModifier(player));
+            int withMachete = saturatingAdd(
+                    withRoland,
+                    com.casper.goetyarkham.item.MacheteStrengthBonusService
+                            .strengthModifier(player));
+            return saturatingAdd(
+                    withMachete,
+                    com.casper.goetyarkham.item.BaseballBatStrengthBonusService
                             .strengthModifier(player));
         }
         if (stat == StatType.INTELLECT) {

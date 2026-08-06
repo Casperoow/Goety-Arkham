@@ -1,8 +1,8 @@
 package com.casper.goetyarkham.stats;
 
 import com.casper.goetyarkham.curios.CurioSlotIds;
-import com.casper.goetyarkham.curios.SharedBonusSlotProvider;
-import com.casper.goetyarkham.curios.SharedBonusSlotProviderRegistry;
+import com.casper.goetyarkham.curios.ResourceSlotProvider;
+import com.casper.goetyarkham.curios.ResourceSlotProviderRegistry;
 import com.casper.goetyarkham.soul.SoulEnergyPoolService;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
@@ -62,8 +62,8 @@ public final class EquipmentStatsService {
             String slotId,
             ICurioStacksHandler handler,
             Map<StatType, Integer> totals) {
-        if (CurioSlotIds.SKILL_BONUS.equals(slotId)) {
-            addSharedBonusSlotContributions(player, handler, totals);
+        if (CurioSlotIds.RESOURCE.equals(slotId)) {
+            addResourceSlotContributions(player, handler, totals);
             return;
         }
         for (int slot = 0; slot < handler.getStacks().getSlots(); slot++) {
@@ -82,17 +82,17 @@ public final class EquipmentStatsService {
     }
 
     /**
-     * Every currently equipped {@link SharedBonusSlotProvider} independently
-     * scans every item sitting in every {@link CurioSlotIds#SKILL_BONUS}
-     * slot and scores it under its own rule; different providers' bonuses
-     * for the same item stack additively, and a provider that does not
+     * Every currently equipped {@link ResourceSlotProvider} independently
+     * scans every item sitting in every {@link CurioSlotIds#RESOURCE} slot
+     * and scores it under its own rule; different providers' bonuses for
+     * the same item stack additively, and a provider that does not
      * recognize an item contributes 0 for it.
      */
-    private static void addSharedBonusSlotContributions(
+    private static void addResourceSlotContributions(
             ServerPlayer player,
             ICurioStacksHandler handler,
             Map<StatType, Integer> totals) {
-        List<SharedBonusSlotProvider> providers = SharedBonusSlotProviderRegistry.providers();
+        List<ResourceSlotProvider> providers = ResourceSlotProviderRegistry.providers();
         if (providers.isEmpty()) {
             return;
         }
@@ -102,7 +102,7 @@ public final class EquipmentStatsService {
                 continue;
             }
             Item item = stack.getItem();
-            for (SharedBonusSlotProvider provider : providers) {
+            for (ResourceSlotProvider provider : providers) {
                 if (!provider.isEquipped(player)) {
                     continue;
                 }

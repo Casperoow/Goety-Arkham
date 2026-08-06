@@ -3,8 +3,8 @@ package com.casper.goetyarkham.item;
 import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.curios.CurioSlotIds;
 import com.casper.goetyarkham.curios.DynamicCurioSlotContributionService;
-import com.casper.goetyarkham.curios.SharedBonusSlotProvider;
-import com.casper.goetyarkham.curios.SharedBonusSlotProviderRegistry;
+import com.casper.goetyarkham.curios.ResourceSlotProvider;
+import com.casper.goetyarkham.curios.ResourceSlotProviderRegistry;
 import com.casper.goetyarkham.stats.StatType;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.gametest.framework.GameTest;
@@ -35,12 +35,12 @@ import java.util.UUID;
 
 /**
  * Exercises the Encyclopedia item's use of {@link EncyclopediaService} /
- * {@link EncyclopediaBonusProvider} to grant {@link
- * CurioSlotIds#SKILL_BONUS} slot capacity, mirroring {@link
- * BookOfShadowsGameTests}' coverage of the equivalent focus-slot mechanism.
- * It deliberately never re-tests the skill_bonus slot's own content
- * restrictions or stat bonuses - those already have dedicated coverage in
- * {@code SharedBonusSlotGameTests} and are not re-implemented by this item.
+ * {@link EncyclopediaBonusProvider} to guarantee {@link
+ * CurioSlotIds#RESOURCE} slot capacity, and the Shift-tooltip "current
+ * bonus" / "when equipped" prediction. It deliberately never re-tests the
+ * resource slot's own content restrictions or stat bonuses - those already
+ * have dedicated coverage in {@code ResourceSlotGameTests} and are not
+ * re-implemented by this item.
  */
 @GameTestHolder(GoetyArkham.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -48,7 +48,7 @@ public final class EncyclopediaGameTests {
     /**
      * Isolates this suite from {@code defaultBatch}'s concurrently running
      * tests, matching the established fix for the pre-existing {@code
-     * defaultBatch} crash landmine (see {@code SharedBonusSlotGameTests}).
+     * defaultBatch} crash landmine (see {@code ResourceSlotGameTests}).
      */
     private static final String ENCYCLOPEDIA_TEST_BATCH = "goetyarkham:encyclopedia";
 
@@ -56,7 +56,7 @@ public final class EncyclopediaGameTests {
     }
 
     @GameTest(template = "empty", batch = ENCYCLOPEDIA_TEST_BATCH)
-    public static void encyclopediaGrantsSkillSlotInHandsSlot(GameTestHelper helper) {
+    public static void encyclopediaGuaranteesResourceSlotInHandsSlot(GameTestHelper helper) {
         ResourceLocation expectedId = ResourceLocation.fromNamespaceAndPath(
                 GoetyArkham.MOD_ID, "encyclopedia");
         helper.assertTrue(expectedId.equals(ForgeRegistries.ITEMS.getKey(
@@ -76,28 +76,28 @@ public final class EncyclopediaGameTests {
         TestPlayer wearer = testPlayer(level, "encyclopedia-hands", 1.5D);
         try {
             ICurioStacksHandler handsHandler = handler(wearer, CurioSlotIds.HANDS, helper);
-            ICurioStacksHandler skillHandler =
-                    handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            int baseSkillSlots = skillHandler.getStacks().getSlots();
-            helper.assertTrue(baseSkillSlots == 0,
-                    "skill_bonus did not start at base size 0");
+            ICurioStacksHandler resourceHandler =
+                    handler(wearer, CurioSlotIds.RESOURCE, helper);
+            int baseResourceSlots = resourceHandler.getStacks().getSlots();
+            helper.assertTrue(baseResourceSlots == 0,
+                    "resource did not start at base size 0");
 
             handsHandler.getStacks().setStackInSlot(0, stack.copy());
             settleCurioChange(wearer);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
-                    "Equipping in hands did not add exactly one skill_bonus slot");
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots + 1,
+                    "Equipping in hands did not add exactly one resource slot");
 
             // Repeated reconciliation (login/respawn/dimension-change stand-in)
             // must never duplicate the slot.
             EncyclopediaService.reconcile(wearer);
             EncyclopediaService.reconcile(wearer);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
-                    "Repeated reconciliation duplicated the skill_bonus slot (hands)");
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots + 1,
+                    "Repeated reconciliation duplicated the resource slot (hands)");
 
             handsHandler.getStacks().setStackInSlot(0, ItemStack.EMPTY);
             settleCurioChange(wearer);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots,
-                    "Unequipping from hands did not remove the granted skill_bonus slot");
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots,
+                    "Unequipping from hands did not remove the granted resource slot");
 
             helper.succeed();
         } finally {
@@ -106,7 +106,7 @@ public final class EncyclopediaGameTests {
     }
 
     @GameTest(template = "empty", batch = ENCYCLOPEDIA_TEST_BATCH)
-    public static void encyclopediaGrantsSkillSlotInBookSlot(GameTestHelper helper) {
+    public static void encyclopediaGuaranteesResourceSlotInBookSlot(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         TestPlayer wearer = testPlayer(level, "encyclopedia-book", 1.5D);
         try {
@@ -115,9 +115,9 @@ public final class EncyclopediaGameTests {
             helper.assertTrue(inventory != null,
                     "Missing Curios inventory for book slot test");
             ICurioStacksHandler bookHandler = handler(wearer, CurioSlotIds.BOOK, helper);
-            ICurioStacksHandler skillHandler =
-                    handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            int baseSkillSlots = skillHandler.getStacks().getSlots();
+            ICurioStacksHandler resourceHandler =
+                    handler(wearer, CurioSlotIds.RESOURCE, helper);
+            int baseResourceSlots = resourceHandler.getStacks().getSlots();
 
             // The book slot's base size is 0; it only exists once some
             // other dynamic modifier grants it capacity. Simulate that here
@@ -133,14 +133,14 @@ public final class EncyclopediaGameTests {
             bookHandler.getStacks().setStackInSlot(
                     0, new ItemStack(ModItems.ENCYCLOPEDIA.get()));
             settleCurioChange(wearer);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
-                    "Equipping in the book slot did not add exactly one skill_bonus slot");
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots + 1,
+                    "Equipping in the book slot did not add exactly one resource slot");
 
             bookHandler.getStacks().setStackInSlot(0, ItemStack.EMPTY);
             settleCurioChange(wearer);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots,
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots,
                     "Unequipping from the book slot did not remove the granted"
-                            + " skill_bonus slot");
+                            + " resource slot");
 
             helper.succeed();
         } finally {
@@ -164,30 +164,28 @@ public final class EncyclopediaGameTests {
 
             ICurioStacksHandler handsHandler = handler(wearer, CurioSlotIds.HANDS, helper);
             ICurioStacksHandler bookHandler = handler(wearer, CurioSlotIds.BOOK, helper);
-            ICurioStacksHandler skillHandler =
-                    handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            int baseSkillSlots = skillHandler.getStacks().getSlots();
+            ICurioStacksHandler resourceHandler =
+                    handler(wearer, CurioSlotIds.RESOURCE, helper);
+            int baseResourceSlots = resourceHandler.getStacks().getSlots();
             ItemStack stack = new ItemStack(ModItems.ENCYCLOPEDIA.get());
 
             handsHandler.getStacks().setStackInSlot(0, stack.copy());
             settleCurioChange(wearer);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
-                    "Equipping in hands did not add the skill_bonus slot"
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots + 1,
+                    "Equipping in hands did not add the resource slot"
                             + " before the move");
 
-            // Move the same stack from hands to book in one settle window -
-            // must never briefly show two slots or drop to zero.
             handsHandler.getStacks().setStackInSlot(0, ItemStack.EMPTY);
             bookHandler.getStacks().setStackInSlot(0, stack.copy());
             settleCurioChange(wearer);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots + 1,
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots + 1,
                     "Moving the Encyclopedia between slots changed the"
-                            + " skill_bonus slot count");
+                            + " resource slot count");
 
             bookHandler.getStacks().setStackInSlot(0, ItemStack.EMPTY);
             settleCurioChange(wearer);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots,
-                    "Unequipping after the move left a residual skill_bonus slot");
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots,
+                    "Unequipping after the move left a residual resource slot");
 
             helper.succeed();
         } finally {
@@ -201,9 +199,9 @@ public final class EncyclopediaGameTests {
         TestPlayer wearer = testPlayer(level, "encyclopedia-rapid", 1.5D);
         try {
             ICurioStacksHandler handsHandler = handler(wearer, CurioSlotIds.HANDS, helper);
-            ICurioStacksHandler skillHandler =
-                    handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            int baseSkillSlots = skillHandler.getStacks().getSlots();
+            ICurioStacksHandler resourceHandler =
+                    handler(wearer, CurioSlotIds.RESOURCE, helper);
+            int baseResourceSlots = resourceHandler.getStacks().getSlots();
             ItemStack stack = new ItemStack(ModItems.ENCYCLOPEDIA.get());
 
             for (int i = 0; i < 3; i++) {
@@ -212,8 +210,8 @@ public final class EncyclopediaGameTests {
                 handsHandler.getStacks().setStackInSlot(0, ItemStack.EMPTY);
                 settleCurioChange(wearer);
             }
-            helper.assertTrue(skillHandler.getStacks().getSlots() == baseSkillSlots,
-                    "Repeated equip/unequip cycles left a residual skill_bonus slot");
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == baseResourceSlots,
+                    "Repeated equip/unequip cycles left a residual resource slot");
 
             helper.succeed();
         } finally {
@@ -222,22 +220,22 @@ public final class EncyclopediaGameTests {
     }
 
     /**
-     * Covers the Shift-tooltip "Current Bonus" feature's live computation
+     * Covers the Shift-tooltip "current bonus" feature's live computation
      * and its independence from anything except the Encyclopedia's own
-     * {@code skill_bonus} contribution: single/triple books, mixed items,
+     * {@code resource} contribution: single/triple books, mixed items,
      * empty/illegal slot contents, equip-state dedup by item type (not by
      * the specific {@code ItemStack} instance viewed), isolation from other
-     * registered {@link SharedBonusSlotProvider}s, absence of side effects,
+     * registered {@link ResourceSlotProvider}s, absence of side effects,
      * and a real {@link EncyclopediaItem#appendHoverText} call.
      */
     @GameTest(template = "empty", batch = ENCYCLOPEDIA_TEST_BATCH)
-    public static void oneBookInSkillBonusSlotGivesPlusTwoIntellectOnly(GameTestHelper helper) {
+    public static void oneBookInResourceSlotGivesPlusTwoIntellectOnly(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         TestPlayer wearer = testPlayer(level, "encyclopedia-bonus-one-book", 3.5D);
         try {
             equipEncyclopedia(wearer);
-            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            skillHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
 
             Map<StatType, Integer> bonus = computeCurrentBonus(wearer);
             helper.assertTrue(bonus.get(StatType.INTELLECT) == 2,
@@ -260,14 +258,14 @@ public final class EncyclopediaGameTests {
         CapacityBoostProvider capacityBoost =
                 new CapacityBoostProvider("test:encyclopedia_tooltip_capacity_a", 3);
         try {
-            SharedBonusSlotProviderRegistry.register(capacityBoost);
+            ResourceSlotProviderRegistry.register(capacityBoost);
             capacityBoost.equipped = true;
             equipEncyclopedia(wearer);
-            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == 3,
-                    "Setup: capacity did not reach 3 skill_bonus slots");
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == 3,
+                    "Setup: capacity did not reach 3 resource slots");
             for (int slot = 0; slot < 3; slot++) {
-                skillHandler.getStacks().setStackInSlot(slot, new ItemStack(Items.BOOK));
+                resourceHandler.getStacks().setStackInSlot(slot, new ItemStack(Items.BOOK));
             }
 
             Map<StatType, Integer> bonus = computeCurrentBonus(wearer);
@@ -281,7 +279,7 @@ public final class EncyclopediaGameTests {
 
             helper.succeed();
         } finally {
-            SharedBonusSlotProviderRegistry.unregister(capacityBoost.providerId());
+            ResourceSlotProviderRegistry.unregister(capacityBoost.providerId());
             wearer.discard();
         }
     }
@@ -294,13 +292,13 @@ public final class EncyclopediaGameTests {
         CapacityBoostProvider capacityBoost =
                 new CapacityBoostProvider("test:encyclopedia_tooltip_capacity_b", 3);
         try {
-            SharedBonusSlotProviderRegistry.register(capacityBoost);
+            ResourceSlotProviderRegistry.register(capacityBoost);
             capacityBoost.equipped = true;
             equipEncyclopedia(wearer);
-            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            skillHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
-            skillHandler.getStacks().setStackInSlot(1, new ItemStack(Items.BOOK));
-            skillHandler.getStacks().setStackInSlot(2, new ItemStack(Items.IRON_INGOT));
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            resourceHandler.getStacks().setStackInSlot(1, new ItemStack(Items.BOOK));
+            resourceHandler.getStacks().setStackInSlot(2, new ItemStack(Items.IRON_INGOT));
 
             Map<StatType, Integer> bonus = computeCurrentBonus(wearer);
             helper.assertTrue(bonus.get(StatType.INTELLECT) == 4,
@@ -315,7 +313,7 @@ public final class EncyclopediaGameTests {
 
             helper.succeed();
         } finally {
-            SharedBonusSlotProviderRegistry.unregister(capacityBoost.providerId());
+            ResourceSlotProviderRegistry.unregister(capacityBoost.providerId());
             wearer.discard();
         }
     }
@@ -327,13 +325,13 @@ public final class EncyclopediaGameTests {
         CapacityBoostProvider capacityBoost =
                 new CapacityBoostProvider("test:encyclopedia_tooltip_capacity_c", 3);
         try {
-            SharedBonusSlotProviderRegistry.register(capacityBoost);
+            ResourceSlotProviderRegistry.register(capacityBoost);
             capacityBoost.equipped = true;
             equipEncyclopedia(wearer);
-            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            skillHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
-            skillHandler.getStacks().setStackInSlot(1, new ItemStack(Items.RABBIT_FOOT));
-            skillHandler.getStacks().setStackInSlot(
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            resourceHandler.getStacks().setStackInSlot(1, new ItemStack(Items.RABBIT_FOOT));
+            resourceHandler.getStacks().setStackInSlot(
                     2, new ItemStack(com.Polarice3.Goety.common.items.ModItems.ECTOPLASM.get()));
 
             Map<StatType, Integer> bonus = computeCurrentBonus(wearer);
@@ -347,7 +345,7 @@ public final class EncyclopediaGameTests {
 
             helper.succeed();
         } finally {
-            SharedBonusSlotProviderRegistry.unregister(capacityBoost.providerId());
+            ResourceSlotProviderRegistry.unregister(capacityBoost.providerId());
             wearer.discard();
         }
     }
@@ -358,17 +356,17 @@ public final class EncyclopediaGameTests {
         TestPlayer wearer = testPlayer(level, "encyclopedia-bonus-empty-illegal", 11.5D);
         try {
             equipEncyclopedia(wearer);
-            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == 1,
-                    "Setup: Encyclopedia alone should grant exactly 1 skill_bonus slot");
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == 1,
+                    "Setup: Encyclopedia alone should grant exactly 1 resource slot");
 
             Map<StatType, Integer> emptyBonus = computeCurrentBonus(wearer);
             helper.assertTrue(allZero(emptyBonus), "An empty slot must contribute no bonus");
 
-            // Bypasses SharedBonusSlotContentPolicy directly (as an
+            // Bypasses ResourceSlotContentPolicy directly (as an
             // out-of-band write would) to confirm an unrecognized item is
             // simply scored 0, never crashing or contributing.
-            skillHandler.getStacks().setStackInSlot(0, new ItemStack(Items.DIRT));
+            resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.DIRT));
             Map<StatType, Integer> illegalBonus = computeCurrentBonus(wearer);
             helper.assertTrue(allZero(illegalBonus),
                     "An illegal/unrecognized item must contribute no bonus");
@@ -393,11 +391,11 @@ public final class EncyclopediaGameTests {
 
             helper.assertTrue(EncyclopediaService.isWearing(wearer),
                     "Wearing two Encyclopedias should still report equipped");
-            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            helper.assertTrue(skillHandler.getStacks().getSlots() == 1,
-                    "Two worn Encyclopedias must not double the skill_bonus capacity (max, not sum)");
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == 1,
+                    "Two worn Encyclopedias must not double the resource capacity (max, not sum)");
 
-            skillHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
             Map<StatType, Integer> bonus = computeCurrentBonus(wearer);
             helper.assertTrue(bonus.get(StatType.INTELLECT) == 2,
                     "Wearing two Encyclopedias must not double the Book's own +2 Intellect, found "
@@ -429,11 +427,6 @@ public final class EncyclopediaGameTests {
             helper.assertTrue(EncyclopediaService.isWearing(wearer),
                     "A worn Encyclopedia must report equipped regardless of an"
                             + " unequipped copy sitting in the inventory");
-            // The item-instance parameter that would be passed to
-            // appendHoverText for that inventory copy is never consulted by
-            // the equip check at all - EncyclopediaService.isWearing(wearer)
-            // above takes only the player, proving the result cannot depend
-            // on which specific stack is being hovered.
 
             helper.succeed();
         } finally {
@@ -448,10 +441,10 @@ public final class EncyclopediaGameTests {
         TestPlayer wearer = testPlayer(level, "encyclopedia-bonus-isolation", 17.5D);
         BookHoggingProvider bookHogger = new BookHoggingProvider("test:book_hogging_provider");
         try {
-            SharedBonusSlotProviderRegistry.register(bookHogger);
+            ResourceSlotProviderRegistry.register(bookHogger);
             equipEncyclopedia(wearer);
-            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            skillHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
 
             Map<StatType, Integer> bonus = computeCurrentBonus(wearer);
             helper.assertTrue(bonus.get(StatType.INTELLECT) == 2,
@@ -461,7 +454,7 @@ public final class EncyclopediaGameTests {
 
             helper.succeed();
         } finally {
-            SharedBonusSlotProviderRegistry.unregister(bookHogger.providerId());
+            ResourceSlotProviderRegistry.unregister(bookHogger.providerId());
             wearer.discard();
         }
     }
@@ -472,23 +465,23 @@ public final class EncyclopediaGameTests {
         TestPlayer wearer = testPlayer(level, "encyclopedia-bonus-no-side-effects", 19.5D);
         try {
             equipEncyclopedia(wearer);
-            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
-            skillHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
-            int slotsBefore = skillHandler.getStacks().getSlots();
-            ItemStack contentBefore = skillHandler.getStacks().getStackInSlot(0).copy();
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            int slotsBefore = resourceHandler.getStacks().getSlots();
+            ItemStack contentBefore = resourceHandler.getStacks().getStackInSlot(0).copy();
 
             for (int i = 0; i < 3; i++) {
                 EncyclopediaService.isWearing(wearer);
                 computeCurrentBonus(wearer);
             }
 
-            helper.assertTrue(skillHandler.getStacks().getSlots() == slotsBefore,
-                    "Reading the tooltip bonus changed the skill_bonus slot capacity");
-            ItemStack contentAfter = skillHandler.getStacks().getStackInSlot(0);
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == slotsBefore,
+                    "Reading the tooltip bonus changed the resource slot capacity");
+            ItemStack contentAfter = resourceHandler.getStacks().getStackInSlot(0);
             helper.assertTrue(
                     ItemStack.isSameItemSameTags(contentBefore, contentAfter)
                             && contentBefore.getCount() == contentAfter.getCount(),
-                    "Reading the tooltip bonus changed the skill_bonus slot contents");
+                    "Reading the tooltip bonus changed the resource slot contents");
 
             helper.succeed();
         } finally {
@@ -502,7 +495,8 @@ public final class EncyclopediaGameTests {
      * EncyclopediaService.currentClientBonus()} both safely resolve to
      * their no-client-player defaults (there is no {@code Dist.CLIENT} in a
      * GameTest server), proving the item never crashes when no local
-     * client player is available.
+     * client player is available - covering both the equipped and
+     * unequipped Shift-hidden tooltip paths.
      */
     @GameTest(template = "empty", batch = ENCYCLOPEDIA_TEST_BATCH)
     public static void appendHoverTextNeverCrashesWithoutAClientPlayer(GameTestHelper helper) {
@@ -515,7 +509,7 @@ public final class EncyclopediaGameTests {
 
     private static Map<StatType, Integer> computeCurrentBonus(ServerPlayer wearer) {
         List<ItemStack> contents = DynamicCurioSlotContributionService.slotContents(
-                wearer, CurioSlotIds.SKILL_BONUS);
+                wearer, CurioSlotIds.RESOURCE);
         return EncyclopediaBonusProvider.INSTANCE.computeBonus(contents);
     }
 
@@ -532,7 +526,7 @@ public final class EncyclopediaGameTests {
         settleCurioChange(wearer);
     }
 
-    private static final class CapacityBoostProvider implements SharedBonusSlotProvider {
+    private static final class CapacityBoostProvider implements ResourceSlotProvider {
         private final String id;
         private final int slotCount;
         private volatile boolean equipped;
@@ -564,7 +558,7 @@ public final class EncyclopediaGameTests {
     }
 
     /** Deliberately scores Books far higher than the Encyclopedia does, to prove isolation. */
-    private static final class BookHoggingProvider implements SharedBonusSlotProvider {
+    private static final class BookHoggingProvider implements ResourceSlotProvider {
         private final String id;
 
         BookHoggingProvider(String id) {

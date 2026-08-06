@@ -6,7 +6,7 @@ import top.theillusivec4.curios.common.inventory.DynamicStackHandler;
 import java.util.function.Function;
 
 /**
- * Every {@link CurioSlotIds#SKILL_BONUS} slot's own {@code
+ * Every {@link CurioSlotIds#RESOURCE} slot's own {@code
  * IDynamicStackHandler}, capped to holding exactly one item regardless of
  * that item's own stack size (Iron Ingot, Book, etc. all normally stack to
  * 64). {@link #getSlotLimit} is the single source of this cap: it is what
@@ -18,13 +18,13 @@ import java.util.function.Function;
  * a player holding 64 Iron Ingots and clicking (or shift-clicking, or
  * right-click-auto-equipping) into an empty slot here has exactly 1 unit
  * split off structurally, without this mod ever touching the source stack
- * itself. See {@link com.casper.goetyarkham.mixin.SharedBonusSlotHandlerMixin}
+ * itself. See {@link com.casper.goetyarkham.mixin.ResourceSlotHandlerMixin}
  * for how a player's {@code CurioStacksHandler} is made to construct this
  * subclass instead of a plain {@code DynamicStackHandler} for this one
  * slot identifier.
  */
-public final class SharedBonusSlotStackHandler extends DynamicStackHandler {
-    public SharedBonusSlotStackHandler(int size, Function<Integer, SlotContext> ctxBuilder) {
+public final class ResourceSlotStackHandler extends DynamicStackHandler {
+    public ResourceSlotStackHandler(int size, Function<Integer, SlotContext> ctxBuilder) {
         super(size, ctxBuilder);
     }
 

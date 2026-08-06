@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Deterministic pure-logic tests for {@link EncyclopediaBonusTooltipHelper}
  * and {@link EncyclopediaBonusProvider#computeBonus}: the Shift-revealed
- * "Current Bonus" block of the Encyclopedia's tooltip.
+ * "current bonus" / "when equipped" block of the Encyclopedia's tooltip.
  */
 public final class EncyclopediaBonusTooltipHelperSelfTest {
     private EncyclopediaBonusTooltipHelperSelfTest() {
@@ -24,9 +24,10 @@ public final class EncyclopediaBonusTooltipHelperSelfTest {
         equippedNonEmptyShowsHeadingThenOrderedLines();
         equippedAllZeroShowsCurrentBonusNone();
         zeroAttributesAreSuppressed();
-        inactiveWithPredictionShowsInactiveThenWhenEquippedLines();
-        inactiveWithNoPredictionShowsWhenEquippedNone();
+        notEquippedWithPredictionShowsWhenEquippedLines();
+        notEquippedWithNoPredictionShowsWhenEquippedNone();
         unavailableShowsCurrentBonusNone();
+        displayOrderIsStrengthAgilityWillpowerIntellect();
         System.out.println("EncyclopediaBonusTooltipHelperSelfTest: all checks passed");
     }
 
@@ -66,36 +67,28 @@ public final class EncyclopediaBonusTooltipHelperSelfTest {
         assertAttributeLine(tooltip.get(1), "attribute.name.goetyarkham.intellect");
     }
 
-    private static void inactiveWithPredictionShowsInactiveThenWhenEquippedLines() {
+    private static void notEquippedWithPredictionShowsWhenEquippedLines() {
         Map<StatType, Integer> bonuses = totals(2, 0, 0, 4);
         List<Component> tooltip = new ArrayList<>();
         EncyclopediaBonusTooltipHelper.append(
                 tooltip, new EncyclopediaTooltipBonus(true, false, bonuses));
 
-        assertEquals(4, tooltip.size(), "inactive line + heading + 2 predicted lines");
-        assertHeadingWithInlineKey(
-                tooltip.get(0),
-                EncyclopediaBonusTooltipHelper.CURRENT_BONUS_HEADING_KEY,
-                EncyclopediaBonusTooltipHelper.INACTIVE_KEY);
+        assertEquals(3, tooltip.size(), "when-equipped heading + 2 predicted lines");
         assertHeadingAlone(
-                tooltip.get(1), EncyclopediaBonusTooltipHelper.WHEN_EQUIPPED_HEADING_KEY);
-        assertAttributeLine(tooltip.get(2), "attribute.name.goetyarkham.strength");
-        assertAttributeLine(tooltip.get(3), "attribute.name.goetyarkham.intellect");
+                tooltip.get(0), EncyclopediaBonusTooltipHelper.WHEN_EQUIPPED_HEADING_KEY);
+        assertAttributeLine(tooltip.get(1), "attribute.name.goetyarkham.strength");
+        assertAttributeLine(tooltip.get(2), "attribute.name.goetyarkham.intellect");
     }
 
-    private static void inactiveWithNoPredictionShowsWhenEquippedNone() {
+    private static void notEquippedWithNoPredictionShowsWhenEquippedNone() {
         Map<StatType, Integer> bonuses = totals(0, 0, 0, 0);
         List<Component> tooltip = new ArrayList<>();
         EncyclopediaBonusTooltipHelper.append(
                 tooltip, new EncyclopediaTooltipBonus(true, false, bonuses));
 
-        assertEquals(2, tooltip.size(), "inactive line + when-equipped-none line");
+        assertEquals(1, tooltip.size(), "single when-equipped-none line");
         assertHeadingWithInlineKey(
                 tooltip.get(0),
-                EncyclopediaBonusTooltipHelper.CURRENT_BONUS_HEADING_KEY,
-                EncyclopediaBonusTooltipHelper.INACTIVE_KEY);
-        assertHeadingWithInlineKey(
-                tooltip.get(1),
                 EncyclopediaBonusTooltipHelper.WHEN_EQUIPPED_HEADING_KEY,
                 EncyclopediaBonusTooltipHelper.NONE_KEY);
     }
@@ -109,6 +102,19 @@ public final class EncyclopediaBonusTooltipHelperSelfTest {
                 tooltip.get(0),
                 EncyclopediaBonusTooltipHelper.CURRENT_BONUS_HEADING_KEY,
                 EncyclopediaBonusTooltipHelper.NONE_KEY);
+    }
+
+    private static void displayOrderIsStrengthAgilityWillpowerIntellect() {
+        Map<StatType, Integer> bonuses = totals(2, 2, 2, 2);
+        List<Component> tooltip = new ArrayList<>();
+        EncyclopediaBonusTooltipHelper.append(
+                tooltip, new EncyclopediaTooltipBonus(true, true, bonuses));
+
+        assertEquals(5, tooltip.size(), "heading + 4 non-zero lines");
+        assertAttributeLine(tooltip.get(1), "attribute.name.goetyarkham.strength");
+        assertAttributeLine(tooltip.get(2), "attribute.name.goetyarkham.agility");
+        assertAttributeLine(tooltip.get(3), "attribute.name.goetyarkham.willpower");
+        assertAttributeLine(tooltip.get(4), "attribute.name.goetyarkham.intellect");
     }
 
     private static Map<StatType, Integer> totals(

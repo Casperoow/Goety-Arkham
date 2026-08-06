@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Formats {@link EncyclopediaTooltipBonus} into the Shift-revealed "Current
- * Bonus" block of {@link EncyclopediaItem}'s tooltip. Pure formatting only -
- * every number it prints comes from {@link EncyclopediaBonusProvider#computeBonus},
- * the same rule used for the player's actual stats, so this can never drift
- * from what the Encyclopedia really grants.
+ * Formats {@link EncyclopediaTooltipBonus} into the Shift-revealed
+ * "current bonus" / "when equipped" block of {@link EncyclopediaItem}'s
+ * tooltip. Pure formatting only - every number it prints comes from {@link
+ * EncyclopediaBonusProvider#computeBonus}, the same rule used for the
+ * player's actual stats, so this can never drift from what the Encyclopedia
+ * really grants.
  */
 public final class EncyclopediaBonusTooltipHelper {
     static final String CURRENT_BONUS_HEADING_KEY =
             "tooltip.goetyarkham.encyclopedia.current_bonus_heading";
     static final String WHEN_EQUIPPED_HEADING_KEY =
             "tooltip.goetyarkham.encyclopedia.when_equipped_heading";
-    static final String INACTIVE_KEY = "tooltip.goetyarkham.encyclopedia.inactive";
     static final String NONE_KEY = "tooltip.goetyarkham.encyclopedia.none";
 
     /** Fixed display order: Strength, Agility, Willpower, Intellect. */
@@ -36,29 +36,31 @@ public final class EncyclopediaBonusTooltipHelper {
     private EncyclopediaBonusTooltipHelper() {
     }
 
+    /**
+     * Appends either the "current bonus" block (when the viewing player has
+     * an Encyclopedia equipped) or the "when equipped" prediction block
+     * (when they do not), matching the same resource-slot contents either
+     * way. {@code bonus.equipped()} is what selects between them - not
+     * whether the specific hovered {@code ItemStack} is the equipped one.
+     */
     public static void append(List<Component> tooltip, EncyclopediaTooltipBonus bonus) {
         if (!bonus.available()) {
             tooltip.add(headingLine(CURRENT_BONUS_HEADING_KEY, none()));
             return;
         }
         List<Component> lines = bonusLines(bonus.bonuses());
-        if (bonus.equipped()) {
-            appendSection(tooltip, CURRENT_BONUS_HEADING_KEY, null, lines);
-        } else {
-            tooltip.add(headingLine(CURRENT_BONUS_HEADING_KEY, inactive()));
-            appendSection(tooltip, WHEN_EQUIPPED_HEADING_KEY, null, lines);
-        }
+        String headingKey = bonus.equipped() ? CURRENT_BONUS_HEADING_KEY : WHEN_EQUIPPED_HEADING_KEY;
+        appendSection(tooltip, headingKey, lines);
     }
 
     private static void appendSection(
             List<Component> tooltip,
             String headingKey,
-            Component inlineValue,
             List<Component> lines) {
         if (lines.isEmpty()) {
-            tooltip.add(headingLine(headingKey, inlineValue == null ? none() : inlineValue));
+            tooltip.add(headingLine(headingKey, none()));
         } else {
-            tooltip.add(headingLine(headingKey, inlineValue));
+            tooltip.add(headingLine(headingKey, null));
             tooltip.addAll(lines);
         }
     }
@@ -86,9 +88,5 @@ public final class EncyclopediaBonusTooltipHelper {
 
     private static Component none() {
         return Component.translatable(NONE_KEY).withStyle(ChatFormatting.GRAY);
-    }
-
-    private static Component inactive() {
-        return Component.translatable(INACTIVE_KEY).withStyle(ChatFormatting.GRAY);
     }
 }

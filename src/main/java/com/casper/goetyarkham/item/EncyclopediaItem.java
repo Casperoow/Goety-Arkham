@@ -16,16 +16,17 @@ import java.util.List;
 
 /**
  * A Curio equippable in either the {@code hands} or {@code book} slot.
- * While worn, grants 1 additional {@link CurioSlotIds#SKILL_BONUS} Curios
- * slot via {@link EncyclopediaService} / {@link EncyclopediaBonusProvider}.
- * Content legality and the {@code +2} skill bonus for whatever is placed in
- * it are enforced by the slot's own shared content policy and this item's
- * {@link EncyclopediaBonusProvider} (see {@link
- * com.casper.goetyarkham.curios.SharedBonusSlotContentPolicy}) - this item
- * never writes to that slot itself. Its Shift tooltip does read the slot's
- * current contents client-side (see {@link EncyclopediaService#currentClientBonus()}
- * / {@link EncyclopediaBonusTooltipHelper}), purely to display the same
- * numbers, never to change them.
+ * While worn, ensures the player has at least 1 {@link
+ * CurioSlotIds#RESOURCE} Curios slot via {@link EncyclopediaService} /
+ * {@link EncyclopediaBonusProvider}. Content legality and the {@code +2}
+ * skill bonus for whatever is placed in it are enforced by the slot's own
+ * shared content policy and this item's {@link EncyclopediaBonusProvider}
+ * (see {@link com.casper.goetyarkham.curios.ResourceSlotContentPolicy}) -
+ * this item never writes to that slot itself. Its Shift tooltip does read
+ * the slot's current contents client-side (see {@link
+ * EncyclopediaService#currentClientBonus()} / {@link
+ * EncyclopediaBonusTooltipHelper}), purely to display the same numbers,
+ * never to change them.
  */
 public final class EncyclopediaItem extends Item implements ICurioItem {
     public EncyclopediaItem() {
@@ -57,15 +58,9 @@ public final class EncyclopediaItem extends Item implements ICurioItem {
         CurioTooltipHelper.appendSlot(tooltip, "tooltip.goetyarkham.encyclopedia.slot");
         CurioTooltipHelper.appendWhenWorn(
                 tooltip,
-                Component.translatable("tooltip.goetyarkham.encyclopedia.skill_slot"),
-                Component.translatable("tooltip.goetyarkham.encyclopedia.skill_bonus"));
+                Component.translatable("tooltip.goetyarkham.encyclopedia.resource_slot"),
+                Component.translatable("tooltip.goetyarkham.encyclopedia.resource_bonus"));
         if (ShiftTooltipHelper.isShiftDown()) {
-            tooltip.add(Component.translatable(
-                            "tooltip.goetyarkham.encyclopedia.accepted_heading")
-                    .withStyle(ChatFormatting.YELLOW));
-            tooltip.add(Component.translatable(
-                            "tooltip.goetyarkham.encyclopedia.accepted_items")
-                    .withStyle(ChatFormatting.GRAY));
             EncyclopediaBonusTooltipHelper.append(tooltip, EncyclopediaService.currentClientBonus());
         } else {
             tooltip.add(Component.translatable(

@@ -3,8 +3,8 @@ package com.casper.goetyarkham.item;
 import com.casper.goetyarkham.client.ClientEncyclopediaBonus;
 import com.casper.goetyarkham.curios.CurioSlotIds;
 import com.casper.goetyarkham.curios.DynamicCurioSlotContributionService;
-import com.casper.goetyarkham.curios.SharedBonusSlotProviderRegistry;
-import com.casper.goetyarkham.curios.SharedBonusSlotService;
+import com.casper.goetyarkham.curios.ResourceSlotProviderRegistry;
+import com.casper.goetyarkham.curios.ResourceSlotService;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
@@ -14,21 +14,21 @@ import java.util.List;
 
 /**
  * Owns the Encyclopedia's participation in the shared {@link
- * CurioSlotIds#SKILL_BONUS} slot pool, worn in either {@link
+ * CurioSlotIds#RESOURCE} slot pool, worn in either {@link
  * CurioSlotIds#HANDS} or {@link CurioSlotIds#BOOK}. This item never keeps
  * its own dedicated slot or modifier: it simply registers {@link
  * EncyclopediaBonusProvider} once (on first class load, before it is ever
  * consulted - see the static initializer below) and, on every observed
- * equip/unequip transition, asks {@link SharedBonusSlotService} to
- * recompute the shared slot's capacity from every currently registered
- * provider's equip state.
+ * equip/unequip transition, asks {@link ResourceSlotService} to recompute
+ * the shared slot's capacity from every currently registered provider's
+ * equip state.
  */
 public final class EncyclopediaService {
     private static final List<String> WORN_SLOTS =
             List.of(CurioSlotIds.HANDS, CurioSlotIds.BOOK);
 
     static {
-        SharedBonusSlotProviderRegistry.register(EncyclopediaBonusProvider.INSTANCE);
+        ResourceSlotProviderRegistry.register(EncyclopediaBonusProvider.INSTANCE);
     }
 
     private EncyclopediaService() {
@@ -41,19 +41,19 @@ public final class EncyclopediaService {
      * equipped, so calling it repeatedly (or out of order with any other
      * provider's own reconcile call) never duplicates or loses slots. May
      * shrink the slot and evacuate overflow contents - see {@link
-     * SharedBonusSlotService#reconcile}.
+     * ResourceSlotService#reconcile}.
      */
     public static void reconcile(ServerPlayer player) {
-        SharedBonusSlotService.reconcile(player);
+        ResourceSlotService.reconcile(player);
     }
 
     /**
      * Login/respawn/clone/dimension-change restore. Unlike {@link
      * #reconcile}, this never shrinks the shared slot or evacuates its
-     * contents - see {@link SharedBonusSlotService#reconcileRestore}.
+     * contents - see {@link ResourceSlotService#reconcileRestore}.
      */
     public static void reconcileRestore(ServerPlayer player) {
-        SharedBonusSlotService.reconcileRestore(player);
+        ResourceSlotService.reconcileRestore(player);
     }
 
     public static boolean isWearing(ServerPlayer player) {
@@ -82,7 +82,7 @@ public final class EncyclopediaService {
 
     /**
      * Client-safe live snapshot of this provider's own current {@code
-     * skill_bonus} contribution, for {@link EncyclopediaItem}'s Shift
+     * resource} contribution, for {@link EncyclopediaItem}'s Shift
      * tooltip. Mirrors {@link ShiftTooltipHelper}'s {@code DistExecutor}
      * pattern: returns {@link EncyclopediaTooltipBonus#UNAVAILABLE} on a
      * dedicated server or whenever there is no local client player (main
