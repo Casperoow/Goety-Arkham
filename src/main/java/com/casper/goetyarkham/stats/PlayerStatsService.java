@@ -34,9 +34,13 @@ public final class PlayerStatsService {
                             .willpowerModifier(player));
         }
         if (stat == StatType.STRENGTH) {
-            return saturatingAdd(
+            int withAura = saturatingAdd(
                     storedFinal,
                     com.casper.goetyarkham.effect.RitaChandlersAuraEffectService
+                            .strengthModifier(player));
+            return saturatingAdd(
+                    withAura,
+                    com.casper.goetyarkham.item.RolandConditionalStrengthService
                             .strengthModifier(player));
         }
         if (stat == StatType.INTELLECT) {
@@ -98,6 +102,7 @@ public final class PlayerStatsService {
         AgilityEffects.refreshAgilityEffects(player);
         WillpowerEffects.refreshWillpowerEffects(player);
         RevelationAttributeBridge.refresh(player);
+        com.casper.goetyarkham.item.RolandDamageBonusService.refresh(player);
     }
 
     static Optional<PlayerStats> mutable(ServerPlayer player) {

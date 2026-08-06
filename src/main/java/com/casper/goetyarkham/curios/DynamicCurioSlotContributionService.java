@@ -1,6 +1,7 @@
 package com.casper.goetyarkham.curios;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -10,6 +11,7 @@ import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -126,9 +128,15 @@ public final class DynamicCurioSlotContributionService {
         });
     }
 
+    /**
+     * Widened to {@link LivingEntity} (rather than {@link ServerPlayer})
+     * because it is a pure read with no server-only side effect, and Curios
+     * replicates a player's own equipped contents to their client, so this
+     * is also safe to call for the local client player from a tooltip.
+     */
     public static boolean isWearing(
-            ServerPlayer player, Item item, List<String> wornSlots) {
-        return CuriosApi.getCuriosInventory(player).resolve()
+            LivingEntity entity, Item item, List<String> wornSlots) {
+        return CuriosApi.getCuriosInventory(entity).resolve()
                 .map(inventory -> isWearing(inventory, item, wornSlots))
                 .orElse(false);
     }
@@ -138,6 +146,30 @@ public final class DynamicCurioSlotContributionService {
         return CuriosApi.getCuriosInventory(player).resolve()
                 .map(inventory -> equippedCount(inventory, item, wornSlots))
                 .orElse(0);
+    }
+
+    /**
+     * Read-only snapshot of every stack currently sitting in {@code
+     * slotId}'s Curios slots (including empty ones, as {@link
+     * ItemStack#EMPTY}). Never mutates the handler. Safe to call for a
+     * client-side {@link LivingEntity} (e.g. the local player from a
+     * tooltip), since Curios replicates a player's own equipped slot
+     * contents to their client.
+     */
+    public static List<ItemStack> slotContents(LivingEntity entity, String slotId) {
+        return CuriosApi.getCuriosInventory(entity).resolve()
+                .flatMap(inventory -> inventory.getStacksHandler(slotId))
+                .map(DynamicCurioSlotContributionService::copyOfStacks)
+                .orElse(List.of());
+    }
+
+    private static List<ItemStack> copyOfStacks(ICurioStacksHandler handler) {
+        IDynamicStackHandler stacks = handler.getStacks();
+        List<ItemStack> contents = new ArrayList<>(stacks.getSlots());
+        for (int slot = 0; slot < stacks.getSlots(); slot++) {
+            contents.add(stacks.getStackInSlot(slot));
+        }
+        return contents;
     }
 
     private static boolean ensureSlots(

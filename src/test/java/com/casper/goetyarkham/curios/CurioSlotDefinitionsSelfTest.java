@@ -157,10 +157,18 @@ public final class CurioSlotDefinitionsSelfTest {
                         "goetyarkham:old_book_of_lore",
                         "goetyarkham:lockpicks",
                         "goetyarkham:magnifying_glass",
-                        "goetyarkham:encyclopedia"),
+                        "goetyarkham:encyclopedia",
+                        "goetyarkham:rolands_38_special"),
                 hands.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Hands tag entries");
+        for (String slotId : CurioSlotIds.ALL) {
+            if (!CurioSlotIds.HANDS.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:rolands_38_special");
+            }
+        }
         for (String slotId : CurioSlotIds.ALL) {
             if (!CurioSlotIds.HANDS.equals(slotId)) {
                 assertResourceValueAbsent(
@@ -298,7 +306,8 @@ public final class CurioSlotDefinitionsSelfTest {
                 "weakness item tag must merge without replace");
         assertEquals(List.of(
                         "goetyarkham:dark_memory",
-                        "goetyarkham:abandoned_and_alone"),
+                        "goetyarkham:abandoned_and_alone",
+                        "goetyarkham:cover_up"),
                 weakness.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Weakness tag entries");
@@ -319,6 +328,9 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:abandoned_and_alone");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:cover_up");
             }
         }
     }
@@ -654,6 +666,43 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Encyclopedia model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/encyclopedia.png");
+
+        JsonObject rolandModel = readJson(
+                "/assets/goetyarkham/models/item/rolands_38_special.json");
+        assertEquals("minecraft:item/generated",
+                rolandModel.get("parent").getAsString(),
+                "Roland's .38 Special model parent");
+        assertEquals("goetyarkham:item/rolands_38_special",
+                rolandModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Roland's .38 Special model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/rolands_38_special.png");
+
+        JsonObject coverUpModel = readJson(
+                "/assets/goetyarkham/models/item/cover_up.json");
+        assertEquals("minecraft:item/generated",
+                coverUpModel.get("parent").getAsString(),
+                "Cover Up model parent");
+        assertEquals("goetyarkham:item/cover_up",
+                coverUpModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Cover Up model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/cover_up.png");
+
+        JsonObject knifeModel = readJson(
+                "/assets/goetyarkham/models/item/knife.json");
+        assertEquals("minecraft:item/handheld",
+                knifeModel.get("parent").getAsString(),
+                "Knife model parent (must render with a held-item pose,"
+                        + " not minecraft:item/generated)");
+        assertEquals("goetyarkham:item/knife",
+                knifeModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Knife model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/knife.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -980,11 +1029,31 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.encyclopedia.accepted_items")
                             .getAsString(),
                     "Chinese Encyclopedia accepted-items tooltip");
-            assertEquals("按住 Shift 查看详细效果",
+            assertEquals("按住Shift查看当前加成",
                     translations.get(
                             "tooltip.goetyarkham.encyclopedia.hold_shift")
                             .getAsString(),
                     "Chinese Encyclopedia hold-shift tooltip");
+            assertEquals("当前加成：",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.current_bonus_heading")
+                            .getAsString(),
+                    "Chinese Encyclopedia current-bonus heading");
+            assertEquals("装备后可获得：",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.when_equipped_heading")
+                            .getAsString(),
+                    "Chinese Encyclopedia when-equipped heading");
+            assertEquals("未生效",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.inactive")
+                            .getAsString(),
+                    "Chinese Encyclopedia inactive label");
+            assertEquals("无",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.none")
+                            .getAsString(),
+                    "Chinese Encyclopedia none label");
             assertEquals("智慧古书",
                     translations.get("item.goetyarkham.old_book_of_lore")
                             .getAsString(),
@@ -1065,6 +1134,9 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.abandoned_and_alone.effect")
                             .getAsString(),
                     "Chinese Abandoned and Alone effect tooltip");
+            assertEquals("刀子",
+                    translations.get("item.goetyarkham.knife").getAsString(),
+                    "Chinese Knife name");
         } else if ("en_us".equals(language)) {
             assertEquals("Goety: Arkham",
                     translations.get("creativetab.goetyarkham.goety_arkham")
@@ -1359,11 +1431,31 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.encyclopedia.accepted_items")
                             .getAsString(),
                     "English Encyclopedia accepted-items tooltip");
-            assertEquals("Hold Shift for details",
+            assertEquals("Hold Shift to view current bonus",
                     translations.get(
                             "tooltip.goetyarkham.encyclopedia.hold_shift")
                             .getAsString(),
                     "English Encyclopedia hold-shift tooltip");
+            assertEquals("Current Bonus:",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.current_bonus_heading")
+                            .getAsString(),
+                    "English Encyclopedia current-bonus heading");
+            assertEquals("When equipped:",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.when_equipped_heading")
+                            .getAsString(),
+                    "English Encyclopedia when-equipped heading");
+            assertEquals("Inactive",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.inactive")
+                            .getAsString(),
+                    "English Encyclopedia inactive label");
+            assertEquals("None",
+                    translations.get(
+                            "tooltip.goetyarkham.encyclopedia.none")
+                            .getAsString(),
+                    "English Encyclopedia none label");
             assertEquals("Old Book of Lore",
                     translations.get("item.goetyarkham.old_book_of_lore")
                             .getAsString(),
@@ -1448,6 +1540,9 @@ public final class CurioSlotDefinitionsSelfTest {
                     translations.get("tooltip.goetyarkham.abandoned_and_alone.effect")
                             .getAsString(),
                     "English Abandoned and Alone effect tooltip");
+            assertEquals("Knife",
+                    translations.get("item.goetyarkham.knife").getAsString(),
+                    "English Knife name");
         }
     }
 

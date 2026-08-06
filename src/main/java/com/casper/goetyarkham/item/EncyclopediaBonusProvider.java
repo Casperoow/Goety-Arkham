@@ -6,8 +6,10 @@ import com.casper.goetyarkham.curios.SharedBonusSlotProvider;
 import com.casper.goetyarkham.stats.StatType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,5 +61,32 @@ public final class EncyclopediaBonusProvider implements SharedBonusSlotProvider 
     public int statBonus(StatType stat, Item item) {
         StatType granted = BONUS_BY_ITEM.get(item);
         return granted == stat ? BONUS_AMOUNT : 0;
+    }
+
+    /**
+     * Pure, read-only tally of this provider's own {@code +2}-per-item
+     * contribution across whatever is currently sitting in the {@code
+     * skill_bonus} slots - the same rule {@link #statBonus} applies during
+     * real equipment-stat computation (see {@code
+     * EquipmentStatsService#addSharedBonusSlotContributions}), so a Shift
+     * tooltip built from this can never disagree with the player's actual
+     * stats. Every {@link StatType} is always present in the result (zero
+     * if ungranted); empty or illegal slot contents contribute nothing.
+     */
+    public Map<StatType, Integer> computeBonus(List<ItemStack> skillBonusSlotContents) {
+        EnumMap<StatType, Integer> totals = new EnumMap<>(StatType.class);
+        for (StatType stat : StatType.values()) {
+            totals.put(stat, 0);
+        }
+        for (ItemStack stack : skillBonusSlotContents) {
+            if (stack.isEmpty()) {
+                continue;
+            }
+            Item item = stack.getItem();
+            for (StatType stat : StatType.values()) {
+                totals.merge(stat, statBonus(stat, item), Integer::sum);
+            }
+        }
+        return totals;
     }
 }

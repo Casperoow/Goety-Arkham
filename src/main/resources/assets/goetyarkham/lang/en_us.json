@@ -162,7 +162,11 @@
   "tooltip.goetyarkham.encyclopedia.skill_bonus": "Each skill item in these slots grants +2 to its corresponding skill",
   "tooltip.goetyarkham.encyclopedia.accepted_heading": "Hold Shift:",
   "tooltip.goetyarkham.encyclopedia.accepted_items": "Accepts Iron Ingots, Rabbit's Feet, Books, and Ectoplasm.",
-  "tooltip.goetyarkham.encyclopedia.hold_shift": "Hold Shift for details",
+  "tooltip.goetyarkham.encyclopedia.hold_shift": "Hold Shift to view current bonus",
+  "tooltip.goetyarkham.encyclopedia.current_bonus_heading": "Current Bonus:",
+  "tooltip.goetyarkham.encyclopedia.when_equipped_heading": "When equipped:",
+  "tooltip.goetyarkham.encyclopedia.inactive": "Inactive",
+  "tooltip.goetyarkham.encyclopedia.none": "None",
   "item.goetyarkham.old_book_of_lore": "Old Book of Lore",
   "tooltip.goetyarkham.old_book_of_lore.slot": "Slots: Hands, Book",
   "tooltip.goetyarkham.old_book_of_lore.redirect": "After casting, the focus does not enter cooldown. Old Book of Lore enters cooldown for the same duration instead",
@@ -174,5 +178,13 @@
   "tooltip.goetyarkham.lockpicks.durability": "Durability: %s",
   "tooltip.goetyarkham.lockpicks.hold_shift": "Hold Shift for details",
   "item.goetyarkham.magnifying_glass": "Magnifying Glass",
-  "tooltip.goetyarkham.magnifying_glass.slot": "Slot: Hands"
+  "tooltip.goetyarkham.magnifying_glass.slot": "Slot: Hands",
+  "item.goetyarkham.rolands_38_special": "Roland’s .38 Special",
+  "tooltip.goetyarkham.rolands_38_special.kill_bonus": "After you defeat an enemy, gain +2 Intellect, up to +6 Intellect",
+  "tooltip.goetyarkham.rolands_38_special.current_bonus_intellect": "Current bonus Intellect: +%s",
+  "tooltip.goetyarkham.rolands_38_special.condition_heading": "If you have at least 2 Intellect:",
+  "item.goetyarkham.cover_up": "Cover Up",
+  "tooltip.goetyarkham.cover_up.intellect": "-6 Intellect",
+  "tooltip.goetyarkham.cover_up.effect": "If your Intellect is negative, lose 10 Soul Energy every second",
+  "item.goetyarkham.knife": "Knife"
 }

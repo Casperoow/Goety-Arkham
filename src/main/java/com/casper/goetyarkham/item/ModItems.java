@@ -98,6 +98,15 @@ public final class ModItems {
     public static final RegistryObject<EncyclopediaItem> ENCYCLOPEDIA =
             ITEMS.register("encyclopedia", EncyclopediaItem::new);
 
+    public static final RegistryObject<RolandsThirtyEightSpecialItem> ROLANDS_38_SPECIAL =
+            ITEMS.register("rolands_38_special", RolandsThirtyEightSpecialItem::new);
+
+    public static final RegistryObject<CoverUpItem> COVER_UP =
+            ITEMS.register("cover_up", CoverUpItem::new);
+
+    public static final RegistryObject<KnifeItem> KNIFE =
+            ITEMS.register("knife", KnifeItem::new);
+
     private ModItems() {
     }
 
@@ -124,6 +133,7 @@ public final class ModItems {
         }
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(GROTESQUE_STATUE);
+            event.accept(ROLANDS_38_SPECIAL);
         }
     }
 }

@@ -351,6 +351,14 @@ tasks.register('signatureWeaknessTooltipSelfTest', JavaExec) {
     mainClass = 'com.casper.goetyarkham.item.SignatureWeaknessTooltipHelperSelfTest'
 }
 
+tasks.register('encyclopediaBonusTooltipSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs deterministic tests for the Encyclopedia Shift-tooltip current-bonus formatting.'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.casper.goetyarkham.item.EncyclopediaBonusTooltipHelperSelfTest'
+}
+
 tasks.register('prepareGameTestStructures', Copy) {
     group = 'verification'
     description = 'Copies source-controlled SNBT templates into the Forge GameTest directory.'
@@ -370,4 +378,5 @@ tasks.named('check').configure {
     dependsOn tasks.named('curioSlotsSelfTest')
     dependsOn tasks.named('lonelinessSelfTest')
     dependsOn tasks.named('signatureWeaknessTooltipSelfTest')
+    dependsOn tasks.named('encyclopediaBonusTooltipSelfTest')
 }

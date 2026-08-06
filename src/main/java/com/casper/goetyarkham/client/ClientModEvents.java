@@ -1,6 +1,7 @@
 package com.casper.goetyarkham.client;
 
 import com.casper.goetyarkham.GoetyArkham;
+import com.casper.goetyarkham.client.renderer.ThrownKnifeRenderer;
 import com.casper.goetyarkham.client.renderer.YoungDeepOneRenderer;
 import com.casper.goetyarkham.entity.ModEntities;
 import net.minecraftforge.api.distmarker.Dist;
@@ -23,6 +24,10 @@ public final class ClientModEvents {
         event.registerEntityRenderer(
                 ModEntities.YOUNG_DEEP_ONE.get(),
                 YoungDeepOneRenderer::new
+        );
+        event.registerEntityRenderer(
+                ModEntities.THROWN_KNIFE.get(),
+                ThrownKnifeRenderer::new
         );
     }
 

@@ -162,7 +162,11 @@
   "tooltip.goetyarkham.encyclopedia.skill_bonus": "每个栏位中的技能物品使其对应技能+2",
   "tooltip.goetyarkham.encyclopedia.accepted_heading": "按住 Shift：",
   "tooltip.goetyarkham.encyclopedia.accepted_items": "可放入铁锭、兔子腿、书、灵质",
-  "tooltip.goetyarkham.encyclopedia.hold_shift": "按住 Shift 查看详细效果",
+  "tooltip.goetyarkham.encyclopedia.hold_shift": "按住Shift查看当前加成",
+  "tooltip.goetyarkham.encyclopedia.current_bonus_heading": "当前加成：",
+  "tooltip.goetyarkham.encyclopedia.when_equipped_heading": "装备后可获得：",
+  "tooltip.goetyarkham.encyclopedia.inactive": "未生效",
+  "tooltip.goetyarkham.encyclopedia.none": "无",
   "item.goetyarkham.old_book_of_lore": "智慧古书",
   "tooltip.goetyarkham.old_book_of_lore.slot": "栏位：手饰、书籍",
   "tooltip.goetyarkham.old_book_of_lore.redirect": "施法后，聚晶不会进入冷却，改为使智慧古书进入相同时间的冷却",
@@ -174,5 +178,13 @@
   "tooltip.goetyarkham.lockpicks.durability": "耐久：%s",
   "tooltip.goetyarkham.lockpicks.hold_shift": "按住 Shift 查看详细效果",
   "item.goetyarkham.magnifying_glass": "放大镜",
-  "tooltip.goetyarkham.magnifying_glass.slot": "栏位：手饰"
+  "tooltip.goetyarkham.magnifying_glass.slot": "栏位：手饰",
+  "item.goetyarkham.rolands_38_special": "罗兰的.38特制手枪",
+  "tooltip.goetyarkham.rolands_38_special.kill_bonus": "在你击败一个敌人后，+2智慧，最多+6智慧",
+  "tooltip.goetyarkham.rolands_38_special.current_bonus_intellect": "当前额外智慧：+%s",
+  "tooltip.goetyarkham.rolands_38_special.condition_heading": "如果你至少拥有2点智慧：",
+  "item.goetyarkham.cover_up": "掩盖罪证",
+  "tooltip.goetyarkham.cover_up.intellect": "-6智慧",
+  "tooltip.goetyarkham.cover_up.effect": "如果你的智慧为负，则每秒失去10灵魂能量",
+  "item.goetyarkham.knife": "刀子"
 }

@@ -7,6 +7,7 @@ import com.casper.goetyarkham.item.BookOfShadowsService;
 import com.casper.goetyarkham.item.EncyclopediaService;
 import com.casper.goetyarkham.item.HeirloomOfHyperboreaService;
 import com.casper.goetyarkham.item.ModItems;
+import com.casper.goetyarkham.item.RolandsThirtyEightSpecialService;
 import com.casper.goetyarkham.item.WendysAmuletService;
 import com.casper.goetyarkham.sanity.SanityService;
 import com.casper.goetyarkham.sanity.weakness.ILockedWeakness;
@@ -39,6 +40,8 @@ public final class CuriosForgeEvents {
     private static final Set<UUID> PENDING_BOOK_OF_SHADOWS_RECONCILE =
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_ENCYCLOPEDIA_RECONCILE =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_ROLAND_RECONCILE =
             ConcurrentHashMap.newKeySet();
 
     private CuriosForgeEvents() {
@@ -92,6 +95,7 @@ public final class CuriosForgeEvents {
             handleArcaneInitiatesTokenTransition(player, event);
             handleBookOfShadowsTransition(player, event);
             handleEncyclopediaTransition(player, event);
+            handleRolandTransition(player, event);
         }
     }
 
@@ -128,6 +132,9 @@ public final class CuriosForgeEvents {
         if (PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID())) {
             EncyclopediaService.reconcile(player);
         }
+        if (PENDING_ROLAND_RECONCILE.remove(player.getUUID())) {
+            RolandsThirtyEightSpecialService.reconcile(player);
+        }
         SharedBonusSlotContentPolicy.enforce(player);
         if (!DIRTY_EQUIPMENT.remove(player.getUUID())) {
             return;
@@ -152,6 +159,7 @@ public final class CuriosForgeEvents {
             PENDING_ARCANE_TOKEN_RECONCILE.remove(player.getUUID());
             PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(player.getUUID());
             PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID());
+            PENDING_ROLAND_RECONCILE.remove(player.getUUID());
         }
     }
 
@@ -177,6 +185,8 @@ public final class CuriosForgeEvents {
                 event.getOriginal(), event.getEntity());
         WendysAmuletService.copyPersistentState(
                 event.getOriginal(), event.getEntity());
+        RolandsThirtyEightSpecialService.copyPersistentState(
+                event.getOriginal(), event.getEntity());
         queueReconcile(event);
     }
 
@@ -187,6 +197,7 @@ public final class CuriosForgeEvents {
             PENDING_ARCANE_TOKEN_RECONCILE.add(player.getUUID());
             PENDING_BOOK_OF_SHADOWS_RECONCILE.add(player.getUUID());
             PENDING_ENCYCLOPEDIA_RECONCILE.add(player.getUUID());
+            PENDING_ROLAND_RECONCILE.add(player.getUUID());
         }
     }
 
@@ -243,6 +254,33 @@ public final class CuriosForgeEvents {
         if (event.getFrom().is(ModItems.ENCYCLOPEDIA.get())
                 || event.getTo().is(ModItems.ENCYCLOPEDIA.get())) {
             EncyclopediaService.reconcile(player);
+        }
+    }
+
+    private static void handleRolandTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.HANDS.equals(event.getIdentifier())) {
+            return;
+        }
+        boolean from = event.getFrom().is(
+                ModItems.ROLANDS_38_SPECIAL.get());
+        boolean to = event.getTo().is(
+                ModItems.ROLANDS_38_SPECIAL.get());
+        if (!from && !to) {
+            return;
+        }
+
+        // Curios discovers the change while comparing its previous stack to
+        // the already-committed current handler contents.
+        int after = RolandsThirtyEightSpecialService.equippedCount(player);
+        int before = after - (to ? 1 : 0) + (from ? 1 : 0);
+        if (before <= 0 && after > 0) {
+            RolandsThirtyEightSpecialService.equipTransition(player);
+        } else if (before > 0 && after <= 0) {
+            // This occurs before Curios settles any remaining modifiers.
+            RolandsThirtyEightSpecialService.unequipTransition(player);
+        } else {
+            PENDING_ROLAND_RECONCILE.add(player.getUUID());
         }
     }
 

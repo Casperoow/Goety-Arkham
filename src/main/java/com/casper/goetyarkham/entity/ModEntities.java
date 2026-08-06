@@ -19,6 +19,15 @@ public final class ModEntities {
                             .clientTrackingRange(8)
                             .build(GoetyArkham.MOD_ID + ":young_deep_one"));
 
+    public static final RegistryObject<EntityType<ThrownKnifeEntity>> THROWN_KNIFE =
+            ENTITY_TYPES.register("thrown_knife", () ->
+                    EntityType.Builder.<ThrownKnifeEntity>of(
+                                    ThrownKnifeEntity::new, MobCategory.MISC)
+                            .sized(0.4F, 0.4F)
+                            .clientTrackingRange(4)
+                            .updateInterval(20)
+                            .build(GoetyArkham.MOD_ID + ":thrown_knife"));
+
     private ModEntities() {
     }
 
