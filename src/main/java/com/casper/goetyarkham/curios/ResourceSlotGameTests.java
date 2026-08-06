@@ -10,6 +10,7 @@ import com.casper.goetyarkham.stats.StatType;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,14 +33,21 @@ import java.util.UUID;
 /**
  * Exercises the generic {@link CurioSlotIds#RESOURCE} mechanism: {@link
  * ResourceSlotService}'s maximum-not-sum, deduplicated-by-provider-ID
- * capacity computation, {@link ResourceSlotContentPolicy}'s four-item
- * content restriction, safe shrink/refund via {@link
+ * capacity computation, safe shrink/refund via {@link
  * DynamicCurioSlotContributionService#reconcileSize}, and the Encyclopedia's
  * own {@link com.casper.goetyarkham.item.EncyclopediaBonusProvider} stat
  * scoring, including how it stacks with other simultaneously active
  * providers. The multi-provider math is exercised with throwaway {@link
  * TestProvider} stand-ins - matching how a future resource-slot-granting
  * item would plug in - rather than registering any unfinished real item.
+ *
+ * <p>Which items may occupy the {@code resource} slot at all is decided
+ * entirely by Curios' own native item tag ({@code
+ * data/curios/tags/items/resource.json}), exactly like {@code focus}
+ * accepts foci via {@code data/curios/tags/items/focus.json} - there is no
+ * mod-specific {@code CurioEquipEvent} gate, occupied-slot rejection, or
+ * per-item stack cap for this slot; it behaves like any other plain Curios
+ * slot backed by a native {@code DynamicStackHandler}.</p>
  *
  * <p>Per the project's GameTest {@code TestPlayer} gotchas, these stand-ins
  * are deliberately never added to {@code level.players()}.</p>
@@ -260,10 +268,19 @@ public final class ResourceSlotGameTests {
         }
     }
 
+    /**
+     * Admission is entirely Curios-native: {@code isItemValid} for the
+     * {@code resource} slot posts a {@code CurioEquipEvent} that, absent any
+     * mod-specific listener for this slot, falls through to {@code
+     * CuriosApi#isStackValid}, which checks the item against {@code
+     * data/curios/tags/items/resource.json} - exactly the same path {@code
+     * focus} uses for {@code data/curios/tags/items/focus.json}. There is no
+     * second, Java-side whitelist to keep in sync with the data pack.
+     */
     @GameTest(template = "empty", batch = RESOURCE_TEST_BATCH)
-    public static void contentIsRestrictedToTheFourAllowedItems(GameTestHelper helper) {
+    public static void admissionComesFromTheCuriosResourceItemTag(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        TestPlayer wearer = testPlayer(level, "resource-restrictions", 30.0D);
+        TestPlayer wearer = testPlayer(level, "resource-tag-admission", 30.0D);
         try {
             equipEncyclopedia(wearer);
             ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
@@ -271,25 +288,20 @@ public final class ResourceSlotGameTests {
 
             helper.assertTrue(
                     stacks.isItemValid(0, new ItemStack(Items.IRON_INGOT, 64)),
-                    "A stack of 64 Iron Ingots was rejected");
+                    "Iron Ingot (tagged goetyarkham:resource... via minecraft:iron_ingot)"
+                            + " was rejected");
             helper.assertTrue(
                     stacks.isItemValid(0, new ItemStack(Items.RABBIT_FOOT, 1)),
-                    "A single Rabbit's Foot was rejected");
+                    "Rabbit's Foot was rejected");
             helper.assertTrue(
                     stacks.isItemValid(0, new ItemStack(Items.BOOK, 1)),
-                    "A single Book was rejected");
+                    "Book was rejected");
             helper.assertTrue(
                     stacks.isItemValid(0, new ItemStack(ModItems.ECTOPLASM.get(), 1)),
-                    "A single Ectoplasm was rejected");
+                    "Ectoplasm was rejected");
             helper.assertTrue(
                     !stacks.isItemValid(0, new ItemStack(Items.STONE, 64)),
-                    "An unrelated item (Stone) was incorrectly accepted");
-
-            ItemStack ironLeftover = stacks.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
-            helper.assertTrue(stacks.getStackInSlot(0).getCount() == 1
-                            && ironLeftover.getCount() == 63,
-                    "64 Iron Ingots did not split into exactly 1 in the slot"
-                            + " and 63 leftover");
+                    "An item absent from the resource tag (Stone) was incorrectly accepted");
 
             helper.succeed();
         } finally {
@@ -297,26 +309,65 @@ public final class ResourceSlotGameTests {
         }
     }
 
+    /**
+     * The {@code resource} slot uses Curios' own native {@code
+     * DynamicStackHandler} with no per-slot item cap of its own (removed
+     * along with {@code ResourceSlotContentPolicy}/{@code
+     * ResourceSlotStackHandler}), so a stack behaves exactly as it would in
+     * any other Curios slot or a normal inventory slot: 64 Iron Ingots stay
+     * together as one stack of 64, never forcibly split down to 1, and a
+     * second stack of the same item merges into the first up to its normal
+     * max stack size instead of being rejected outright.
+     */
     @GameTest(template = "empty", batch = RESOURCE_TEST_BATCH)
-    public static void occupiedSlotRejectsFurtherPlacement(GameTestHelper helper) {
+    public static void slotUsesNativeStackingWithNoPerItemCap(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        TestPlayer wearer = testPlayer(level, "resource-occupied", 40.0D);
+        TestPlayer wearer = testPlayer(level, "resource-native-stacking", 40.0D);
         try {
             equipEncyclopedia(wearer);
             ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
             IDynamicStackHandler stacks = resourceHandler.getStacks();
 
-            stacks.insertItem(0, new ItemStack(Items.IRON_INGOT, 1), false);
-            settleCurioChange(wearer);
+            ItemStack leftover = stacks.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+            helper.assertTrue(leftover.isEmpty(),
+                    "Inserting 64 Iron Ingots left leftover units instead of taking the"
+                            + " whole stack (found " + leftover.getCount() + ")");
+            helper.assertTrue(stacks.getStackInSlot(0).getCount() == 64,
+                    "The resource slot did not keep the full stack of 64 Iron Ingots"
+                            + " together (found " + stacks.getStackInSlot(0).getCount() + ")");
 
-            helper.assertTrue(!stacks.isItemValid(0, new ItemStack(Items.IRON_INGOT, 1)),
-                    "An occupied slot accepted a second Iron Ingot");
-            helper.assertTrue(!stacks.isItemValid(0, new ItemStack(Items.BOOK, 1)),
-                    "An occupied slot accepted a different legal item (Book)");
-            helper.assertTrue(stacks.getStackInSlot(0).is(Items.IRON_INGOT)
-                            && stacks.getStackInSlot(0).getCount() == 1,
-                    "The already-equipped item changed while a rejected"
-                            + " placement was attempted");
+            helper.succeed();
+        } finally {
+            wearer.discard();
+        }
+    }
+
+    /**
+     * A second stack of the same item merges into an already-occupied
+     * resource slot up to the item's own normal max stack size, exactly
+     * like any other native Curios/inventory slot - not rejected outright
+     * because the slot already holds one unit, and not silently truncated
+     * to a count of 1.
+     */
+    @GameTest(template = "empty", batch = RESOURCE_TEST_BATCH)
+    public static void secondStackOfSameItemMergesUpToMaxStackSize(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        TestPlayer wearer = testPlayer(level, "resource-native-merge", 41.0D);
+        try {
+            equipEncyclopedia(wearer);
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            IDynamicStackHandler stacks = resourceHandler.getStacks();
+
+            stacks.insertItem(0, new ItemStack(Items.IRON_INGOT, 40), false);
+            ItemStack leftover = stacks.insertItem(0, new ItemStack(Items.IRON_INGOT, 30), false);
+
+            helper.assertTrue(stacks.getStackInSlot(0).getCount() == 64,
+                    "Merging 40 + 30 Iron Ingots did not fill the slot to the item's"
+                            + " max stack size of 64 (found "
+                            + stacks.getStackInSlot(0).getCount() + ")");
+            helper.assertTrue(leftover.getCount() == 6,
+                    "Merging 40 + 30 Iron Ingots (max stack 64) should leave exactly"
+                            + " 6 leftover, found " + leftover.getCount());
 
             helper.succeed();
         } finally {
@@ -383,6 +434,72 @@ public final class ResourceSlotGameTests {
 
             helper.succeed();
         } finally {
+            wearer.discard();
+        }
+    }
+
+    /**
+     * Now that the resource slot uses Curios' own native {@code
+     * DynamicStackHandler} (no per-item cap of 1), a single occupied slot
+     * can legitimately hold a stack of 64 Books. The Encyclopedia's bonus
+     * must still be scored once per <em>occupied slot</em>, never
+     * multiplied by {@link ItemStack#getCount()} - 64 Books in one slot
+     * grants the same +2 Intellect as a single Book.
+     */
+    @GameTest(template = "empty", batch = RESOURCE_TEST_BATCH)
+    public static void bonusIsScoredPerSlotNotPerStackCount(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        TestPlayer wearer = testPlayer(level, "resource-bonus-per-slot-not-count", 55.0D);
+        try {
+            equipEncyclopedia(wearer);
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+
+            int baseIntellect = PlayerStatsService.getFinalValue(wearer, StatType.INTELLECT);
+            place(resourceHandler, new ItemStack(Items.BOOK, 64), wearer);
+            int intellectWithSixtyFourBooks = PlayerStatsService.getFinalValue(wearer, StatType.INTELLECT);
+            helper.assertTrue(intellectWithSixtyFourBooks == baseIntellect + 2,
+                    "A single resource slot holding 64 Books did not grant the same"
+                            + " +2 Intellect as 1 Book (found +"
+                            + (intellectWithSixtyFourBooks - baseIntellect) + ")");
+
+            helper.succeed();
+        } finally {
+            wearer.discard();
+        }
+    }
+
+    /**
+     * Two occupied slots (64 Books and 32 Books) grant +4 Intellect total -
+     * one +2 per non-empty slot, not one +2 per unit of {@code
+     * ItemStack#getCount()} (which would be +192).
+     */
+    @GameTest(template = "empty", batch = RESOURCE_TEST_BATCH)
+    public static void bonusIsScoredOncePerOccupiedSlotAcrossMultipleSlots(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        TestPlayer wearer = testPlayer(level, "resource-bonus-per-slot-multi", 56.0D);
+        TestProvider capacityBoost = new TestProvider("test:bonus_per_slot_capacity", 2, null, null, 0);
+        try {
+            ResourceSlotProviderRegistry.register(capacityBoost);
+            capacityBoost.equipped = true;
+            equipEncyclopedia(wearer);
+            ICurioStacksHandler resourceHandler = handler(wearer, CurioSlotIds.RESOURCE, helper);
+            helper.assertTrue(resourceHandler.getStacks().getSlots() == 2,
+                    "Setup: capacity did not reach 2 resource slots");
+
+            int baseIntellect = PlayerStatsService.getFinalValue(wearer, StatType.INTELLECT);
+            resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK, 64));
+            resourceHandler.getStacks().setStackInSlot(1, new ItemStack(Items.BOOK, 32));
+            settleCurioChange(wearer);
+            EquipmentStatsService.refresh(wearer);
+
+            int intellect = PlayerStatsService.getFinalValue(wearer, StatType.INTELLECT);
+            helper.assertTrue(intellect == baseIntellect + 4,
+                    "64 Books + 32 Books across 2 slots did not grant +4 Intellect"
+                            + " (2 per occupied slot), found +" + (intellect - baseIntellect));
+
+            helper.succeed();
+        } finally {
+            ResourceSlotProviderRegistry.unregister(capacityBoost.providerId());
             wearer.discard();
         }
     }
@@ -642,22 +759,21 @@ public final class ResourceSlotGameTests {
 
     /**
      * Login/respawn/clone/dimension-change restore round trip using the
-     * real Encyclopedia item. Curios' own {@code ICuriosItemHandler#readTag}
-     * rebuilds every slot handler at its live base size before any of this
-     * mod's own restore logic runs (persistent attribute modifiers are
-     * never themselves part of the NBT round trip - by design, this
-     * mod always re-derives them live from current equip state), so a
-     * base-size-0 slot like {@code resource} has nothing to receive the
-     * deserialized content into yet: Curios safely returns it to the plain
-     * inventory itself via its own recall path before {@link
-     * EncyclopediaService#reconcileRestore} ever gets a chance to reinstate
-     * the slot's capacity. The guarantee this architecture actually
-     * provides - and the one this test verifies - is that capacity is
-     * correctly restored and the Book is never lost or duplicated across
-     * the round trip, not that it survives at its exact prior slot index.
+     * real Encyclopedia item and a real {@code ICuriosItemHandler#writeTag}
+     * / {@code #readTag} round trip. Curios itself restores this mod's
+     * {@code addPermanentSlotModifier} capacity grant from the saved {@code
+     * PersistentModifiers} NBT (via {@code CurioStacksHandler#deserializeNBT}
+     * and {@code #copyModifiers}, both of which call {@code update()}) and
+     * re-applies it to the freshly reconstructed slot handler <em>before</em>
+     * {@code CurioInventoryWrapper#readTag} copies the deserialized item
+     * content back in - so the resource slot already has its correct
+     * capacity by the time the Book is copied back, and the Book lands
+     * directly at its original index with no detour through {@code
+     * loseInvalidStack}/the plain inventory. This mirrors exactly how the
+     * pre-existing {@code focus} slot survives the same round trip.
      */
     @GameTest(template = "empty", batch = RESOURCE_TEST_BATCH)
-    public static void encyclopediaAndResourceCapacityAndContentsSurviveRealNbtReloginRoundTrip(
+    public static void encyclopediaAndResourceContentsSurviveRealNbtReloginRoundTrip(
             GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         TestPlayer before = testPlayer(level, "resource-relogin-before", 130.0D);
@@ -666,11 +782,11 @@ public final class ResourceSlotGameTests {
             equipEncyclopedia(before);
             ICurioStacksHandler resourceHandlerBefore =
                     handler(before, CurioSlotIds.RESOURCE, helper);
-            resourceHandlerBefore.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            ItemStack originalBook = new ItemStack(Items.BOOK);
+            originalBook.getOrCreateTag().putString("goetyarkham_test_marker", "resource-relogin");
+            resourceHandlerBefore.getStacks().setStackInSlot(0, originalBook.copy());
             settleCurioChange(before);
-            int totalBooksBefore = totalBookCount(before, resourceHandlerBefore);
-            int baselineIntellect = PlayerStatsService.getFinalValue(before, StatType.INTELLECT)
-                    - EncyclopediaBonusProvider.INSTANCE.statBonus(StatType.INTELLECT, Items.BOOK);
+            CompoundTag originalBookTag = originalBook.save(new CompoundTag());
 
             net.minecraft.nbt.Tag saved = inventory(before, helper).writeTag();
             before.discard();
@@ -679,43 +795,45 @@ public final class ResourceSlotGameTests {
             ICuriosItemHandler inventoryAfter = inventory(after, helper);
             inventoryAfter.readTag(saved);
             EncyclopediaService.reconcileRestore(after);
-            // Curios' own readTag only queues content it couldn't place
-            // (e.g. this base-size-0 slot at its live capacity of 0, before
-            // the restore reconcile above reinstates it) into an internal
-            // pending list via loseInvalidStack - handleInvalidStacks is
-            // what actually hands it back to the player, exactly like
-            // Curios' own regular per-entity tick does in real play.
-            inventoryAfter.handleInvalidStacks();
 
             ICurioStacksHandler resourceHandlerAfter =
                     handler(after, CurioSlotIds.RESOURCE, helper);
             helper.assertTrue(resourceHandlerAfter.getStacks().getSlots() == 1,
-                    "Login-restore reconcile did not restore resource capacity"
-                            + " to 1 even though the Encyclopedia is still equipped");
-            int totalBooksAfter = totalBookCount(after, resourceHandlerAfter);
-            helper.assertTrue(totalBooksAfter == totalBooksBefore,
-                    "The Book was lost or duplicated across the NBT round trip"
-                            + " (before=" + totalBooksBefore + ", after=" + totalBooksAfter + ")");
+                    "resource capacity was not restored to 1 by the NBT round trip");
+
+            ItemStack restored = resourceHandlerAfter.getStacks().getStackInSlot(0);
+            helper.assertTrue(restored.is(Items.BOOK) && restored.getCount() == 1,
+                    "The Book was not restored into resource slot 0 by the NBT"
+                            + " round trip (found " + restored + ")");
+            helper.assertTrue(restored.save(new CompoundTag()).equals(originalBookTag),
+                    "The restored Book's NBT does not match the original");
+
+            helper.assertTrue(after.getMainHandItem().isEmpty(),
+                    "The restored Book leaked into the main hand");
+            helper.assertTrue(after.getOffhandItem().isEmpty(),
+                    "The restored Book leaked into the off hand");
+            helper.assertTrue(after.getInventory().countItem(Items.BOOK) == 0,
+                    "The restored Book leaked into the plain inventory while the"
+                            + " resource slot still exists");
+            helper.assertTrue(
+                    level.getEntitiesOfClass(ItemEntity.class, after.getBoundingBox().inflate(3.0D))
+                            .stream().noneMatch(entity -> entity.getItem().is(Items.BOOK)),
+                    "The NBT round trip dropped a Book on the ground");
 
             EquipmentStatsService.refresh(after);
-            boolean bookBackInResourceSlot =
-                    resourceHandlerAfter.getStacks().getStackInSlot(0).is(Items.BOOK);
-            int expectedBonus = bookBackInResourceSlot
-                    ? EncyclopediaBonusProvider.INSTANCE.statBonus(StatType.INTELLECT, Items.BOOK)
-                    : 0;
-            int intellectAfterRefresh = PlayerStatsService.getFinalValue(after, StatType.INTELLECT);
-            helper.assertTrue(intellectAfterRefresh == baselineIntellect + expectedBonus,
-                    "Intellect after relogin did not match whatever the Book's"
-                            + " actual restored location implies (bookInSlot="
-                            + bookBackInResourceSlot + ")");
+            int baseIntellect = PlayerStatsService.getFinalValue(after, StatType.INTELLECT)
+                    - EncyclopediaBonusProvider.INSTANCE.statBonus(StatType.INTELLECT, Items.BOOK);
+            helper.assertTrue(
+                    PlayerStatsService.getFinalValue(after, StatType.INTELLECT)
+                            == baseIntellect + 2,
+                    "The Encyclopedia's +2 Intellect bonus for the restored Book"
+                            + " was not intact after relogin");
 
             EncyclopediaService.reconcile(after);
-            helper.assertTrue(resourceHandlerAfter.getStacks().getSlots() == 1,
-                    "A follow-up confirmed reconcile disturbed the restored"
-                            + " capacity even though the Encyclopedia is still"
-                            + " equipped");
-            helper.assertTrue(totalBookCount(after, resourceHandlerAfter) == totalBooksBefore,
-                    "A follow-up confirmed reconcile lost or duplicated the Book");
+            helper.assertTrue(resourceHandlerAfter.getStacks().getSlots() == 1
+                            && resourceHandlerAfter.getStacks().getStackInSlot(0).is(Items.BOOK),
+                    "A follow-up confirmed reconcile disturbed a still-valid"
+                            + " restored slot");
 
             helper.succeed();
         } finally {
@@ -726,10 +844,126 @@ public final class ResourceSlotGameTests {
         }
     }
 
-    /** Total Books either sitting in the resource slot or in the plain inventory. */
-    private static int totalBookCount(ServerPlayer player, ICurioStacksHandler resourceHandler) {
-        int inResourceSlot = resourceHandler.getStacks().getStackInSlot(0).is(Items.BOOK) ? 1 : 0;
-        return player.getInventory().countItem(Items.BOOK) + inResourceSlot;
+    /**
+     * The same {@code writeTag}/{@code readTag} round trip repeated twice in
+     * a row, asserting the Book stays at resource slot 0 with an unchanged
+     * count after each cycle - guards against slow duplication/loss that a
+     * single round trip could miss.
+     */
+    @GameTest(template = "empty", batch = RESOURCE_TEST_BATCH)
+    public static void repeatedNbtReloginCyclesNeverDuplicateOrLoseResourceContents(
+            GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        TestPlayer current = testPlayer(level, "resource-relogin-cycle-0", 131.0D);
+        try {
+            equipEncyclopedia(current);
+            handler(current, CurioSlotIds.RESOURCE, helper)
+                    .getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            settleCurioChange(current);
+
+            for (int cycle = 1; cycle <= 2; cycle++) {
+                net.minecraft.nbt.Tag saved = inventory(current, helper).writeTag();
+                current.discard();
+
+                current = testPlayer(level, "resource-relogin-cycle-" + cycle, 131.0D);
+                inventory(current, helper).readTag(saved);
+                EncyclopediaService.reconcileRestore(current);
+
+                ICurioStacksHandler resourceHandler = handler(current, CurioSlotIds.RESOURCE, helper);
+                helper.assertTrue(resourceHandler.getStacks().getSlots() == 1,
+                        "Cycle " + cycle + ": resource capacity was lost");
+                ItemStack restored = resourceHandler.getStacks().getStackInSlot(0);
+                helper.assertTrue(restored.is(Items.BOOK) && restored.getCount() == 1,
+                        "Cycle " + cycle + ": the Book left resource slot 0 (found "
+                                + restored + ")");
+                helper.assertTrue(current.getInventory().countItem(Items.BOOK) == 0,
+                        "Cycle " + cycle + ": a duplicate Book appeared in the plain"
+                                + " inventory");
+            }
+            List<ItemEntity> dropped = level.getEntitiesOfClass(ItemEntity.class,
+                    current.getBoundingBox().inflate(5.0D));
+            helper.assertTrue(dropped.stream().noneMatch(entity -> entity.getItem().is(Items.BOOK)),
+                    "A duplicate Book was dropped across relogin cycles");
+
+            helper.succeed();
+        } finally {
+            current.discard();
+        }
+    }
+
+    /**
+     * A single NBT round trip with both the Arcane Initiate's Token's own
+     * {@code focus} slot and the Encyclopedia's {@code resource} slot
+     * occupied at once, asserting both dynamic slots restore their capacity
+     * and their contents at their original indices independently, with
+     * neither leaking into the plain inventory nor into each other.
+     */
+    @GameTest(template = "empty", batch = RESOURCE_TEST_BATCH)
+    public static void resourceAndFocusSlotsSurviveTheSameNbtReloginRoundTripInParallel(
+            GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        TestPlayer before = testPlayer(level, "resource-focus-parallel-before", 132.0D);
+        TestPlayer after = null;
+        try {
+            ICurioStacksHandler tokenHandlerBefore = handler(before, CurioSlotIds.TOKEN, helper);
+            tokenHandlerBefore.getStacks().setStackInSlot(
+                    0, new ItemStack(com.casper.goetyarkham.item.ModItems.ARCANE_INITIATES_TOKEN.get()));
+            settleCurioChange(before);
+            com.casper.goetyarkham.item.ArcaneInitiatesTokenService.reconcile(before);
+
+            equipEncyclopedia(before);
+
+            ICurioStacksHandler focusHandlerBefore = handler(before, CurioSlotIds.FOCUS, helper);
+            ICurioStacksHandler resourceHandlerBefore = handler(before, CurioSlotIds.RESOURCE, helper);
+            int focusSlotsBefore = focusHandlerBefore.getStacks().getSlots();
+            helper.assertTrue(focusSlotsBefore >= 1,
+                    "Setup: the Arcane Initiate's Token did not grant a focus slot");
+            int lastFocusIndex = focusSlotsBefore - 1;
+            focusHandlerBefore.getStacks().setStackInSlot(lastFocusIndex, new ItemStack(com.Polarice3.Goety.common.items.ModItems.VEXING_FOCUS.get()));
+            resourceHandlerBefore.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            settleCurioChange(before);
+
+            net.minecraft.nbt.Tag saved = inventory(before, helper).writeTag();
+            before.discard();
+
+            after = testPlayer(level, "resource-focus-parallel-after", 132.0D);
+            ICuriosItemHandler inventoryAfter = inventory(after, helper);
+            inventoryAfter.readTag(saved);
+            com.casper.goetyarkham.item.ArcaneInitiatesTokenService.reconcile(after);
+            EncyclopediaService.reconcileRestore(after);
+
+            ICurioStacksHandler focusHandlerAfter = handler(after, CurioSlotIds.FOCUS, helper);
+            ICurioStacksHandler resourceHandlerAfter = handler(after, CurioSlotIds.RESOURCE, helper);
+
+            helper.assertTrue(focusHandlerAfter.getStacks().getSlots() == focusSlotsBefore,
+                    "focus capacity was not restored by the parallel NBT round trip");
+            helper.assertTrue(
+                    focusHandlerAfter.getStacks().getStackInSlot(lastFocusIndex)
+                            .is(com.Polarice3.Goety.common.items.ModItems.VEXING_FOCUS.get()),
+                    "The focus item did not survive at its original focus slot index");
+
+            helper.assertTrue(resourceHandlerAfter.getStacks().getSlots() == 1,
+                    "resource capacity was not restored by the parallel NBT round trip");
+            helper.assertTrue(
+                    resourceHandlerAfter.getStacks().getStackInSlot(0).is(Items.BOOK),
+                    "The Book did not survive at its original resource slot index");
+
+            helper.assertTrue(
+                    after.getInventory().countItem(com.Polarice3.Goety.common.items.ModItems.VEXING_FOCUS.get()) == 0
+                            && after.getInventory().countItem(Items.BOOK) == 0,
+                    "The focus item or Book leaked into the plain inventory");
+            helper.assertTrue(
+                    level.getEntitiesOfClass(ItemEntity.class, after.getBoundingBox().inflate(3.0D))
+                            .isEmpty(),
+                    "The parallel round trip dropped an item on the ground");
+
+            helper.succeed();
+        } finally {
+            before.discard();
+            if (after != null) {
+                after.discard();
+            }
+        }
     }
 
     private static void equipEncyclopedia(ServerPlayer wearer) {

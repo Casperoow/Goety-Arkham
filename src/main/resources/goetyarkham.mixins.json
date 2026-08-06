@@ -13,7 +13,6 @@
     "OldBookOfLoreCooldownMixin",
     "RaidCreationMixin",
     "RaidsCreationContextMixin",
-    "ResourceSlotHandlerMixin",
     "SEHelperMixin",
     "TotemFinderCanOpenWandCircleMixin"
   ],

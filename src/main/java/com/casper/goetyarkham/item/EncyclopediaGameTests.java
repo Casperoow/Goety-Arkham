@@ -363,8 +363,8 @@ public final class EncyclopediaGameTests {
             Map<StatType, Integer> emptyBonus = computeCurrentBonus(wearer);
             helper.assertTrue(allZero(emptyBonus), "An empty slot must contribute no bonus");
 
-            // Bypasses ResourceSlotContentPolicy directly (as an
-            // out-of-band write would) to confirm an unrecognized item is
+            // Direct write (as an out-of-band placement bypassing the
+            // resource item tag would) to confirm an unrecognized item is
             // simply scored 0, never crashing or contributing.
             resourceHandler.getStacks().setStackInSlot(0, new ItemStack(Items.DIRT));
             Map<StatType, Integer> illegalBonus = computeCurrentBonus(wearer);

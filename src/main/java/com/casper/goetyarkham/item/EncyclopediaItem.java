@@ -18,15 +18,16 @@ import java.util.List;
  * A Curio equippable in either the {@code hands} or {@code book} slot.
  * While worn, ensures the player has at least 1 {@link
  * CurioSlotIds#RESOURCE} Curios slot via {@link EncyclopediaService} /
- * {@link EncyclopediaBonusProvider}. Content legality and the {@code +2}
- * skill bonus for whatever is placed in it are enforced by the slot's own
- * shared content policy and this item's {@link EncyclopediaBonusProvider}
- * (see {@link com.casper.goetyarkham.curios.ResourceSlotContentPolicy}) -
- * this item never writes to that slot itself. Its Shift tooltip does read
- * the slot's current contents client-side (see {@link
- * EncyclopediaService#currentClientBonus()} / {@link
- * EncyclopediaBonusTooltipHelper}), purely to display the same numbers,
- * never to change them.
+ * {@link EncyclopediaBonusProvider}. Which items may occupy that slot is
+ * decided entirely by Curios' own native item tag (see {@code
+ * data/curios/tags/items/resource.json}) - exactly like the {@code focus}
+ * slot accepts foci via {@code data/curios/tags/items/focus.json} - and the
+ * {@code +2} skill bonus for whatever is placed in it is scored by this
+ * item's {@link EncyclopediaBonusProvider}; this item never writes to that
+ * slot itself. Its Shift tooltip does read the slot's current contents
+ * client-side (see {@link EncyclopediaService#currentClientBonus()} /
+ * {@link EncyclopediaBonusTooltipHelper}), purely to display the same
+ * numbers, never to change them.
  */
 public final class EncyclopediaItem extends Item implements ICurioItem {
     public EncyclopediaItem() {

@@ -86,23 +86,6 @@ public final class CuriosForgeEvents {
         }
     }
 
-    /**
-     * Same pre-equip gate pattern as {@link #preventDuplicateGoetyArkhamCurio},
-     * restricted to the {@link CurioSlotIds#RESOURCE} slot: only the four
-     * items in {@link ResourceSlotContentPolicy} may enter, and only as a
-     * stack of exactly 1. This covers every route Curios itself funnels
-     * through {@code isItemValid} (drag-and-drop, shift-click quick move,
-     * right-click auto-equip, and creative-mode placement).
-     */
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void restrictResourceSlotContent(CurioEquipEvent event) {
-        if (CurioSlotIds.RESOURCE.equals(event.getSlotContext().identifier())
-                && !ResourceSlotContentPolicy.canEquip(
-                        event.getSlotContext(), event.getStack())) {
-            event.setResult(net.minecraftforge.eventbus.api.Event.Result.DENY);
-        }
-    }
-
     /** Curios posts this event before applying its attribute add/remove operation. */
     @SubscribeEvent
     public static void curioChanged(CurioChangeEvent event) {
@@ -174,7 +157,6 @@ public final class CuriosForgeEvents {
         if (PENDING_ROLAND_RECONCILE.remove(uuid)) {
             RolandsThirtyEightSpecialService.reconcile(player);
         }
-        ResourceSlotContentPolicy.enforce(player);
         if (!DIRTY_EQUIPMENT.remove(uuid)) {
             return;
         }
