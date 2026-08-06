@@ -49,6 +49,12 @@ public final class PlayerStatsService {
                     com.casper.goetyarkham.item.LockpicksIntellectBonusService
                             .intellectModifier(player));
         }
+        if (stat == StatType.AGILITY) {
+            return saturatingAdd(
+                    storedFinal,
+                    com.casper.goetyarkham.item.SwitchbladeAgilityBonusService
+                            .agilityModifier(player));
+        }
         return storedFinal;
     }
 
@@ -103,6 +109,7 @@ public final class PlayerStatsService {
         WillpowerEffects.refreshWillpowerEffects(player);
         RevelationAttributeBridge.refresh(player);
         com.casper.goetyarkham.item.RolandDamageBonusService.refresh(player);
+        com.casper.goetyarkham.item.SwitchbladeDamageBonusService.refresh(player);
     }
 
     static Optional<PlayerStats> mutable(ServerPlayer player) {

@@ -107,6 +107,9 @@ public final class ModItems {
     public static final RegistryObject<KnifeItem> KNIFE =
             ITEMS.register("knife", KnifeItem::new);
 
+    public static final RegistryObject<SwitchbladeItem> SWITCHBLADE =
+            ITEMS.register("switchblade", SwitchbladeItem::new);
+
     private ModItems() {
     }
 

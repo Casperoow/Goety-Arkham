@@ -186,5 +186,10 @@
   "item.goetyarkham.cover_up": "Cover Up",
   "tooltip.goetyarkham.cover_up.intellect": "-6 Intellect",
   "tooltip.goetyarkham.cover_up.effect": "If your Intellect is negative, lose 10 Soul Energy every second",
-  "item.goetyarkham.knife": "Knife"
+  "item.goetyarkham.knife": "Knife",
+  "item.goetyarkham.switchblade": "Switchblade",
+  "tooltip.goetyarkham.switchblade.main_hand": "When in Main Hand:",
+  "tooltip.goetyarkham.switchblade.agility": "+2 Agility",
+  "tooltip.goetyarkham.switchblade.strength_requirement": "When you have at least 5 Strength:",
+  "tooltip.goetyarkham.switchblade.bonus_damage": "Deal 2 additional damage"
 }

@@ -186,5 +186,10 @@
   "item.goetyarkham.cover_up": "掩盖罪证",
   "tooltip.goetyarkham.cover_up.intellect": "-6智慧",
   "tooltip.goetyarkham.cover_up.effect": "如果你的智慧为负，则每秒失去10灵魂能量",
-  "item.goetyarkham.knife": "刀子"
+  "item.goetyarkham.knife": "刀子",
+  "item.goetyarkham.switchblade": "弹簧刀",
+  "tooltip.goetyarkham.switchblade.main_hand": "在主手时：",
+  "tooltip.goetyarkham.switchblade.agility": "+2 敏捷",
+  "tooltip.goetyarkham.switchblade.strength_requirement": "当力量至少为5时：",
+  "tooltip.goetyarkham.switchblade.bonus_damage": "额外造成2点伤害"
 }
