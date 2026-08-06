@@ -35,14 +35,25 @@ public final class EncyclopediaService {
     }
 
     /**
-     * Login/clone/dimension/sync-safe repair. Stateless: it only re-derives
-     * the shared slot's target capacity from whichever providers are
-     * currently equipped, so calling it repeatedly (or out of order with
-     * any other provider's own reconcile call) never duplicates or loses
-     * slots.
+     * Confirmed equip-state reconcile, for a real observed Curios
+     * equip/unequip transition. Stateless: it only re-derives the shared
+     * slot's target capacity from whichever providers are currently
+     * equipped, so calling it repeatedly (or out of order with any other
+     * provider's own reconcile call) never duplicates or loses slots. May
+     * shrink the slot and evacuate overflow contents - see {@link
+     * SharedBonusSlotService#reconcile}.
      */
     public static void reconcile(ServerPlayer player) {
         SharedBonusSlotService.reconcile(player);
+    }
+
+    /**
+     * Login/respawn/clone/dimension-change restore. Unlike {@link
+     * #reconcile}, this never shrinks the shared slot or evacuates its
+     * contents - see {@link SharedBonusSlotService#reconcileRestore}.
+     */
+    public static void reconcileRestore(ServerPlayer player) {
+        SharedBonusSlotService.reconcileRestore(player);
     }
 
     public static boolean isWearing(ServerPlayer player) {

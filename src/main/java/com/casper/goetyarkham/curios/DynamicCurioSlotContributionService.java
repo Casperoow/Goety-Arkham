@@ -1,5 +1,6 @@
 package com.casper.goetyarkham.curios;
 
+import com.casper.goetyarkham.GoetyArkham;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -92,12 +93,25 @@ public final class DynamicCurioSlotContributionService {
             String targetSlotId,
             UUID modifierId,
             String modifierName,
-            int targetSize) {
+            int targetSize,
+            ReconcileMode mode,
+            String source) {
+        boolean handlerPresent = CuriosApi.getCuriosInventory(player).resolve().isPresent();
+        if (!handlerPresent) {
+            GoetyArkham.LOGGER.debug(
+                    "[SharedBonusSlot] No Curios handler yet player={} uuid={} slot={}"
+                            + " mode={} source={} - skipping (not a shrink, nothing to evacuate)",
+                    player.getGameProfile().getName(), player.getUUID(), targetSlotId, mode, source);
+            return;
+        }
         CuriosApi.getCuriosInventory(player).ifPresent(inventory -> {
             ICurioStacksHandler handler = inventory
                     .getStacksHandler(targetSlotId)
                     .orElse(null);
             if (handler == null) {
+                GoetyArkham.LOGGER.debug(
+                        "[SharedBonusSlot] No handler for slot={} player={} mode={} source={}",
+                        targetSlotId, player.getGameProfile().getName(), mode, source);
                 return;
             }
             AttributeModifier existing = handler.getModifiers().get(modifierId);
@@ -106,7 +120,21 @@ public final class DynamicCurioSlotContributionService {
                 return;
             }
             if (targetSize < currentAmount) {
+                if (!mode.allowsShrink()) {
+                    GoetyArkham.LOGGER.debug(
+                            "[SharedBonusSlot] Blocking shrink player={} uuid={} slot={}"
+                                    + " current={} target={} mode={} source={} - restore-mode"
+                                    + " reconcile never shrinks or evacuates",
+                            player.getGameProfile().getName(), player.getUUID(), targetSlotId,
+                            currentAmount, targetSize, mode, source);
+                    return;
+                }
                 int shrinkBy = (int) Math.round(currentAmount - targetSize);
+                GoetyArkham.LOGGER.debug(
+                        "[SharedBonusSlot] Shrinking player={} uuid={} slot={} current={}"
+                                + " target={} mode={} source={}",
+                        player.getGameProfile().getName(), player.getUUID(), targetSlotId,
+                        currentAmount, targetSize, mode, source);
                 evacuateTopSlots(player, handler, shrinkBy);
             }
             if (existing != null) {
@@ -255,6 +283,10 @@ public final class DynamicCurioSlotContributionService {
                 continue;
             }
             stacks.setStackInSlot(slot, ItemStack.EMPTY);
+            GoetyArkham.LOGGER.debug(
+                    "[SharedBonusSlot] Evacuating player={} uuid={} slot={} item={} count={}",
+                    player.getGameProfile().getName(), player.getUUID(), slot,
+                    stack.getItem(), stack.getCount());
             ItemHandlerHelper.giveItemToPlayer(player, stack);
         }
     }

@@ -23,12 +23,27 @@ import top.theillusivec4.curios.api.event.CurioChangeEvent;
 import top.theillusivec4.curios.api.event.CurioEquipEvent;
 import top.theillusivec4.curios.api.event.CurioUnequipEvent;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Mod.EventBusSubscriber(modid = GoetyArkham.MOD_ID)
 public final class CuriosForgeEvents {
+    /**
+     * How long after a login/respawn/clone/dimension-change restore reconcile
+     * (see {@link EncyclopediaService#reconcileRestore}, which never shrinks)
+     * to run one follow-up confirmed reconcile that re-derives the real
+     * equip state and is allowed to shrink. This is only ever a
+     * <em>secondary</em> signal alongside the real state check performed at
+     * that later tick - never the sole basis for a destructive action - so a
+     * provider that is genuinely still equipped is unaffected no matter how
+     * long Curios took to settle, while a provider that was truly removed
+     * (e.g. edited out of the save between sessions) still eventually gets
+     * its stale capacity corrected instead of staying inflated forever.
+     */
+    private static final int ENCYCLOPEDIA_RESTORE_CONFIRM_DELAY_TICKS = 20;
+
     private static final Set<UUID> DIRTY_EQUIPMENT =
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_HEIRLOOM_RECONCILE =
@@ -43,6 +58,9 @@ public final class CuriosForgeEvents {
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_ROLAND_RECONCILE =
             ConcurrentHashMap.newKeySet();
+    /** Tick (per-player {@code tickCount}) at which to run the follow-up confirmed reconcile. */
+    private static final Map<UUID, Integer> ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK =
+            new ConcurrentHashMap<>();
 
     private CuriosForgeEvents() {
     }
@@ -130,6 +148,26 @@ public final class CuriosForgeEvents {
             BookOfShadowsService.reconcile(player);
         }
         if (PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID())) {
+            // Restore, not confirmed: the Curios handler for a just
+            // (re)created player entity may not have finished settling its
+            // equipped-item state yet, so this must never shrink/evacuate
+            // skill_bonus - only grow or leave it alone. See the follow-up
+            // confirmed pass scheduled right below and run once the restore
+            // window elapses.
+            EncyclopediaService.reconcileRestore(player);
+            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.put(player.getUUID(),
+                    player.tickCount + ENCYCLOPEDIA_RESTORE_CONFIRM_DELAY_TICKS);
+        }
+        Integer confirmAtTick = ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.get(player.getUUID());
+        if (confirmAtTick != null && player.tickCount >= confirmAtTick) {
+            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(player.getUUID());
+            // The delay is only ever a secondary signal: this still
+            // re-derives the real, current equip state before deciding
+            // whether to shrink, so it can never wrongly evict a provider
+            // that is genuinely still equipped, however long Curios took to
+            // settle. It exists so a provider that really is gone (e.g. the
+            // save was edited between sessions) doesn't leave skill_bonus's
+            // capacity permanently stuck inflated from the restore pass.
             EncyclopediaService.reconcile(player);
         }
         if (PENDING_ROLAND_RECONCILE.remove(player.getUUID())) {
@@ -160,6 +198,7 @@ public final class CuriosForgeEvents {
             PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(player.getUUID());
             PENDING_ENCYCLOPEDIA_RECONCILE.remove(player.getUUID());
             PENDING_ROLAND_RECONCILE.remove(player.getUUID());
+            ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(player.getUUID());
         }
     }
 

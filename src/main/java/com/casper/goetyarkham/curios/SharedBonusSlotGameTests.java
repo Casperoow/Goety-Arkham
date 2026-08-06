@@ -2,6 +2,7 @@ package com.casper.goetyarkham.curios;
 
 import com.Polarice3.Goety.common.items.ModItems;
 import com.casper.goetyarkham.GoetyArkham;
+import com.casper.goetyarkham.item.EncyclopediaBonusProvider;
 import com.casper.goetyarkham.item.EncyclopediaService;
 import com.casper.goetyarkham.stats.EquipmentStatsService;
 import com.casper.goetyarkham.stats.PlayerStatsService;
@@ -489,6 +490,224 @@ public final class SharedBonusSlotGameTests {
         } finally {
             playerA.discard();
             playerB.discard();
+        }
+    }
+
+    /**
+     * Reproduces the reported save/relogin bug directly: a provider that
+     * transiently reports "not equipped" during a login-restore reconcile
+     * must never shrink or evacuate {@code skill_bonus}, since a real player
+     * entity's Curios handler may not have finished settling its equipped
+     * state by the time the first post-login reconcile runs. Uses a {@link
+     * TestProvider} stand-in (rather than the real Encyclopedia) purely to
+     * force the "transiently unreadable" state on demand; the slot mechanics
+     * exercised (real {@link ICurioStacksHandler}, real permanent slot
+     * modifier, real {@link SharedBonusSlotService}) are identical to the
+     * real item's path.
+     */
+    @GameTest(template = "empty", batch = SKILL_BONUS_TEST_BATCH)
+    public static void restoreReconcileNeverEvacuatesWhenProviderTransientlyUnreadable(
+            GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        TestPlayer wearer = testPlayer(level, "skill-bonus-restore-transient", 120.0D);
+        TestProvider provider = new TestProvider("test:restore_transient", 1, null, null, 0);
+        try {
+            SharedBonusSlotProviderRegistry.register(provider);
+            provider.equipped = true;
+            SharedBonusSlotService.reconcile(wearer);
+            ICurioStacksHandler skillHandler = handler(wearer, CurioSlotIds.SKILL_BONUS, helper);
+            skillHandler.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            int booksInInventoryBefore = wearer.getInventory().countItem(Items.BOOK);
+
+            // Simulate the login-restore window: the provider is
+            // momentarily unreadable (e.g. Curios handler not yet settled
+            // on the freshly (re)created player entity).
+            provider.equipped = false;
+            SharedBonusSlotService.reconcileRestore(wearer);
+            helper.assertTrue(skillHandler.getStacks().getSlots() == 1,
+                    "Restore reconcile shrank skill_bonus even though it must"
+                            + " never shrink");
+            helper.assertTrue(skillHandler.getStacks().getStackInSlot(0).is(Items.BOOK),
+                    "Restore reconcile evacuated the Book still sitting in"
+                            + " skill_bonus slot 0");
+            helper.assertTrue(
+                    wearer.getInventory().countItem(Items.BOOK) == booksInInventoryBefore,
+                    "Restore reconcile returned the Book to the inventory even"
+                            + " though it must never evacuate");
+
+            // Repeated restore calls while still unreadable must remain
+            // just as safe (idempotent, no duplication or loss).
+            SharedBonusSlotService.reconcileRestore(wearer);
+            SharedBonusSlotService.reconcileRestore(wearer);
+            helper.assertTrue(skillHandler.getStacks().getSlots() == 1
+                            && skillHandler.getStacks().getStackInSlot(0).is(Items.BOOK),
+                    "Repeated restore reconciles disturbed the preserved slot");
+
+            // The provider becomes readable again (state has settled) -
+            // capacity and contents must be unaffected either way.
+            provider.equipped = true;
+            SharedBonusSlotService.reconcileRestore(wearer);
+            helper.assertTrue(skillHandler.getStacks().getSlots() == 1
+                            && skillHandler.getStacks().getStackInSlot(0).is(Items.BOOK),
+                    "Slot changed once the provider became readable again");
+
+            // A later genuinely confirmed unequip must still shrink and
+            // refund exactly once - the fix must not have disabled real
+            // shrink behavior.
+            provider.equipped = false;
+            SharedBonusSlotService.reconcile(wearer);
+            helper.assertTrue(skillHandler.getStacks().getSlots() == 0,
+                    "A confirmed reconcile after the provider was genuinely"
+                            + " removed did not shrink skill_bonus");
+            helper.assertTrue(
+                    wearer.getInventory().countItem(Items.BOOK)
+                            == booksInInventoryBefore + 1,
+                    "The confirmed shrink did not return the Book exactly once");
+
+            SharedBonusSlotService.reconcile(wearer);
+            helper.assertTrue(
+                    wearer.getInventory().countItem(Items.BOOK)
+                            == booksInInventoryBefore + 1,
+                    "A repeated confirmed reconcile duplicated the refunded Book");
+
+            helper.succeed();
+        } finally {
+            SharedBonusSlotProviderRegistry.unregister(provider.providerId());
+            wearer.discard();
+        }
+    }
+
+    /**
+     * End-to-end reproduction using the real Encyclopedia item and a real
+     * Curios {@code writeTag}/{@code readTag} NBT round trip into a brand
+     * new {@link ServerPlayer} instance - standing in for the new entity
+     * Curios/Capability state a real relogin creates (see the project's
+     * GameTest {@code TestPlayer} gotchas for why a raw {@code ServerPlayer}
+     * subclass is used instead of a real client connection). The
+     * login-restore reconcile is invoked exactly as {@code
+     * CuriosForgeEvents} invokes it: {@code reconcileRestore} first, with no
+     * shrink permitted, before the state has had a chance to be re-verified.
+     */
+    @GameTest(template = "empty", batch = SKILL_BONUS_TEST_BATCH)
+    public static void encyclopediaAndSkillBonusContentsSurviveRealNbtReloginRoundTrip(
+            GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        TestPlayer before = testPlayer(level, "skill-bonus-relogin-before", 130.0D);
+        TestPlayer after = null;
+        try {
+            equipEncyclopedia(before);
+            ICurioStacksHandler skillHandlerBefore =
+                    handler(before, CurioSlotIds.SKILL_BONUS, helper);
+            skillHandlerBefore.getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            settleCurioChange(before);
+            int booksInInventoryBefore = before.getInventory().countItem(Items.BOOK);
+
+            net.minecraft.nbt.Tag saved =
+                    inventory(before, helper).writeTag();
+            before.discard();
+
+            // A brand new ServerPlayer/Curios handler instance, exactly
+            // like the one Curios re-creates for a returning player.
+            after = testPlayer(level, "skill-bonus-relogin-after", 130.0D);
+            inventory(after, helper).readTag(saved);
+
+            ICurioStacksHandler skillHandlerAfter =
+                    handler(after, CurioSlotIds.SKILL_BONUS, helper);
+            helper.assertTrue(skillHandlerAfter.getStacks().getSlots() == 1,
+                    "skill_bonus capacity was not restored by the NBT round trip");
+            helper.assertTrue(skillHandlerAfter.getStacks().getStackInSlot(0).is(Items.BOOK),
+                    "The Book was not restored into skill_bonus slot 0 by the"
+                            + " NBT round trip");
+
+            // Exactly the call sequence CuriosForgeEvents.livingTick uses
+            // for a queued login/respawn/clone/dimension-change reconcile.
+            EncyclopediaService.reconcileRestore(after);
+
+            helper.assertTrue(skillHandlerAfter.getStacks().getSlots() == 1,
+                    "Login-restore reconcile shrank skill_bonus after a"
+                            + " relogin even though the Encyclopedia is still"
+                            + " equipped");
+            helper.assertTrue(skillHandlerAfter.getStacks().getStackInSlot(0).is(Items.BOOK),
+                    "Login-restore reconcile evacuated the Book that survived"
+                            + " the NBT round trip");
+            helper.assertTrue(
+                    after.getInventory().countItem(Items.BOOK) == booksInInventoryBefore,
+                    "Login-restore reconcile moved the Book into the plain"
+                            + " inventory");
+
+            int intellect = PlayerStatsService.getFinalValue(after, StatType.INTELLECT);
+            int baseIntellect = intellect - EncyclopediaBonusProvider.INSTANCE
+                    .statBonus(StatType.INTELLECT, Items.BOOK);
+            EquipmentStatsService.refresh(after);
+            helper.assertTrue(
+                    PlayerStatsService.getFinalValue(after, StatType.INTELLECT)
+                            == baseIntellect + 2,
+                    "The Encyclopedia's +2 Intellect bonus for the restored"
+                            + " Book was not intact after relogin");
+
+            // The follow-up confirmed pass CuriosForgeEvents schedules after
+            // the restore window must be a no-op here, since the
+            // Encyclopedia is genuinely still equipped.
+            EncyclopediaService.reconcile(after);
+            helper.assertTrue(skillHandlerAfter.getStacks().getSlots() == 1
+                            && skillHandlerAfter.getStacks().getStackInSlot(0).is(Items.BOOK),
+                    "The follow-up confirmed reconcile disturbed a still-valid"
+                            + " restored slot");
+
+            helper.succeed();
+        } finally {
+            before.discard();
+            if (after != null) {
+                after.discard();
+            }
+        }
+    }
+
+    /**
+     * The same NBT round trip repeated three times in a row (multiple
+     * relogin cycles), asserting the total Book count across the
+     * {@code skill_bonus} slot and the plain inventory never changes -
+     * guards against slow duplication that a single round trip could miss.
+     */
+    @GameTest(template = "empty", batch = SKILL_BONUS_TEST_BATCH)
+    public static void repeatedReloginCyclesNeverDuplicateOrLoseSkillBonusContents(
+            GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        TestPlayer current = testPlayer(level, "skill-bonus-relogin-cycle-0", 140.0D);
+        try {
+            equipEncyclopedia(current);
+            handler(current, CurioSlotIds.SKILL_BONUS, helper)
+                    .getStacks().setStackInSlot(0, new ItemStack(Items.BOOK));
+            settleCurioChange(current);
+
+            for (int cycle = 1; cycle <= 3; cycle++) {
+                net.minecraft.nbt.Tag saved = inventory(current, helper).writeTag();
+                current.discard();
+
+                current = testPlayer(level, "skill-bonus-relogin-cycle-" + cycle, 140.0D);
+                inventory(current, helper).readTag(saved);
+                EncyclopediaService.reconcileRestore(current);
+
+                ICurioStacksHandler skillHandler =
+                        handler(current, CurioSlotIds.SKILL_BONUS, helper);
+                int totalBooks = current.getInventory().countItem(Items.BOOK)
+                        + (skillHandler.getStacks().getStackInSlot(0).is(Items.BOOK) ? 1 : 0);
+                helper.assertTrue(skillHandler.getStacks().getSlots() == 1,
+                        "Cycle " + cycle + ": skill_bonus capacity was lost");
+                helper.assertTrue(skillHandler.getStacks().getStackInSlot(0).is(Items.BOOK),
+                        "Cycle " + cycle + ": the Book left skill_bonus slot 0");
+                helper.assertTrue(totalBooks == 1,
+                        "Cycle " + cycle + ": total Book count changed (found "
+                                + totalBooks + ")");
+            }
+            List<ItemEntity> dropped = level.getEntitiesOfClass(ItemEntity.class,
+                    current.getBoundingBox().inflate(5.0D));
+            helper.assertTrue(dropped.stream().noneMatch(entity -> entity.getItem().is(Items.BOOK)),
+                    "A duplicate Book was dropped across relogin cycles");
+
+            helper.succeed();
+        } finally {
+            current.discard();
         }
     }
 

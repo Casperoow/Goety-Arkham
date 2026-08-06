@@ -1,9 +1,11 @@
 package com.casper.goetyarkham.curios;
 
+import com.casper.goetyarkham.GoetyArkham;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Owns the {@link CurioSlotIds#SKILL_BONUS} slot's capacity: the maximum
@@ -27,19 +29,56 @@ public final class SharedBonusSlotService {
 
     /**
      * Recomputes the target capacity from every registered provider's
-     * current equip state and syncs the slot to it. Stateless and
-     * idempotent: safe to call repeatedly, and safe to call whenever any
-     * one provider's equip state might have changed, since it always
-     * re-derives the answer from scratch rather than incrementing/
-     * decrementing.
+     * current equip state and syncs the slot to it, allowing the slot to
+     * shrink (and evacuate any overflow contents) if the computed target is
+     * smaller than the current capacity. Stateless and idempotent: safe to
+     * call repeatedly. Use this only for a genuinely confirmed equip-state
+     * change (e.g. a real {@code CurioChangeEvent} transition) - never for a
+     * login/respawn/clone/dimension-change restore, where a provider's
+     * equip state may not have finished settling yet; see {@link
+     * #reconcileRestore}.
      */
     public static void reconcile(ServerPlayer player) {
+        reconcile(player, ReconcileMode.CONFIRMED_SHRINK, "confirmed");
+    }
+
+    /**
+     * Same recomputation as {@link #reconcile}, but for a player
+     * entity/Capability/Curios handler that was just (re)created - login,
+     * respawn, clone, or dimension change. The slot may grow (or have its
+     * modifier re-applied at the same size) but is never shrunk or
+     * evacuated here: a provider that is transiently unreadable at this
+     * point (Curios handler not yet resolved, equipped-item state not yet
+     * settled) must not be misread as "unequipped" and trigger a
+     * destructive evacuation of whatever the player had stored.
+     */
+    public static void reconcileRestore(ServerPlayer player) {
+        reconcile(player, ReconcileMode.RESTORE, "restore");
+    }
+
+    private static void reconcile(ServerPlayer player, ReconcileMode mode, String source) {
+        List<SharedBonusSlotProvider> providers = SharedBonusSlotProviderRegistry.providers();
+        int target = computeCapacity(providers, player);
+        if (GoetyArkham.LOGGER.isDebugEnabled()) {
+            GoetyArkham.LOGGER.debug(
+                    "[SharedBonusSlot] Reconcile player={} uuid={} entityId={} mode={} source={}"
+                            + " target={} providers={}",
+                    player.getGameProfile().getName(), player.getUUID(), player.getId(), mode,
+                    source, target,
+                    providers.stream()
+                            .map(provider -> provider.providerId() + "="
+                                    + provider.isEquipped(player) + "/"
+                                    + provider.declaredSlotCount())
+                            .collect(Collectors.joining(",")));
+        }
         DynamicCurioSlotContributionService.reconcileSize(
                 player,
                 CurioSlotIds.SKILL_BONUS,
                 CAPACITY_MODIFIER_ID,
                 CAPACITY_MODIFIER_NAME,
-                targetCapacity(player));
+                target,
+                mode,
+                source);
     }
 
     public static int targetCapacity(ServerPlayer player) {
