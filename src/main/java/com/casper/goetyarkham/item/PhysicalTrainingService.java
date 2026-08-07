@@ -1,6 +1,6 @@
 package com.casper.goetyarkham.item;
 
-import com.casper.goetyarkham.client.ClientEncyclopediaBonus;
+import com.casper.goetyarkham.client.ClientPhysicalTrainingBonus;
 import com.casper.goetyarkham.curios.CurioSlotIds;
 import com.casper.goetyarkham.curios.DynamicCurioSlotContributionService;
 import com.casper.goetyarkham.curios.ResourceSlotProviderRegistry;
@@ -13,25 +13,24 @@ import net.minecraftforge.fml.DistExecutor;
 import java.util.List;
 
 /**
- * Owns the Encyclopedia's participation in the shared {@link
- * CurioSlotIds#RESOURCE} slot pool, worn in either {@link
- * CurioSlotIds#HANDS} or {@link CurioSlotIds#BOOK}. This item never keeps
- * its own dedicated slot or modifier: it simply registers {@link
- * EncyclopediaBonusProvider} once (on first class load, before it is ever
- * consulted - see the static initializer below) and, on every observed
- * equip/unequip transition, asks {@link ResourceSlotService} to recompute
- * the shared slot's capacity from every currently registered provider's
- * equip state.
+ * Owns Physical Training's participation in the shared {@link
+ * CurioSlotIds#RESOURCE} slot pool, worn in {@link CurioSlotIds#ASSET}.
+ * Mirrors {@link EncyclopediaService} exactly: registers {@link
+ * PhysicalTrainingBonusProvider} once (on first class load) and, on every
+ * observed equip/unequip transition, asks {@link ResourceSlotService} to
+ * recompute the shared slot's capacity from every currently registered
+ * provider's equip state - the same generic mechanism the Encyclopedia
+ * already uses, so the two coexist without either one needing to know about
+ * the other.
  */
-public final class EncyclopediaService {
-    private static final List<String> WORN_SLOTS =
-            List.of(CurioSlotIds.HANDS, CurioSlotIds.BOOK);
+public final class PhysicalTrainingService {
+    private static final List<String> WORN_SLOTS = List.of(CurioSlotIds.ASSET);
 
     static {
-        ResourceSlotProviderRegistry.register(EncyclopediaBonusProvider.INSTANCE);
+        ResourceSlotProviderRegistry.register(PhysicalTrainingBonusProvider.INSTANCE);
     }
 
-    private EncyclopediaService() {
+    private PhysicalTrainingService() {
     }
 
     /**
@@ -40,7 +39,7 @@ public final class EncyclopediaService {
      * slot's target capacity from whichever providers are currently
      * equipped, so calling it repeatedly (or out of order with any other
      * provider's own reconcile call) never duplicates or loses slots. May
-     * shrink the slot and evacuate overflow contents - see {@link
+     * shrink the shared slot and evacuate overflow contents - see {@link
      * ResourceSlotService#reconcile}.
      */
     public static void reconcile(ServerPlayer player) {
@@ -58,39 +57,28 @@ public final class EncyclopediaService {
 
     public static boolean isWearing(ServerPlayer player) {
         return DynamicCurioSlotContributionService.isWearing(
-                player, ModItems.ENCYCLOPEDIA.get(), WORN_SLOTS);
+                player, ModItems.PHYSICAL_TRAINING.get(), WORN_SLOTS);
     }
 
-    /**
-     * Widened, read-only overload of {@link #isWearing(ServerPlayer)} for
-     * the local client player: whether the player has an Encyclopedia
-     * equipped by item type - not whether the specific {@code ItemStack}
-     * instance a tooltip happens to be hovering is the equipped one, so
-     * viewing a second, unequipped Encyclopedia in the inventory while
-     * another copy is worn still reports {@code true}, and wearing two at
-     * once still reports a single {@code true} rather than double-counting.
-     */
+    /** Widened, read-only overload of {@link #isWearing(ServerPlayer)} for the local client player. */
     public static boolean isWearing(LivingEntity entity) {
         return DynamicCurioSlotContributionService.isWearing(
-                entity, ModItems.ENCYCLOPEDIA.get(), WORN_SLOTS);
+                entity, ModItems.PHYSICAL_TRAINING.get(), WORN_SLOTS);
     }
 
     public static int equippedCount(ServerPlayer player) {
         return DynamicCurioSlotContributionService.equippedCount(
-                player, ModItems.ENCYCLOPEDIA.get(), WORN_SLOTS);
+                player, ModItems.PHYSICAL_TRAINING.get(), WORN_SLOTS);
     }
 
     /**
      * Client-safe live snapshot of this provider's own current {@code
-     * resource} contribution, for {@link EncyclopediaItem}'s Shift
-     * tooltip. Mirrors {@link ShiftTooltipHelper}'s {@code DistExecutor}
-     * pattern: returns {@link ResourceSlotBonusSnapshot#UNAVAILABLE} on a
-     * dedicated server or whenever there is no local client player (main
-     * menu, creative item search).
+     * resource} contribution, for {@code PhysicalTrainingItem}'s Shift
+     * tooltip. Mirrors {@link EncyclopediaService#currentClientBonus()}.
      */
     public static ResourceSlotBonusSnapshot currentClientBonus() {
         ResourceSlotBonusSnapshot result = DistExecutor.unsafeCallWhenOn(
-                Dist.CLIENT, () -> ClientEncyclopediaBonus::compute);
+                Dist.CLIENT, () -> ClientPhysicalTrainingBonus::compute);
         return result == null ? ResourceSlotBonusSnapshot.UNAVAILABLE : result;
     }
 }

@@ -195,5 +195,16 @@
   "tooltip.goetyarkham.machete.monster_bonus": "对怪物敌人额外造成2点伤害",
   "item.goetyarkham.baseball_bat": "球棒",
   "tooltip.goetyarkham.baseball_bat.main_hand": "在主手时：",
-  "tooltip.goetyarkham.baseball_bat.strength": "+2 力量"
+  "tooltip.goetyarkham.baseball_bat.strength": "+2 力量",
+  "item.goetyarkham.relic_hunter": "宝物猎人",
+  "tooltip.goetyarkham.relic_hunter.charm_slot": "获得额外1个护符栏位",
+  "item.goetyarkham.charisma": "魅力超凡",
+  "tooltip.goetyarkham.charisma.token_slot": "获得额外1个信物栏位",
+  "item.goetyarkham.physical_training": "体能训练",
+  "tooltip.goetyarkham.physical_training.slot": "栏位：资产",
+  "tooltip.goetyarkham.physical_training.resource_bonus": "拥有3个资源栏位，放置于该栏位的灵质或铁锭使你指定的技能+1",
+  "tooltip.goetyarkham.physical_training.hold_shift": "按住 Shift 查看当前加成",
+  "tooltip.goetyarkham.physical_training.current_bonus_heading": "当前加成：",
+  "tooltip.goetyarkham.physical_training.when_equipped_heading": "装备后可获得：",
+  "tooltip.goetyarkham.physical_training.none": "无"
 }

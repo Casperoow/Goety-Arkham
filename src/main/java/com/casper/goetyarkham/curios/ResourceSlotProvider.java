@@ -3,6 +3,11 @@ package com.casper.goetyarkham.curios;
 import com.casper.goetyarkham.stats.StatType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A Curio that participates in the shared {@link CurioSlotIds#RESOURCE}
@@ -38,4 +43,32 @@ public interface ResourceSlotProvider {
 
     /** Zero if this provider assigns no bonus to {@code item} for {@code stat}. */
     int statBonus(StatType stat, Item item);
+
+    /**
+     * Pure, read-only tally of this provider's own {@link #statBonus}
+     * contribution across whatever is currently sitting in the {@code
+     * resource} slots - the same rule applied during real equipment-stat
+     * computation (see {@code EquipmentStatsService#addResourceSlotContributions}),
+     * so a Shift tooltip built from this can never disagree with the
+     * player's actual stats. Every {@link StatType} is always present in the
+     * result (zero if ungranted); empty or illegal slot contents contribute
+     * nothing. Shared by every {@link ResourceSlotProvider} implementer so
+     * none of them need to reimplement this tally themselves.
+     */
+    default Map<StatType, Integer> computeBonus(List<ItemStack> resourceSlotContents) {
+        EnumMap<StatType, Integer> totals = new EnumMap<>(StatType.class);
+        for (StatType stat : StatType.values()) {
+            totals.put(stat, 0);
+        }
+        for (ItemStack stack : resourceSlotContents) {
+            if (stack.isEmpty()) {
+                continue;
+            }
+            Item item = stack.getItem();
+            for (StatType stat : StatType.values()) {
+                totals.merge(stat, statBonus(stat, item), Integer::sum);
+            }
+        }
+        return totals;
+    }
 }

@@ -2,8 +2,8 @@ package com.casper.goetyarkham.client;
 
 import com.casper.goetyarkham.curios.CurioSlotIds;
 import com.casper.goetyarkham.curios.DynamicCurioSlotContributionService;
-import com.casper.goetyarkham.item.EncyclopediaBonusProvider;
-import com.casper.goetyarkham.item.EncyclopediaService;
+import com.casper.goetyarkham.item.PhysicalTrainingBonusProvider;
+import com.casper.goetyarkham.item.PhysicalTrainingService;
 import com.casper.goetyarkham.item.ResourceSlotBonusSnapshot;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -16,11 +16,12 @@ import java.util.List;
 /**
  * Kept in the client package so dedicated servers never load {@link
  * Minecraft}. Reads only - never touches the shared {@code resource} slot's
- * capacity, contents, or any player attribute.
+ * capacity, contents, or any player attribute. Mirrors {@link
+ * ClientEncyclopediaBonus} exactly.
  */
 @OnlyIn(Dist.CLIENT)
-public final class ClientEncyclopediaBonus {
-    private ClientEncyclopediaBonus() {
+public final class ClientPhysicalTrainingBonus {
+    private ClientPhysicalTrainingBonus() {
     }
 
     public static ResourceSlotBonusSnapshot compute() {
@@ -28,10 +29,10 @@ public final class ClientEncyclopediaBonus {
         if (player == null) {
             return ResourceSlotBonusSnapshot.UNAVAILABLE;
         }
-        boolean equipped = EncyclopediaService.isWearing(player);
+        boolean equipped = PhysicalTrainingService.isWearing(player);
         List<ItemStack> resourceContents = DynamicCurioSlotContributionService.slotContents(
                 player, CurioSlotIds.RESOURCE);
         return new ResourceSlotBonusSnapshot(
-                true, equipped, EncyclopediaBonusProvider.INSTANCE.computeBonus(resourceContents));
+                true, equipped, PhysicalTrainingBonusProvider.INSTANCE.computeBonus(resourceContents));
     }
 }

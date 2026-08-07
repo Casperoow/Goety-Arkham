@@ -65,6 +65,7 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyFocusItemTag();
         verifyBookItemTag();
         verifyResourceItemTag();
+        verifyAssetItemTag();
         verifyBossOrEliteTag();
         verifyItemResources();
         verifySharedTooltipFormatting();
@@ -434,6 +435,65 @@ public final class CurioSlotDefinitionsSelfTest {
                 "resource item tag entries");
     }
 
+    /**
+     * The Curios {@code asset} slot has base size 4 and is bound directly
+     * in the player binding (unlike {@code book}/{@code resource}). Relic
+     * Hunter is the first Goety: Arkham item to occupy it; multiple copies
+     * may be equipped at once (see {@link MultiEquippableCurio}), each
+     * dynamically granting its own {@link CurioSlotIds#CHARM} slot rather
+     * than the base charm size being edited directly - see {@link
+     * com.casper.goetyarkham.item.RelicHunterService}. Charisma is the
+     * second, mirroring the same mechanism but granting {@link
+     * CurioSlotIds#TOKEN} instead - see {@link
+     * com.casper.goetyarkham.item.CharismaService}. Physical Training is the
+     * third: unlike the other two, it does not grant its own extra slot on
+     * some other Curios slot - instead it participates in the shared {@link
+     * CurioSlotIds#RESOURCE} pool exactly like the Encyclopedia (see {@link
+     * com.casper.goetyarkham.item.PhysicalTrainingService}), just declaring
+     * a minimum of 3 instead of 1.
+     */
+    private static void verifyAssetItemTag() throws IOException {
+        JsonObject tag = readJson("/data/curios/tags/items/asset.json");
+        assertFalse(tag.get("replace").getAsBoolean(),
+                "asset item tag must merge without replace");
+        Set<String> entries = new HashSet<>();
+        tag.getAsJsonArray("values").forEach(element -> entries.add(element.getAsString()));
+        assertEquals(Set.of(
+                        "goetyarkham:relic_hunter",
+                        "goetyarkham:charisma",
+                        "goetyarkham:physical_training"),
+                entries,
+                "asset item tag entries");
+        for (String slotId : CurioSlotIds.ALL) {
+            if (!CurioSlotIds.ASSET.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:relic_hunter");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:charisma");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:physical_training");
+            }
+        }
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:relic_hunter");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:charisma");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:charisma");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:physical_training");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:physical_training");
+    }
+
     private static void verifyBossOrEliteTag() throws IOException {
         JsonObject tag = readJson(
                 "/data/goetyarkham/tags/entity_types/boss_or_elite.json");
@@ -722,6 +782,42 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Knife model reuses the supplied texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/knife.png");
+
+        JsonObject relicHunterModel = readJson(
+                "/assets/goetyarkham/models/item/relic_hunter.json");
+        assertEquals("minecraft:item/generated",
+                relicHunterModel.get("parent").getAsString(),
+                "Relic Hunter model parent");
+        assertEquals("goetyarkham:item/relic_hunter",
+                relicHunterModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Relic Hunter model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/relic_hunter.png");
+
+        JsonObject charismaModel = readJson(
+                "/assets/goetyarkham/models/item/charisma.json");
+        assertEquals("minecraft:item/generated",
+                charismaModel.get("parent").getAsString(),
+                "Charisma model parent");
+        assertEquals("goetyarkham:item/charisma",
+                charismaModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Charisma model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/charisma.png");
+
+        JsonObject physicalTrainingModel = readJson(
+                "/assets/goetyarkham/models/item/physical_training.json");
+        assertEquals("minecraft:item/generated",
+                physicalTrainingModel.get("parent").getAsString(),
+                "Physical Training model parent");
+        assertEquals("goetyarkham:item/physical_training",
+                physicalTrainingModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Physical Training model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/physical_training.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -1143,6 +1239,57 @@ public final class CurioSlotDefinitionsSelfTest {
             assertEquals("刀子",
                     translations.get("item.goetyarkham.knife").getAsString(),
                     "Chinese Knife name");
+            assertEquals("宝物猎人",
+                    translations.get("item.goetyarkham.relic_hunter")
+                            .getAsString(),
+                    "Chinese Relic Hunter name");
+            assertEquals("获得额外1个护符栏位",
+                    translations.get(
+                            "tooltip.goetyarkham.relic_hunter.charm_slot")
+                            .getAsString(),
+                    "Chinese Relic Hunter charm-slot tooltip");
+            assertEquals("魅力超凡",
+                    translations.get("item.goetyarkham.charisma")
+                            .getAsString(),
+                    "Chinese Charisma name");
+            assertEquals("获得额外1个信物栏位",
+                    translations.get(
+                            "tooltip.goetyarkham.charisma.token_slot")
+                            .getAsString(),
+                    "Chinese Charisma token-slot tooltip");
+            assertEquals("体能训练",
+                    translations.get("item.goetyarkham.physical_training")
+                            .getAsString(),
+                    "Chinese Physical Training name");
+            assertEquals("栏位：资产",
+                    translations.get("tooltip.goetyarkham.physical_training.slot")
+                            .getAsString(),
+                    "Chinese Physical Training slot label");
+            assertEquals("拥有3个资源栏位，放置于该栏位的灵质或铁锭使你指定的技能+1",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.resource_bonus")
+                            .getAsString(),
+                    "Chinese Physical Training resource-bonus tooltip");
+            assertEquals("按住 Shift 查看当前加成",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.hold_shift")
+                            .getAsString(),
+                    "Chinese Physical Training hold-shift tooltip");
+            assertEquals("当前加成：",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.current_bonus_heading")
+                            .getAsString(),
+                    "Chinese Physical Training current-bonus heading");
+            assertEquals("装备后可获得：",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.when_equipped_heading")
+                            .getAsString(),
+                    "Chinese Physical Training when-equipped heading");
+            assertEquals("无",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.none")
+                            .getAsString(),
+                    "Chinese Physical Training none label");
         } else if ("en_us".equals(language)) {
             assertEquals("Goety: Arkham",
                     translations.get("creativetab.goetyarkham.goety_arkham")
@@ -1535,6 +1682,59 @@ public final class CurioSlotDefinitionsSelfTest {
             assertEquals("Knife",
                     translations.get("item.goetyarkham.knife").getAsString(),
                     "English Knife name");
+            assertEquals("Relic Hunter",
+                    translations.get("item.goetyarkham.relic_hunter")
+                            .getAsString(),
+                    "English Relic Hunter name");
+            assertEquals("Gain 1 additional Charm slot",
+                    translations.get(
+                            "tooltip.goetyarkham.relic_hunter.charm_slot")
+                            .getAsString(),
+                    "English Relic Hunter charm-slot tooltip");
+            assertEquals("Charisma",
+                    translations.get("item.goetyarkham.charisma")
+                            .getAsString(),
+                    "English Charisma name");
+            assertEquals("Gain 1 additional Token slot",
+                    translations.get(
+                            "tooltip.goetyarkham.charisma.token_slot")
+                            .getAsString(),
+                    "English Charisma token-slot tooltip");
+            assertEquals("Physical Training",
+                    translations.get("item.goetyarkham.physical_training")
+                            .getAsString(),
+                    "English Physical Training name");
+            assertEquals("Slot: Asset",
+                    translations.get("tooltip.goetyarkham.physical_training.slot")
+                            .getAsString(),
+                    "English Physical Training slot label");
+            assertEquals(
+                    "You have 3 Resource slots. Ectoplasm or Iron Ingots placed"
+                            + " in these slots grant +1 to their corresponding skill.",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.resource_bonus")
+                            .getAsString(),
+                    "English Physical Training resource-bonus tooltip");
+            assertEquals("Hold Shift to view current bonuses",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.hold_shift")
+                            .getAsString(),
+                    "English Physical Training hold-shift tooltip");
+            assertEquals("Current bonus:",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.current_bonus_heading")
+                            .getAsString(),
+                    "English Physical Training current-bonus heading");
+            assertEquals("When equipped, you would gain:",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.when_equipped_heading")
+                            .getAsString(),
+                    "English Physical Training when-equipped heading");
+            assertEquals("None",
+                    translations.get(
+                            "tooltip.goetyarkham.physical_training.none")
+                            .getAsString(),
+                    "English Physical Training none label");
         }
     }
 

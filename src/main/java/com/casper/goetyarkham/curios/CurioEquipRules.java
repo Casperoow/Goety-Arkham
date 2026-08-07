@@ -37,6 +37,9 @@ public final class CurioEquipRules {
         if (candidate.isEmpty() || !isOwnedByThisMod(candidate.getItem())) {
             return false;
         }
+        if (candidate.getItem() instanceof MultiEquippableCurio) {
+            return false;
+        }
         LivingEntity entity = target.entity();
         if (entity == null) {
             return false;

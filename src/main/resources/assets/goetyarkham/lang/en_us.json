@@ -195,5 +195,16 @@
   "tooltip.goetyarkham.machete.monster_bonus": "Deal 2 additional damage to hostile monsters",
   "item.goetyarkham.baseball_bat": "Baseball Bat",
   "tooltip.goetyarkham.baseball_bat.main_hand": "When in Main Hand:",
-  "tooltip.goetyarkham.baseball_bat.strength": "+2 Strength"
+  "tooltip.goetyarkham.baseball_bat.strength": "+2 Strength",
+  "item.goetyarkham.relic_hunter": "Relic Hunter",
+  "tooltip.goetyarkham.relic_hunter.charm_slot": "Gain 1 additional Charm slot",
+  "item.goetyarkham.charisma": "Charisma",
+  "tooltip.goetyarkham.charisma.token_slot": "Gain 1 additional Token slot",
+  "item.goetyarkham.physical_training": "Physical Training",
+  "tooltip.goetyarkham.physical_training.slot": "Slot: Asset",
+  "tooltip.goetyarkham.physical_training.resource_bonus": "You have 3 Resource slots. Ectoplasm or Iron Ingots placed in these slots grant +1 to their corresponding skill.",
+  "tooltip.goetyarkham.physical_training.hold_shift": "Hold Shift to view current bonuses",
+  "tooltip.goetyarkham.physical_training.current_bonus_heading": "Current bonus:",
+  "tooltip.goetyarkham.physical_training.when_equipped_heading": "When equipped, you would gain:",
+  "tooltip.goetyarkham.physical_training.none": "None"
 }

@@ -351,12 +351,12 @@ tasks.register('signatureWeaknessTooltipSelfTest', JavaExec) {
     mainClass = 'com.casper.goetyarkham.item.SignatureWeaknessTooltipHelperSelfTest'
 }
 
-tasks.register('encyclopediaBonusTooltipSelfTest', JavaExec) {
+tasks.register('resourceSlotBonusTooltipSelfTest', JavaExec) {
     group = 'verification'
-    description = 'Runs deterministic tests for the Encyclopedia Shift-tooltip current-bonus formatting.'
+    description = 'Runs deterministic tests for the shared resource-slot Shift-tooltip current-bonus formatting (Encyclopedia, Physical Training).'
     dependsOn testClasses
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'com.casper.goetyarkham.item.EncyclopediaBonusTooltipHelperSelfTest'
+    mainClass = 'com.casper.goetyarkham.item.ResourceSlotBonusTooltipHelperSelfTest'
 }
 
 tasks.register('prepareGameTestStructures', Copy) {
@@ -378,5 +378,5 @@ tasks.named('check').configure {
     dependsOn tasks.named('curioSlotsSelfTest')
     dependsOn tasks.named('lonelinessSelfTest')
     dependsOn tasks.named('signatureWeaknessTooltipSelfTest')
-    dependsOn tasks.named('encyclopediaBonusTooltipSelfTest')
+    dependsOn tasks.named('resourceSlotBonusTooltipSelfTest')
 }

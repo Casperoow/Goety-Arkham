@@ -4,9 +4,12 @@ import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.CuriosCommand;
 import com.casper.goetyarkham.item.ArcaneInitiatesTokenService;
 import com.casper.goetyarkham.item.BookOfShadowsService;
+import com.casper.goetyarkham.item.CharismaService;
 import com.casper.goetyarkham.item.EncyclopediaService;
 import com.casper.goetyarkham.item.HeirloomOfHyperboreaService;
 import com.casper.goetyarkham.item.ModItems;
+import com.casper.goetyarkham.item.PhysicalTrainingService;
+import com.casper.goetyarkham.item.RelicHunterService;
 import com.casper.goetyarkham.item.RolandsThirtyEightSpecialService;
 import com.casper.goetyarkham.item.WendysAmuletService;
 import com.casper.goetyarkham.sanity.SanityService;
@@ -58,6 +61,12 @@ public final class CuriosForgeEvents {
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_ROLAND_RECONCILE =
             ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_RELIC_HUNTER_RECONCILE =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_CHARISMA_RECONCILE =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_PHYSICAL_TRAINING_RECONCILE =
+            ConcurrentHashMap.newKeySet();
     /** Tick (per-player {@code tickCount}) at which to run the follow-up confirmed reconcile. */
     private static final Map<UUID, Integer> ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK =
             new ConcurrentHashMap<>();
@@ -97,6 +106,9 @@ public final class CuriosForgeEvents {
             handleBookOfShadowsTransition(player, event);
             handleEncyclopediaTransition(player, event);
             handleRolandTransition(player, event);
+            handleRelicHunterTransition(player, event);
+            handleCharismaTransition(player, event);
+            handlePhysicalTrainingTransition(player, event);
         }
     }
 
@@ -157,6 +169,15 @@ public final class CuriosForgeEvents {
         if (PENDING_ROLAND_RECONCILE.remove(uuid)) {
             RolandsThirtyEightSpecialService.reconcile(player);
         }
+        if (PENDING_RELIC_HUNTER_RECONCILE.remove(uuid)) {
+            RelicHunterService.reconcileRestore(player);
+        }
+        if (PENDING_CHARISMA_RECONCILE.remove(uuid)) {
+            CharismaService.reconcileRestore(player);
+        }
+        if (PENDING_PHYSICAL_TRAINING_RECONCILE.remove(uuid)) {
+            PhysicalTrainingService.reconcileRestore(player);
+        }
         if (!DIRTY_EQUIPMENT.remove(uuid)) {
             return;
         }
@@ -182,6 +203,9 @@ public final class CuriosForgeEvents {
             PENDING_BOOK_OF_SHADOWS_RECONCILE.remove(uuid);
             PENDING_ENCYCLOPEDIA_RECONCILE.remove(uuid);
             PENDING_ROLAND_RECONCILE.remove(uuid);
+            PENDING_RELIC_HUNTER_RECONCILE.remove(uuid);
+            PENDING_CHARISMA_RECONCILE.remove(uuid);
+            PENDING_PHYSICAL_TRAINING_RECONCILE.remove(uuid);
             ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(uuid);
         }
     }
@@ -222,6 +246,9 @@ public final class CuriosForgeEvents {
             PENDING_BOOK_OF_SHADOWS_RECONCILE.add(uuid);
             PENDING_ENCYCLOPEDIA_RECONCILE.add(uuid);
             PENDING_ROLAND_RECONCILE.add(uuid);
+            PENDING_RELIC_HUNTER_RECONCILE.add(uuid);
+            PENDING_CHARISMA_RECONCILE.add(uuid);
+            PENDING_PHYSICAL_TRAINING_RECONCILE.add(uuid);
         }
     }
 
@@ -281,6 +308,25 @@ public final class CuriosForgeEvents {
         }
     }
 
+    /**
+     * Same rationale as {@link #handleEncyclopediaTransition}: the shared
+     * {@link CurioSlotIds#RESOURCE} slot's capacity is never auto-filled, so
+     * {@link PhysicalTrainingService#reconcile} (which recomputes that
+     * shared capacity from every registered provider, Physical Training and
+     * the Encyclopedia included) is idempotent and safe to call on every
+     * observed change to the asset slot involving the item.
+     */
+    private static void handlePhysicalTrainingTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.PHYSICAL_TRAINING.get())
+                || event.getTo().is(ModItems.PHYSICAL_TRAINING.get())) {
+            PhysicalTrainingService.reconcile(player);
+        }
+    }
+
     private static void handleRolandTransition(
             ServerPlayer player, CurioChangeEvent event) {
         if (!CurioSlotIds.HANDS.equals(event.getIdentifier())) {
@@ -332,6 +378,44 @@ public final class CuriosForgeEvents {
             WendysAmuletService.unequipTransition(player);
         } else {
             PENDING_WENDYS_AMULET_RECONCILE.add(player.getUUID());
+        }
+    }
+
+    /**
+     * Unlike the other {@code handle*Transition} methods, more than one
+     * Relic Hunter may be equipped in {@link CurioSlotIds#ASSET} at once
+     * (see {@link MultiEquippableCurio}), so there is no single before/after
+     * "did it become equipped" delta to react to. {@link
+     * RelicHunterService#reconcile} always recomputes the full equipped
+     * count from current state instead, so it is safe to call on every
+     * observed asset-slot change involving the item.
+     */
+    private static void handleRelicHunterTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.RELIC_HUNTER.get())
+                || event.getTo().is(ModItems.RELIC_HUNTER.get())) {
+            RelicHunterService.reconcile(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handleRelicHunterTransition}: more than one
+     * Charisma may be equipped in {@link CurioSlotIds#ASSET} at once (see
+     * {@link MultiEquippableCurio}), so {@link CharismaService#reconcile}
+     * always recomputes the full equipped count from current state instead
+     * of reacting to a single before/after delta.
+     */
+    private static void handleCharismaTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.CHARISMA.get())
+                || event.getTo().is(ModItems.CHARISMA.get())) {
+            CharismaService.reconcile(player);
         }
     }
 

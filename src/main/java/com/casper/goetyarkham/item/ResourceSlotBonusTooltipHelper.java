@@ -10,20 +10,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Formats {@link EncyclopediaTooltipBonus} into the Shift-revealed
- * "current bonus" / "when equipped" block of {@link EncyclopediaItem}'s
- * tooltip. Pure formatting only - every number it prints comes from {@link
- * EncyclopediaBonusProvider#computeBonus}, the same rule used for the
- * player's actual stats, so this can never drift from what the Encyclopedia
- * really grants.
+ * Formats a {@link ResourceSlotBonusSnapshot} into the Shift-revealed
+ * "current bonus" / "when equipped" block shared by every {@code resource}
+ * slot scoring Curio's tooltip (the Encyclopedia, Physical Training, and any
+ * future addition). Pure formatting only - every number it prints comes
+ * from that provider's own {@code computeBonus}, the same rule used for the
+ * player's actual stats, so this can never drift from what the item really
+ * grants. Each caller supplies its own translation keys so every item keeps
+ * its own wording, matching this codebase's convention of per-item
+ * translation keys, while sharing this one rendering implementation.
  */
-public final class EncyclopediaBonusTooltipHelper {
-    static final String CURRENT_BONUS_HEADING_KEY =
-            "tooltip.goetyarkham.encyclopedia.current_bonus_heading";
-    static final String WHEN_EQUIPPED_HEADING_KEY =
-            "tooltip.goetyarkham.encyclopedia.when_equipped_heading";
-    static final String NONE_KEY = "tooltip.goetyarkham.encyclopedia.none";
-
+public final class ResourceSlotBonusTooltipHelper {
     /** Fixed display order: Strength, Agility, Willpower, Intellect. */
     private static final List<StatType> DISPLAY_ORDER = List.of(
             StatType.STRENGTH, StatType.AGILITY, StatType.WILLPOWER, StatType.INTELLECT);
@@ -33,32 +30,38 @@ public final class EncyclopediaBonusTooltipHelper {
             StatType.WILLPOWER, "attribute.name.goetyarkham.willpower",
             StatType.INTELLECT, "attribute.name.goetyarkham.intellect");
 
-    private EncyclopediaBonusTooltipHelper() {
+    private ResourceSlotBonusTooltipHelper() {
     }
 
     /**
      * Appends either the "current bonus" block (when the viewing player has
-     * an Encyclopedia equipped) or the "when equipped" prediction block
+     * the scoring item equipped) or the "when equipped" prediction block
      * (when they do not), matching the same resource-slot contents either
      * way. {@code bonus.equipped()} is what selects between them - not
      * whether the specific hovered {@code ItemStack} is the equipped one.
      */
-    public static void append(List<Component> tooltip, EncyclopediaTooltipBonus bonus) {
+    public static void append(
+            List<Component> tooltip,
+            ResourceSlotBonusSnapshot bonus,
+            String currentBonusHeadingKey,
+            String whenEquippedHeadingKey,
+            String noneKey) {
         if (!bonus.available()) {
-            tooltip.add(headingLine(CURRENT_BONUS_HEADING_KEY, none()));
+            tooltip.add(headingLine(currentBonusHeadingKey, none(noneKey)));
             return;
         }
         List<Component> lines = bonusLines(bonus.bonuses());
-        String headingKey = bonus.equipped() ? CURRENT_BONUS_HEADING_KEY : WHEN_EQUIPPED_HEADING_KEY;
-        appendSection(tooltip, headingKey, lines);
+        String headingKey = bonus.equipped() ? currentBonusHeadingKey : whenEquippedHeadingKey;
+        appendSection(tooltip, headingKey, lines, noneKey);
     }
 
     private static void appendSection(
             List<Component> tooltip,
             String headingKey,
-            List<Component> lines) {
+            List<Component> lines,
+            String noneKey) {
         if (lines.isEmpty()) {
-            tooltip.add(headingLine(headingKey, none()));
+            tooltip.add(headingLine(headingKey, none(noneKey)));
         } else {
             tooltip.add(headingLine(headingKey, null));
             tooltip.addAll(lines);
@@ -86,7 +89,7 @@ public final class EncyclopediaBonusTooltipHelper {
         return heading.append(Component.literal(" ")).append(inlineValue);
     }
 
-    private static Component none() {
-        return Component.translatable(NONE_KEY).withStyle(ChatFormatting.GRAY);
+    private static Component none(String noneKey) {
+        return Component.translatable(noneKey).withStyle(ChatFormatting.GRAY);
     }
 }

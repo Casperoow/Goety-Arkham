@@ -116,6 +116,15 @@ public final class ModItems {
     public static final RegistryObject<BaseballBatItem> BASEBALL_BAT =
             ITEMS.register("baseball_bat", BaseballBatItem::new);
 
+    public static final RegistryObject<RelicHunterItem> RELIC_HUNTER =
+            ITEMS.register("relic_hunter", RelicHunterItem::new);
+
+    public static final RegistryObject<CharismaItem> CHARISMA =
+            ITEMS.register("charisma", CharismaItem::new);
+
+    public static final RegistryObject<PhysicalTrainingItem> PHYSICAL_TRAINING =
+            ITEMS.register("physical_training", PhysicalTrainingItem::new);
+
     private ModItems() {
     }
 
