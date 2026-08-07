@@ -6,6 +6,7 @@ import com.casper.goetyarkham.item.ArcaneInitiatesTokenService;
 import com.casper.goetyarkham.item.ArcaneStudiesService;
 import com.casper.goetyarkham.item.BookOfShadowsService;
 import com.casper.goetyarkham.item.CharismaService;
+import com.casper.goetyarkham.item.DaisysToteBagService;
 import com.casper.goetyarkham.item.DigDeepService;
 import com.casper.goetyarkham.item.EncyclopediaService;
 import com.casper.goetyarkham.item.HardKnocksService;
@@ -79,6 +80,8 @@ public final class CuriosForgeEvents {
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_HYPERAWARENESS_RECONCILE =
             ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_DAISYS_TOTE_BAG_RECONCILE =
+            ConcurrentHashMap.newKeySet();
     /** Tick (per-player {@code tickCount}) at which to run the follow-up confirmed reconcile. */
     private static final Map<UUID, Integer> ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK =
             new ConcurrentHashMap<>();
@@ -125,6 +128,8 @@ public final class CuriosForgeEvents {
             handleDigDeepTransition(player, event);
             handleArcaneStudiesTransition(player, event);
             handleHyperawarenessTransition(player, event);
+            handleDaisysToteBagWeaknessTransition(player, event);
+            handleDaisysToteBagBookSlotTransition(player, event);
         }
     }
 
@@ -206,6 +211,9 @@ public final class CuriosForgeEvents {
         if (PENDING_HYPERAWARENESS_RECONCILE.remove(uuid)) {
             HyperawarenessService.reconcileRestore(player);
         }
+        if (PENDING_DAISYS_TOTE_BAG_RECONCILE.remove(uuid)) {
+            DaisysToteBagService.reconcile(player);
+        }
         if (!DIRTY_EQUIPMENT.remove(uuid)) {
             return;
         }
@@ -238,6 +246,7 @@ public final class CuriosForgeEvents {
             PENDING_DIG_DEEP_RECONCILE.remove(uuid);
             PENDING_ARCANE_STUDIES_RECONCILE.remove(uuid);
             PENDING_HYPERAWARENESS_RECONCILE.remove(uuid);
+            PENDING_DAISYS_TOTE_BAG_RECONCILE.remove(uuid);
             ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(uuid);
         }
     }
@@ -266,6 +275,8 @@ public final class CuriosForgeEvents {
                 event.getOriginal(), event.getEntity());
         RolandsThirtyEightSpecialService.copyPersistentState(
                 event.getOriginal(), event.getEntity());
+        DaisysToteBagService.copyPersistentState(
+                event.getOriginal(), event.getEntity());
         queueReconcile(event);
     }
 
@@ -285,6 +296,7 @@ public final class CuriosForgeEvents {
             PENDING_DIG_DEEP_RECONCILE.add(uuid);
             PENDING_ARCANE_STUDIES_RECONCILE.add(uuid);
             PENDING_HYPERAWARENESS_RECONCILE.add(uuid);
+            PENDING_DAISYS_TOTE_BAG_RECONCILE.add(uuid);
         }
     }
 
@@ -528,6 +540,56 @@ public final class CuriosForgeEvents {
         if (event.getFrom().is(ModItems.CHARISMA.get())
                 || event.getTo().is(ModItems.CHARISMA.get())) {
             CharismaService.reconcile(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handleRolandTransition}: reacts only to a
+     * real observed zero-to-one/one-to-zero transition on {@link
+     * CurioSlotIds#BELT}, driving the single weakness slot and its bound
+     * Necronomicon (John Dee).
+     */
+    private static void handleDaisysToteBagWeaknessTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.BELT.equals(event.getIdentifier())) {
+            return;
+        }
+        boolean from = event.getFrom().is(
+                ModItems.DAISYS_TOTE_BAG.get());
+        boolean to = event.getTo().is(
+                ModItems.DAISYS_TOTE_BAG.get());
+        if (!from && !to) {
+            return;
+        }
+
+        // Curios discovers the change while comparing its previous stack to
+        // the already-committed current handler contents.
+        int after = DaisysToteBagService.equippedCount(player);
+        int before = after - (to ? 1 : 0) + (from ? 1 : 0);
+        if (before <= 0 && after > 0) {
+            DaisysToteBagService.equipTransition(player);
+        } else if (before > 0 && after <= 0) {
+            // This occurs before Curios settles any remaining modifiers.
+            DaisysToteBagService.unequipTransition(player);
+        } else {
+            PENDING_DAISYS_TOTE_BAG_RECONCILE.add(player.getUUID());
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handleBookOfShadowsTransition}: the extra
+     * book slot is never auto-filled, so {@link
+     * DaisysToteBagService#reconcileBookSlot} is idempotent and safe to call
+     * on every observed change to the belt slot involving the item.
+     */
+    private static void handleDaisysToteBagBookSlotTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.BELT.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.DAISYS_TOTE_BAG.get())
+                || event.getTo().is(ModItems.DAISYS_TOTE_BAG.get())) {
+            DaisysToteBagService.reconcileBookSlot(player);
         }
     }
 

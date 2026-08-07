@@ -234,5 +234,11 @@
   "tooltip.goetyarkham.hyperawareness.hold_shift": "按住 Shift 查看当前加成",
   "tooltip.goetyarkham.hyperawareness.current_bonus_heading": "当前加成：",
   "tooltip.goetyarkham.hyperawareness.when_equipped_heading": "装备后可获得：",
-  "tooltip.goetyarkham.hyperawareness.none": "无"
+  "tooltip.goetyarkham.hyperawareness.none": "无",
+  "item.goetyarkham.daisys_tote_bag": "黛西的手提包",
+  "tooltip.goetyarkham.daisys_tote_bag.book_slot": "你额外获得2个书籍栏位",
+  "tooltip.goetyarkham.daisys_tote_bag.book_bonus": "你每佩戴一个书籍，你获得1点智慧",
+  "item.goetyarkham.the_necronomicon_john_dee": "死灵之书 (John Dee)",
+  "tooltip.goetyarkham.the_necronomicon_john_dee.slot": "栏位：弱点、书籍",
+  "tooltip.goetyarkham.the_necronomicon_john_dee.effect": "你受到3点理智损伤"
 }

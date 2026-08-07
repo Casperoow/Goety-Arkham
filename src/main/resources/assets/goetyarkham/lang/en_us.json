@@ -234,5 +234,11 @@
   "tooltip.goetyarkham.hyperawareness.hold_shift": "Hold Shift to view current bonuses",
   "tooltip.goetyarkham.hyperawareness.current_bonus_heading": "Current bonus:",
   "tooltip.goetyarkham.hyperawareness.when_equipped_heading": "When equipped, you would gain:",
-  "tooltip.goetyarkham.hyperawareness.none": "None"
+  "tooltip.goetyarkham.hyperawareness.none": "None",
+  "item.goetyarkham.daisys_tote_bag": "Daisy's Tote Bag",
+  "tooltip.goetyarkham.daisys_tote_bag.book_slot": "Gain 2 additional Book slots",
+  "tooltip.goetyarkham.daisys_tote_bag.book_bonus": "For every Book you have equipped, gain 1 Intellect",
+  "item.goetyarkham.the_necronomicon_john_dee": "The Necronomicon (John Dee)",
+  "tooltip.goetyarkham.the_necronomicon_john_dee.slot": "Slot: Weakness, Book",
+  "tooltip.goetyarkham.the_necronomicon_john_dee.effect": "You suffer 3 sanity trauma."
 }

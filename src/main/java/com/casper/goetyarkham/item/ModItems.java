@@ -137,6 +137,12 @@ public final class ModItems {
     public static final RegistryObject<HyperawarenessItem> HYPERAWARENESS =
             ITEMS.register("hyperawareness", HyperawarenessItem::new);
 
+    public static final RegistryObject<DaisysToteBagItem> DAISYS_TOTE_BAG =
+            ITEMS.register("daisys_tote_bag", DaisysToteBagItem::new);
+
+    public static final RegistryObject<TheNecronomiconJohnDeeItem> THE_NECRONOMICON_JOHN_DEE =
+            ITEMS.register("the_necronomicon_john_dee", TheNecronomiconJohnDeeItem::new);
+
     private ModItems() {
     }
 

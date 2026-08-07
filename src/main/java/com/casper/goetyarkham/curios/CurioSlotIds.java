@@ -12,6 +12,8 @@ import java.util.Map;
 public final class CurioSlotIds {
     /** Goety-provided charm slot. Goety: Arkham does not register or resize it. */
     public static final String CHARM = "charm";
+    /** Curios-provided default belt slot. Goety: Arkham does not register or resize it. */
+    public static final String BELT = "belt";
     public static final String NECKLACE = "necklace";
     public static final String BODY = "body";
     public static final String TOKEN = "token";

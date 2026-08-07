@@ -66,6 +66,7 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyBookItemTag();
         verifyResourceItemTag();
         verifyAssetItemTag();
+        verifyBeltItemTag();
         verifyBossOrEliteTag();
         verifyItemResources();
         verifySharedTooltipFormatting();
@@ -332,7 +333,8 @@ public final class CurioSlotDefinitionsSelfTest {
         assertEquals(List.of(
                         "goetyarkham:dark_memory",
                         "goetyarkham:abandoned_and_alone",
-                        "goetyarkham:cover_up"),
+                        "goetyarkham:cover_up",
+                        "goetyarkham:the_necronomicon_john_dee"),
                 weakness.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Weakness tag entries");
@@ -356,6 +358,15 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:cover_up");
+            }
+            // The Necronomicon (John Dee) is deliberately dual-tagged: it
+            // must appear in weakness and book, and nowhere else - it is
+            // still always equipped in the weakness slot only (see {@link
+            // com.casper.goetyarkham.item.TheNecronomiconJohnDeeItem#canEquip}).
+            if (!CurioSlotIds.WEAKNESS.equals(slotId) && !CurioSlotIds.BOOK.equals(slotId)) {
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:the_necronomicon_john_dee");
             }
         }
     }
@@ -402,7 +413,8 @@ public final class CurioSlotDefinitionsSelfTest {
                         "goetyarkham:medical_texts",
                         "goetyarkham:book_of_shadows",
                         "goetyarkham:old_book_of_lore",
-                        "goetyarkham:encyclopedia"),
+                        "goetyarkham:encyclopedia",
+                        "goetyarkham:the_necronomicon_john_dee"),
                 book.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Book tag entries");
@@ -532,6 +544,36 @@ public final class CurioSlotDefinitionsSelfTest {
         assertResourceValueAbsent(
                 "data/curios/tags/items/token.json",
                 "goetyarkham:hyperawareness");
+    }
+
+    /**
+     * The {@code belt} Curios slot is a default slot shipped by the base
+     * Curios mod itself (see {@code data/curios/curios/slots/belt.json} and
+     * {@code assets/curios/textures/slot/empty_belt_slot.png} in the Curios
+     * jar) and is already available to every living entity without any
+     * Goety: Arkham slot definition or player-binding entry - exactly like
+     * {@link CurioSlotIds#CHARM}, it is intentionally absent from {@link
+     * CurioSlotIds#ALL}/{@link CurioSlotIds#BASE_SIZES}. Daisy's Tote Bag is
+     * the first Goety: Arkham item to occupy it, contributed via this
+     * addon-owned item tag file merging into the shared {@code curios:belt}
+     * tag.
+     */
+    private static void verifyBeltItemTag() throws IOException {
+        JsonObject belt = readJson("/data/curios/tags/items/belt.json");
+        assertFalse(belt.get("replace").getAsBoolean(),
+                "belt item tag must merge without replace");
+        assertEquals(List.of("goetyarkham:daisys_tote_bag"),
+                belt.getAsJsonArray("values").asList().stream()
+                        .map(element -> element.getAsString()).toList(),
+                "Belt tag entries");
+        for (String slotId : CurioSlotIds.ALL) {
+            assertResourceValueAbsent(
+                    "data/curios/tags/items/" + slotId + ".json",
+                    "goetyarkham:daisys_tote_bag");
+        }
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:daisys_tote_bag");
     }
 
     private static void verifyBossOrEliteTag() throws IOException {
@@ -906,6 +948,30 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Hyperawareness model texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/hyperawareness.png");
+
+        JsonObject daisysToteBagModel = readJson(
+                "/assets/goetyarkham/models/item/daisys_tote_bag.json");
+        assertEquals("minecraft:item/generated",
+                daisysToteBagModel.get("parent").getAsString(),
+                "Daisy's Tote Bag model parent");
+        assertEquals("goetyarkham:item/daisys_tote_bag",
+                daisysToteBagModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Daisy's Tote Bag model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/daisys_tote_bag.png");
+
+        JsonObject necronomiconModel = readJson(
+                "/assets/goetyarkham/models/item/the_necronomicon_john_dee.json");
+        assertEquals("minecraft:item/generated",
+                necronomiconModel.get("parent").getAsString(),
+                "The Necronomicon (John Dee) model parent");
+        assertEquals("goetyarkham:item/the_necronomicon_john_dee",
+                necronomiconModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "The Necronomicon (John Dee) model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/the_necronomicon_john_dee.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -1510,6 +1576,35 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.hyperawareness.none")
                             .getAsString(),
                     "Chinese Hyperawareness none label");
+            assertEquals("黛西的手提包",
+                    translations.get("item.goetyarkham.daisys_tote_bag")
+                            .getAsString(),
+                    "Chinese Daisy's Tote Bag name");
+            assertEquals("你额外获得2个书籍栏位",
+                    translations.get(
+                            "tooltip.goetyarkham.daisys_tote_bag.book_slot")
+                            .getAsString(),
+                    "Chinese Daisy's Tote Bag book-slot tooltip");
+            assertEquals("你每佩戴一个书籍，你获得1点智慧",
+                    translations.get(
+                            "tooltip.goetyarkham.daisys_tote_bag.book_bonus")
+                            .getAsString(),
+                    "Chinese Daisy's Tote Bag book-bonus tooltip");
+            assertEquals("死灵之书 (John Dee)",
+                    translations.get(
+                            "item.goetyarkham.the_necronomicon_john_dee")
+                            .getAsString(),
+                    "Chinese The Necronomicon (John Dee) name");
+            assertEquals("栏位：弱点、书籍",
+                    translations.get(
+                            "tooltip.goetyarkham.the_necronomicon_john_dee.slot")
+                            .getAsString(),
+                    "Chinese Necronomicon slot label");
+            assertEquals("你受到3点理智损伤",
+                    translations.get(
+                            "tooltip.goetyarkham.the_necronomicon_john_dee.effect")
+                            .getAsString(),
+                    "Chinese Necronomicon effect tooltip");
         } else if ("en_us".equals(language)) {
             assertEquals("Goety: Arkham",
                     translations.get("creativetab.goetyarkham.goety_arkham")
@@ -2095,6 +2190,35 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.hyperawareness.none")
                             .getAsString(),
                     "English Hyperawareness none label");
+            assertEquals("Daisy's Tote Bag",
+                    translations.get("item.goetyarkham.daisys_tote_bag")
+                            .getAsString(),
+                    "English Daisy's Tote Bag name");
+            assertEquals("Gain 2 additional Book slots",
+                    translations.get(
+                            "tooltip.goetyarkham.daisys_tote_bag.book_slot")
+                            .getAsString(),
+                    "English Daisy's Tote Bag book-slot tooltip");
+            assertEquals("For every Book you have equipped, gain 1 Intellect",
+                    translations.get(
+                            "tooltip.goetyarkham.daisys_tote_bag.book_bonus")
+                            .getAsString(),
+                    "English Daisy's Tote Bag book-bonus tooltip");
+            assertEquals("The Necronomicon (John Dee)",
+                    translations.get(
+                            "item.goetyarkham.the_necronomicon_john_dee")
+                            .getAsString(),
+                    "English The Necronomicon (John Dee) name");
+            assertEquals("Slot: Weakness, Book",
+                    translations.get(
+                            "tooltip.goetyarkham.the_necronomicon_john_dee.slot")
+                            .getAsString(),
+                    "English Necronomicon slot label");
+            assertEquals("You suffer 3 sanity trauma.",
+                    translations.get(
+                            "tooltip.goetyarkham.the_necronomicon_john_dee.effect")
+                            .getAsString(),
+                    "English Necronomicon effect tooltip");
         }
     }
 
