@@ -461,7 +461,11 @@ public final class CurioSlotDefinitionsSelfTest {
         assertEquals(Set.of(
                         "goetyarkham:relic_hunter",
                         "goetyarkham:charisma",
-                        "goetyarkham:physical_training"),
+                        "goetyarkham:physical_training",
+                        "goetyarkham:hard_knocks",
+                        "goetyarkham:dig_deep",
+                        "goetyarkham:arcane_studies",
+                        "goetyarkham:hyperawareness"),
                 entries,
                 "asset item tag entries");
         for (String slotId : CurioSlotIds.ALL) {
@@ -475,6 +479,18 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:physical_training");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:hard_knocks");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:dig_deep");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:arcane_studies");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:hyperawareness");
             }
         }
         assertResourceValueAbsent(
@@ -492,6 +508,30 @@ public final class CurioSlotDefinitionsSelfTest {
         assertResourceValueAbsent(
                 "data/curios/tags/items/token.json",
                 "goetyarkham:physical_training");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:hard_knocks");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:hard_knocks");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:dig_deep");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:dig_deep");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:arcane_studies");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:arcane_studies");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:hyperawareness");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:hyperawareness");
     }
 
     private static void verifyBossOrEliteTag() throws IOException {
@@ -818,6 +858,54 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Physical Training model texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/physical_training.png");
+
+        JsonObject hardKnocksModel = readJson(
+                "/assets/goetyarkham/models/item/hard_knocks.json");
+        assertEquals("minecraft:item/generated",
+                hardKnocksModel.get("parent").getAsString(),
+                "Hard Knocks model parent");
+        assertEquals("goetyarkham:item/hard_knocks",
+                hardKnocksModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Hard Knocks model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/hard_knocks.png");
+
+        JsonObject digDeepModel = readJson(
+                "/assets/goetyarkham/models/item/dig_deep.json");
+        assertEquals("minecraft:item/generated",
+                digDeepModel.get("parent").getAsString(),
+                "Dig Deep model parent");
+        assertEquals("goetyarkham:item/dig_deep",
+                digDeepModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Dig Deep model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/dig_deep.png");
+
+        JsonObject arcaneStudiesModel = readJson(
+                "/assets/goetyarkham/models/item/arcane_studies.json");
+        assertEquals("minecraft:item/generated",
+                arcaneStudiesModel.get("parent").getAsString(),
+                "Arcane Studies model parent");
+        assertEquals("goetyarkham:item/arcane_studies",
+                arcaneStudiesModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Arcane Studies model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/arcane_studies.png");
+
+        JsonObject hyperawarenessModel = readJson(
+                "/assets/goetyarkham/models/item/hyperawareness.json");
+        assertEquals("minecraft:item/generated",
+                hyperawarenessModel.get("parent").getAsString(),
+                "Hyperawareness model parent");
+        assertEquals("goetyarkham:item/hyperawareness",
+                hyperawarenessModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Hyperawareness model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/hyperawareness.png");
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -1290,6 +1378,138 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.physical_training.none")
                             .getAsString(),
                     "Chinese Physical Training none label");
+            assertEquals("沉重打击",
+                    translations.get("item.goetyarkham.hard_knocks")
+                            .getAsString(),
+                    "Chinese Hard Knocks name");
+            assertEquals("栏位：资产",
+                    translations.get("tooltip.goetyarkham.hard_knocks.slot")
+                            .getAsString(),
+                    "Chinese Hard Knocks slot label");
+            assertEquals("拥有3个资源栏位，放置于该栏位的铁锭或兔子腿使你指定的技能+1",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.resource_bonus")
+                            .getAsString(),
+                    "Chinese Hard Knocks resource-bonus tooltip");
+            assertEquals("按住 Shift 查看当前加成",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.hold_shift")
+                            .getAsString(),
+                    "Chinese Hard Knocks hold-shift tooltip");
+            assertEquals("当前加成：",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.current_bonus_heading")
+                            .getAsString(),
+                    "Chinese Hard Knocks current-bonus heading");
+            assertEquals("装备后可获得：",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.when_equipped_heading")
+                            .getAsString(),
+                    "Chinese Hard Knocks when-equipped heading");
+            assertEquals("无",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.none")
+                            .getAsString(),
+                    "Chinese Hard Knocks none label");
+            assertEquals("深挖",
+                    translations.get("item.goetyarkham.dig_deep")
+                            .getAsString(),
+                    "Chinese Dig Deep name");
+            assertEquals("栏位：资产",
+                    translations.get("tooltip.goetyarkham.dig_deep.slot")
+                            .getAsString(),
+                    "Chinese Dig Deep slot label");
+            assertEquals("拥有3个资源栏位，放置于该栏位的灵质或兔子腿使你指定的技能+1",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.resource_bonus")
+                            .getAsString(),
+                    "Chinese Dig Deep resource-bonus tooltip");
+            assertEquals("按住 Shift 查看当前加成",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.hold_shift")
+                            .getAsString(),
+                    "Chinese Dig Deep hold-shift tooltip");
+            assertEquals("当前加成：",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.current_bonus_heading")
+                            .getAsString(),
+                    "Chinese Dig Deep current-bonus heading");
+            assertEquals("装备后可获得：",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.when_equipped_heading")
+                            .getAsString(),
+                    "Chinese Dig Deep when-equipped heading");
+            assertEquals("无",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.none")
+                            .getAsString(),
+                    "Chinese Dig Deep none label");
+            assertEquals("神秘研究",
+                    translations.get("item.goetyarkham.arcane_studies")
+                            .getAsString(),
+                    "Chinese Arcane Studies name");
+            assertEquals("栏位：资产",
+                    translations.get("tooltip.goetyarkham.arcane_studies.slot")
+                            .getAsString(),
+                    "Chinese Arcane Studies slot label");
+            assertEquals("拥有3个资源栏位，放置于该栏位的灵质或书使你指定的技能+1",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.resource_bonus")
+                            .getAsString(),
+                    "Chinese Arcane Studies resource-bonus tooltip");
+            assertEquals("按住 Shift 查看当前加成",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.hold_shift")
+                            .getAsString(),
+                    "Chinese Arcane Studies hold-shift tooltip");
+            assertEquals("当前加成：",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.current_bonus_heading")
+                            .getAsString(),
+                    "Chinese Arcane Studies current-bonus heading");
+            assertEquals("装备后可获得：",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.when_equipped_heading")
+                            .getAsString(),
+                    "Chinese Arcane Studies when-equipped heading");
+            assertEquals("无",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.none")
+                            .getAsString(),
+                    "Chinese Arcane Studies none label");
+            assertEquals("超感知",
+                    translations.get("item.goetyarkham.hyperawareness")
+                            .getAsString(),
+                    "Chinese Hyperawareness name");
+            assertEquals("栏位：资产",
+                    translations.get("tooltip.goetyarkham.hyperawareness.slot")
+                            .getAsString(),
+                    "Chinese Hyperawareness slot label");
+            assertEquals("拥有3个资源栏位，放置于该栏位的书或兔子腿使你指定的技能+1",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.resource_bonus")
+                            .getAsString(),
+                    "Chinese Hyperawareness resource-bonus tooltip");
+            assertEquals("按住 Shift 查看当前加成",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.hold_shift")
+                            .getAsString(),
+                    "Chinese Hyperawareness hold-shift tooltip");
+            assertEquals("当前加成：",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.current_bonus_heading")
+                            .getAsString(),
+                    "Chinese Hyperawareness current-bonus heading");
+            assertEquals("装备后可获得：",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.when_equipped_heading")
+                            .getAsString(),
+                    "Chinese Hyperawareness when-equipped heading");
+            assertEquals("无",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.none")
+                            .getAsString(),
+                    "Chinese Hyperawareness none label");
         } else if ("en_us".equals(language)) {
             assertEquals("Goety: Arkham",
                     translations.get("creativetab.goetyarkham.goety_arkham")
@@ -1735,6 +1955,146 @@ public final class CurioSlotDefinitionsSelfTest {
                             "tooltip.goetyarkham.physical_training.none")
                             .getAsString(),
                     "English Physical Training none label");
+            assertEquals("Hard Knocks",
+                    translations.get("item.goetyarkham.hard_knocks")
+                            .getAsString(),
+                    "English Hard Knocks name");
+            assertEquals("Slot: Asset",
+                    translations.get("tooltip.goetyarkham.hard_knocks.slot")
+                            .getAsString(),
+                    "English Hard Knocks slot label");
+            assertEquals(
+                    "You have 3 Resource slots. Iron Ingots or Rabbit's Feet placed"
+                            + " in these slots grant +1 to their corresponding skill.",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.resource_bonus")
+                            .getAsString(),
+                    "English Hard Knocks resource-bonus tooltip");
+            assertEquals("Hold Shift to view current bonuses",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.hold_shift")
+                            .getAsString(),
+                    "English Hard Knocks hold-shift tooltip");
+            assertEquals("Current bonus:",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.current_bonus_heading")
+                            .getAsString(),
+                    "English Hard Knocks current-bonus heading");
+            assertEquals("When equipped, you would gain:",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.when_equipped_heading")
+                            .getAsString(),
+                    "English Hard Knocks when-equipped heading");
+            assertEquals("None",
+                    translations.get(
+                            "tooltip.goetyarkham.hard_knocks.none")
+                            .getAsString(),
+                    "English Hard Knocks none label");
+            assertEquals("Dig Deep",
+                    translations.get("item.goetyarkham.dig_deep")
+                            .getAsString(),
+                    "English Dig Deep name");
+            assertEquals("Slot: Asset",
+                    translations.get("tooltip.goetyarkham.dig_deep.slot")
+                            .getAsString(),
+                    "English Dig Deep slot label");
+            assertEquals(
+                    "You have 3 Resource slots. Ectoplasm or Rabbit's Feet placed"
+                            + " in these slots grant +1 to their corresponding skill.",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.resource_bonus")
+                            .getAsString(),
+                    "English Dig Deep resource-bonus tooltip");
+            assertEquals("Hold Shift to view current bonuses",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.hold_shift")
+                            .getAsString(),
+                    "English Dig Deep hold-shift tooltip");
+            assertEquals("Current bonus:",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.current_bonus_heading")
+                            .getAsString(),
+                    "English Dig Deep current-bonus heading");
+            assertEquals("When equipped, you would gain:",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.when_equipped_heading")
+                            .getAsString(),
+                    "English Dig Deep when-equipped heading");
+            assertEquals("None",
+                    translations.get(
+                            "tooltip.goetyarkham.dig_deep.none")
+                            .getAsString(),
+                    "English Dig Deep none label");
+            assertEquals("Arcane Studies",
+                    translations.get("item.goetyarkham.arcane_studies")
+                            .getAsString(),
+                    "English Arcane Studies name");
+            assertEquals("Slot: Asset",
+                    translations.get("tooltip.goetyarkham.arcane_studies.slot")
+                            .getAsString(),
+                    "English Arcane Studies slot label");
+            assertEquals(
+                    "You have 3 Resource slots. Ectoplasm or Books placed"
+                            + " in these slots grant +1 to their corresponding skill.",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.resource_bonus")
+                            .getAsString(),
+                    "English Arcane Studies resource-bonus tooltip");
+            assertEquals("Hold Shift to view current bonuses",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.hold_shift")
+                            .getAsString(),
+                    "English Arcane Studies hold-shift tooltip");
+            assertEquals("Current bonus:",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.current_bonus_heading")
+                            .getAsString(),
+                    "English Arcane Studies current-bonus heading");
+            assertEquals("When equipped, you would gain:",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.when_equipped_heading")
+                            .getAsString(),
+                    "English Arcane Studies when-equipped heading");
+            assertEquals("None",
+                    translations.get(
+                            "tooltip.goetyarkham.arcane_studies.none")
+                            .getAsString(),
+                    "English Arcane Studies none label");
+            assertEquals("Hyperawareness",
+                    translations.get("item.goetyarkham.hyperawareness")
+                            .getAsString(),
+                    "English Hyperawareness name");
+            assertEquals("Slot: Asset",
+                    translations.get("tooltip.goetyarkham.hyperawareness.slot")
+                            .getAsString(),
+                    "English Hyperawareness slot label");
+            assertEquals(
+                    "You have 3 Resource slots. Books or Rabbit's Feet placed"
+                            + " in these slots grant +1 to their corresponding skill.",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.resource_bonus")
+                            .getAsString(),
+                    "English Hyperawareness resource-bonus tooltip");
+            assertEquals("Hold Shift to view current bonuses",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.hold_shift")
+                            .getAsString(),
+                    "English Hyperawareness hold-shift tooltip");
+            assertEquals("Current bonus:",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.current_bonus_heading")
+                            .getAsString(),
+                    "English Hyperawareness current-bonus heading");
+            assertEquals("When equipped, you would gain:",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.when_equipped_heading")
+                            .getAsString(),
+                    "English Hyperawareness when-equipped heading");
+            assertEquals("None",
+                    translations.get(
+                            "tooltip.goetyarkham.hyperawareness.none")
+                            .getAsString(),
+                    "English Hyperawareness none label");
         }
     }
 

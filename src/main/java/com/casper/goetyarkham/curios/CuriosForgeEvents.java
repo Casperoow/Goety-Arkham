@@ -3,10 +3,14 @@ package com.casper.goetyarkham.curios;
 import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.CuriosCommand;
 import com.casper.goetyarkham.item.ArcaneInitiatesTokenService;
+import com.casper.goetyarkham.item.ArcaneStudiesService;
 import com.casper.goetyarkham.item.BookOfShadowsService;
 import com.casper.goetyarkham.item.CharismaService;
+import com.casper.goetyarkham.item.DigDeepService;
 import com.casper.goetyarkham.item.EncyclopediaService;
+import com.casper.goetyarkham.item.HardKnocksService;
 import com.casper.goetyarkham.item.HeirloomOfHyperboreaService;
+import com.casper.goetyarkham.item.HyperawarenessService;
 import com.casper.goetyarkham.item.ModItems;
 import com.casper.goetyarkham.item.PhysicalTrainingService;
 import com.casper.goetyarkham.item.RelicHunterService;
@@ -67,6 +71,14 @@ public final class CuriosForgeEvents {
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_PHYSICAL_TRAINING_RECONCILE =
             ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_HARD_KNOCKS_RECONCILE =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_DIG_DEEP_RECONCILE =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_ARCANE_STUDIES_RECONCILE =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_HYPERAWARENESS_RECONCILE =
+            ConcurrentHashMap.newKeySet();
     /** Tick (per-player {@code tickCount}) at which to run the follow-up confirmed reconcile. */
     private static final Map<UUID, Integer> ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK =
             new ConcurrentHashMap<>();
@@ -109,6 +121,10 @@ public final class CuriosForgeEvents {
             handleRelicHunterTransition(player, event);
             handleCharismaTransition(player, event);
             handlePhysicalTrainingTransition(player, event);
+            handleHardKnocksTransition(player, event);
+            handleDigDeepTransition(player, event);
+            handleArcaneStudiesTransition(player, event);
+            handleHyperawarenessTransition(player, event);
         }
     }
 
@@ -178,6 +194,18 @@ public final class CuriosForgeEvents {
         if (PENDING_PHYSICAL_TRAINING_RECONCILE.remove(uuid)) {
             PhysicalTrainingService.reconcileRestore(player);
         }
+        if (PENDING_HARD_KNOCKS_RECONCILE.remove(uuid)) {
+            HardKnocksService.reconcileRestore(player);
+        }
+        if (PENDING_DIG_DEEP_RECONCILE.remove(uuid)) {
+            DigDeepService.reconcileRestore(player);
+        }
+        if (PENDING_ARCANE_STUDIES_RECONCILE.remove(uuid)) {
+            ArcaneStudiesService.reconcileRestore(player);
+        }
+        if (PENDING_HYPERAWARENESS_RECONCILE.remove(uuid)) {
+            HyperawarenessService.reconcileRestore(player);
+        }
         if (!DIRTY_EQUIPMENT.remove(uuid)) {
             return;
         }
@@ -206,6 +234,10 @@ public final class CuriosForgeEvents {
             PENDING_RELIC_HUNTER_RECONCILE.remove(uuid);
             PENDING_CHARISMA_RECONCILE.remove(uuid);
             PENDING_PHYSICAL_TRAINING_RECONCILE.remove(uuid);
+            PENDING_HARD_KNOCKS_RECONCILE.remove(uuid);
+            PENDING_DIG_DEEP_RECONCILE.remove(uuid);
+            PENDING_ARCANE_STUDIES_RECONCILE.remove(uuid);
+            PENDING_HYPERAWARENESS_RECONCILE.remove(uuid);
             ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(uuid);
         }
     }
@@ -249,6 +281,10 @@ public final class CuriosForgeEvents {
             PENDING_RELIC_HUNTER_RECONCILE.add(uuid);
             PENDING_CHARISMA_RECONCILE.add(uuid);
             PENDING_PHYSICAL_TRAINING_RECONCILE.add(uuid);
+            PENDING_HARD_KNOCKS_RECONCILE.add(uuid);
+            PENDING_DIG_DEEP_RECONCILE.add(uuid);
+            PENDING_ARCANE_STUDIES_RECONCILE.add(uuid);
+            PENDING_HYPERAWARENESS_RECONCILE.add(uuid);
         }
     }
 
@@ -324,6 +360,82 @@ public final class CuriosForgeEvents {
         if (event.getFrom().is(ModItems.PHYSICAL_TRAINING.get())
                 || event.getTo().is(ModItems.PHYSICAL_TRAINING.get())) {
             PhysicalTrainingService.reconcile(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handlePhysicalTrainingTransition}: the
+     * shared {@link CurioSlotIds#RESOURCE} slot's capacity is never
+     * auto-filled, so {@link HardKnocksService#reconcile} (which recomputes
+     * that shared capacity from every registered provider) is idempotent
+     * and safe to call on every observed change to the asset slot involving
+     * the item.
+     */
+    private static void handleHardKnocksTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.HARD_KNOCKS.get())
+                || event.getTo().is(ModItems.HARD_KNOCKS.get())) {
+            HardKnocksService.reconcile(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handlePhysicalTrainingTransition}: the
+     * shared {@link CurioSlotIds#RESOURCE} slot's capacity is never
+     * auto-filled, so {@link DigDeepService#reconcile} (which recomputes
+     * that shared capacity from every registered provider) is idempotent
+     * and safe to call on every observed change to the asset slot involving
+     * the item.
+     */
+    private static void handleDigDeepTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.DIG_DEEP.get())
+                || event.getTo().is(ModItems.DIG_DEEP.get())) {
+            DigDeepService.reconcile(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handlePhysicalTrainingTransition}: the
+     * shared {@link CurioSlotIds#RESOURCE} slot's capacity is never
+     * auto-filled, so {@link ArcaneStudiesService#reconcile} (which
+     * recomputes that shared capacity from every registered provider) is
+     * idempotent and safe to call on every observed change to the asset
+     * slot involving the item.
+     */
+    private static void handleArcaneStudiesTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.ARCANE_STUDIES.get())
+                || event.getTo().is(ModItems.ARCANE_STUDIES.get())) {
+            ArcaneStudiesService.reconcile(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handlePhysicalTrainingTransition}: the
+     * shared {@link CurioSlotIds#RESOURCE} slot's capacity is never
+     * auto-filled, so {@link HyperawarenessService#reconcile} (which
+     * recomputes that shared capacity from every registered provider) is
+     * idempotent and safe to call on every observed change to the asset
+     * slot involving the item.
+     */
+    private static void handleHyperawarenessTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.HYPERAWARENESS.get())
+                || event.getTo().is(ModItems.HYPERAWARENESS.get())) {
+            HyperawarenessService.reconcile(player);
         }
     }
 

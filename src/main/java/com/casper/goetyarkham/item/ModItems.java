@@ -125,6 +125,18 @@ public final class ModItems {
     public static final RegistryObject<PhysicalTrainingItem> PHYSICAL_TRAINING =
             ITEMS.register("physical_training", PhysicalTrainingItem::new);
 
+    public static final RegistryObject<HardKnocksItem> HARD_KNOCKS =
+            ITEMS.register("hard_knocks", HardKnocksItem::new);
+
+    public static final RegistryObject<DigDeepItem> DIG_DEEP =
+            ITEMS.register("dig_deep", DigDeepItem::new);
+
+    public static final RegistryObject<ArcaneStudiesItem> ARCANE_STUDIES =
+            ITEMS.register("arcane_studies", ArcaneStudiesItem::new);
+
+    public static final RegistryObject<HyperawarenessItem> HYPERAWARENESS =
+            ITEMS.register("hyperawareness", HyperawarenessItem::new);
+
     private ModItems() {
     }
 

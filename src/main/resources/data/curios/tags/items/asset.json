@@ -3,6 +3,10 @@
   "values": [
     "goetyarkham:relic_hunter",
     "goetyarkham:charisma",
-    "goetyarkham:physical_training"
+    "goetyarkham:physical_training",
+    "goetyarkham:hard_knocks",
+    "goetyarkham:dig_deep",
+    "goetyarkham:arcane_studies",
+    "goetyarkham:hyperawareness"
   ]
 }
