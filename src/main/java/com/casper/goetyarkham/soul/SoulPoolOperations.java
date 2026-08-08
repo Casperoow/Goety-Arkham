@@ -33,13 +33,37 @@ final class SoulPoolOperations {
             int physicalMaximum,
             int willpowerContribution,
             int directCapacityModifier) {
+        return maximum(
+                hasContainer,
+                physicalMaximum,
+                willpowerContribution,
+                directCapacityModifier,
+                0);
+    }
+
+    /**
+     * {@code percentModifier} is applied as a percentage against the sum of
+     * every other term (e.g. -60 yields 40% of that sum), not as a further
+     * flat addition - see {@link
+     * com.casper.goetyarkham.item.HospitalDebtsItem#soulCapacityPercentModifier}.
+     * Negative sums are clamped to zero before the percentage is applied so a
+     * heavy direct penalty can never flip the result positive again.
+     */
+    static int maximum(
+            boolean hasContainer,
+            int physicalMaximum,
+            int willpowerContribution,
+            int directCapacityModifier,
+            int percentModifier) {
         if (!hasContainer) {
             return 0;
         }
-        long maximum = (long) physicalMaximum
+        long sum = (long) physicalMaximum
                 + willpowerContribution
                 + directCapacityModifier;
-        return saturatingInt(Math.max(0L, maximum));
+        double multiplier = Math.max(0.0D, (100.0D + percentModifier) / 100.0D);
+        long maximum = Math.round(Math.max(0L, sum) * multiplier);
+        return saturatingInt(maximum);
     }
 
     static int current(int physicalCurrent, int virtualReserve, int maximum) {

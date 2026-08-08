@@ -13,6 +13,7 @@ import com.casper.goetyarkham.item.HardKnocksService;
 import com.casper.goetyarkham.item.HeirloomOfHyperboreaService;
 import com.casper.goetyarkham.item.HyperawarenessService;
 import com.casper.goetyarkham.item.ModItems;
+import com.casper.goetyarkham.item.OnTheLamService;
 import com.casper.goetyarkham.item.PhysicalTrainingService;
 import com.casper.goetyarkham.item.RelicHunterService;
 import com.casper.goetyarkham.item.RolandsThirtyEightSpecialService;
@@ -82,6 +83,8 @@ public final class CuriosForgeEvents {
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_DAISYS_TOTE_BAG_RECONCILE =
             ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_ON_THE_LAM_RECONCILE =
+            ConcurrentHashMap.newKeySet();
     /** Tick (per-player {@code tickCount}) at which to run the follow-up confirmed reconcile. */
     private static final Map<UUID, Integer> ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK =
             new ConcurrentHashMap<>();
@@ -130,6 +133,7 @@ public final class CuriosForgeEvents {
             handleHyperawarenessTransition(player, event);
             handleDaisysToteBagWeaknessTransition(player, event);
             handleDaisysToteBagBookSlotTransition(player, event);
+            handleOnTheLamTransition(player, event);
         }
     }
 
@@ -214,6 +218,14 @@ public final class CuriosForgeEvents {
         if (PENDING_DAISYS_TOTE_BAG_RECONCILE.remove(uuid)) {
             DaisysToteBagService.reconcile(player);
         }
+        if (PENDING_ON_THE_LAM_RECONCILE.remove(uuid)) {
+            OnTheLamService.reconcile(player);
+        }
+        // True Invisibility has no event of its own for "the cooldown just
+        // reached zero", so this single authority must poll every player's
+        // state every tick rather than being gated behind DIRTY_EQUIPMENT
+        // like the reconciles above - see OnTheLamService#tickInvisibility.
+        OnTheLamService.tickInvisibility(player);
         if (!DIRTY_EQUIPMENT.remove(uuid)) {
             return;
         }
@@ -247,6 +259,7 @@ public final class CuriosForgeEvents {
             PENDING_ARCANE_STUDIES_RECONCILE.remove(uuid);
             PENDING_HYPERAWARENESS_RECONCILE.remove(uuid);
             PENDING_DAISYS_TOTE_BAG_RECONCILE.remove(uuid);
+            PENDING_ON_THE_LAM_RECONCILE.remove(uuid);
             ENCYCLOPEDIA_RESTORE_CONFIRM_AT_TICK.remove(uuid);
         }
     }
@@ -277,6 +290,8 @@ public final class CuriosForgeEvents {
                 event.getOriginal(), event.getEntity());
         DaisysToteBagService.copyPersistentState(
                 event.getOriginal(), event.getEntity());
+        OnTheLamService.copyPersistentState(
+                event.getOriginal(), event.getEntity());
         queueReconcile(event);
     }
 
@@ -297,6 +312,7 @@ public final class CuriosForgeEvents {
             PENDING_ARCANE_STUDIES_RECONCILE.add(uuid);
             PENDING_HYPERAWARENESS_RECONCILE.add(uuid);
             PENDING_DAISYS_TOTE_BAG_RECONCILE.add(uuid);
+            PENDING_ON_THE_LAM_RECONCILE.add(uuid);
         }
     }
 
@@ -590,6 +606,41 @@ public final class CuriosForgeEvents {
         if (event.getFrom().is(ModItems.DAISYS_TOTE_BAG.get())
                 || event.getTo().is(ModItems.DAISYS_TOTE_BAG.get())) {
             DaisysToteBagService.reconcileBookSlot(player);
+        }
+    }
+
+    /**
+     * Same rationale as {@link #handleRolandTransition}: reacts only to a
+     * real observed zero-to-one/one-to-zero transition on {@link
+     * CurioSlotIds#ASSET} involving On the Lam specifically, driving the
+     * single weakness slot and its bound Hospital Debts. True Invisibility
+     * itself is not driven from here - see {@link
+     * OnTheLamService#tickInvisibility}, polled unconditionally every tick.
+     */
+    private static void handleOnTheLamTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        boolean from = event.getFrom().is(
+                ModItems.ON_THE_LAM.get());
+        boolean to = event.getTo().is(
+                ModItems.ON_THE_LAM.get());
+        if (!from && !to) {
+            return;
+        }
+
+        // Curios discovers the change while comparing its previous stack to
+        // the already-committed current handler contents.
+        int after = OnTheLamService.equippedCount(player);
+        int before = after - (to ? 1 : 0) + (from ? 1 : 0);
+        if (before <= 0 && after > 0) {
+            OnTheLamService.equipTransition(player);
+        } else if (before > 0 && after <= 0) {
+            // This occurs before Curios settles any remaining modifiers.
+            OnTheLamService.unequipTransition(player);
+        } else {
+            PENDING_ON_THE_LAM_RECONCILE.add(player.getUUID());
         }
     }
 

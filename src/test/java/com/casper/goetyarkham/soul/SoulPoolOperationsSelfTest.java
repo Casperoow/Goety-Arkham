@@ -15,6 +15,7 @@ public final class SoulPoolOperationsSelfTest {
         testExactConsumptionIsAtomic();
         testCapacityDrop();
         testDirectCapacityPenaltyAndTruncation();
+        testPercentCapacityPenalty();
         testContainerRequirementAndArca();
         testMergedTotemAndArcaPool();
         testMergedTotemAndArcaMutationOrder();
@@ -167,6 +168,20 @@ public final class SoulPoolOperationsSelfTest {
                 List.of(a, b), result.virtualReserve(), maximum, 5000);
         assertEquals(0, a.current, "soul removal lower bound A");
         assertEquals(0, b.current, "soul removal lower bound B");
+    }
+
+    /** Mirrors Hospital Debts's -60% maximum soul energy: a percentage of the summed maximum, not a flat deduction. */
+    private static void testPercentCapacityPenalty() {
+        assertEquals(400, SoulPoolOperations.maximum(true, 1000, 0, 0, -60),
+                "-60% reduces 1000 to 400");
+        assertEquals(1000, SoulPoolOperations.maximum(true, 2500, 0, 0, -60),
+                "-60% reduces 2500 to 1000");
+        assertEquals(0, SoulPoolOperations.maximum(true, 1000, 0, 0, -100),
+                "-100% reduces maximum to zero");
+        assertEquals(0, SoulPoolOperations.maximum(true, 1000, 0, -2000, -60),
+                "a negative sum is clamped to zero before the percentage applies");
+        assertEquals(1040, SoulPoolOperations.maximum(true, 2000, 40, -1000, 0),
+                "a zero percent modifier leaves the flat-penalty result unchanged");
     }
 
     private static void testContainerRequirementAndArca() {

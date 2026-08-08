@@ -18,6 +18,9 @@ public final class ModEffects {
             EFFECTS.register(
                     "rita_chandlers_blessing", RitaChandlersBlessingEffect::new);
 
+    public static final RegistryObject<MobEffect> TRUE_INVISIBILITY =
+            EFFECTS.register("true_invisibility", TrueInvisibilityEffect::new);
+
     private ModEffects() {
     }
 

@@ -334,7 +334,8 @@ public final class CurioSlotDefinitionsSelfTest {
                         "goetyarkham:dark_memory",
                         "goetyarkham:abandoned_and_alone",
                         "goetyarkham:cover_up",
-                        "goetyarkham:the_necronomicon_john_dee"),
+                        "goetyarkham:the_necronomicon_john_dee",
+                        "goetyarkham:hospital_debts"),
                 weakness.getAsJsonArray("values").asList().stream()
                         .map(element -> element.getAsString()).toList(),
                 "Weakness tag entries");
@@ -358,6 +359,9 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:cover_up");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:hospital_debts");
             }
             // The Necronomicon (John Dee) is deliberately dual-tagged: it
             // must appear in weakness and book, and nowhere else - it is
@@ -477,7 +481,10 @@ public final class CurioSlotDefinitionsSelfTest {
                         "goetyarkham:hard_knocks",
                         "goetyarkham:dig_deep",
                         "goetyarkham:arcane_studies",
-                        "goetyarkham:hyperawareness"),
+                        "goetyarkham:hyperawareness",
+                        "goetyarkham:working_a_hunch",
+                        "goetyarkham:sneak_attack",
+                        "goetyarkham:on_the_lam"),
                 entries,
                 "asset item tag entries");
         for (String slotId : CurioSlotIds.ALL) {
@@ -503,6 +510,15 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:hyperawareness");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:working_a_hunch");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:sneak_attack");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:on_the_lam");
             }
         }
         assertResourceValueAbsent(
@@ -544,6 +560,24 @@ public final class CurioSlotDefinitionsSelfTest {
         assertResourceValueAbsent(
                 "data/curios/tags/items/token.json",
                 "goetyarkham:hyperawareness");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:working_a_hunch");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:working_a_hunch");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:sneak_attack");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:sneak_attack");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/charm.json",
+                "goetyarkham:on_the_lam");
+        assertResourceValueAbsent(
+                "data/curios/tags/items/token.json",
+                "goetyarkham:on_the_lam");
     }
 
     /**
@@ -972,6 +1006,54 @@ public final class CurioSlotDefinitionsSelfTest {
                 "The Necronomicon (John Dee) model texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/the_necronomicon_john_dee.png");
+
+        JsonObject workingAHunchModel = readJson(
+                "/assets/goetyarkham/models/item/working_a_hunch.json");
+        assertEquals("minecraft:item/generated",
+                workingAHunchModel.get("parent").getAsString(),
+                "Working a Hunch model parent");
+        assertEquals("goetyarkham:item/working_a_lunch",
+                workingAHunchModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Working a Hunch model reuses the supplied texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/working_a_lunch.png");
+
+        JsonObject sneakAttackModel = readJson(
+                "/assets/goetyarkham/models/item/sneak_attack.json");
+        assertEquals("minecraft:item/generated",
+                sneakAttackModel.get("parent").getAsString(),
+                "Sneak Attack model parent");
+        assertEquals("goetyarkham:item/sneak_attack",
+                sneakAttackModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Sneak Attack model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/sneak_attack.png");
+
+        JsonObject onTheLamModel = readJson(
+                "/assets/goetyarkham/models/item/on_the_lam.json");
+        assertEquals("minecraft:item/generated",
+                onTheLamModel.get("parent").getAsString(),
+                "On the Lam model parent");
+        assertEquals("goetyarkham:item/on_the_lam",
+                onTheLamModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "On the Lam model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/on_the_lam.png");
+
+        JsonObject hospitalDebtsModel = readJson(
+                "/assets/goetyarkham/models/item/hospital_debts.json");
+        assertEquals("minecraft:item/generated",
+                hospitalDebtsModel.get("parent").getAsString(),
+                "Hospital Debts model parent");
+        assertEquals("goetyarkham:item/hospital_debts",
+                hospitalDebtsModel.getAsJsonObject("textures")
+                        .get("layer0").getAsString(),
+                "Hospital Debts model texture");
+        assertResourceExists(
+                "/assets/goetyarkham/textures/item/hospital_debts.png");
     }
 
     private static void verifySharedTooltipFormatting() {

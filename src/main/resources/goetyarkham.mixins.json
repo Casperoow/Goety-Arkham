@@ -14,14 +14,17 @@
     "RaidCreationMixin",
     "RaidsCreationContextMixin",
     "SEHelperMixin",
-    "TotemFinderCanOpenWandCircleMixin"
+    "TotemFinderCanOpenWandCircleMixin",
+    "TrueInvisibilityTargetingMixin"
   ],
   "client": [
     "client.ChatComponentMixin",
     "client.CursedCageBlockEntityClientMixin",
     "client.FocusRadialMenuScreenMixin",
     "client.SEHelperClientMixin",
-    "client.SoulEnergyGuiMixin"
+    "client.SoulEnergyGuiMixin",
+    "client.TrueInvisibilityArmorLayerMixin",
+    "client.TrueInvisibilityItemLayerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -240,5 +240,15 @@
   "tooltip.goetyarkham.daisys_tote_bag.book_bonus": "For every Book you have equipped, gain 1 Intellect",
   "item.goetyarkham.the_necronomicon_john_dee": "The Necronomicon (John Dee)",
   "tooltip.goetyarkham.the_necronomicon_john_dee.slot": "Slot: Weakness, Book",
-  "tooltip.goetyarkham.the_necronomicon_john_dee.effect": "You suffer 3 sanity trauma."
+  "tooltip.goetyarkham.the_necronomicon_john_dee.effect": "You suffer 3 sanity trauma.",
+  "item.goetyarkham.working_a_hunch": "Working a Hunch",
+  "tooltip.goetyarkham.working_a_hunch.slot": "Slot: Asset",
+  "item.goetyarkham.sneak_attack": "Sneak Attack",
+  "tooltip.goetyarkham.sneak_attack.slot": "Slot: Asset",
+  "tooltip.goetyarkham.sneak_attack.effect": "Deal 2× damage when attacking a target at full health.",
+  "item.goetyarkham.on_the_lam": "On the Lam",
+  "tooltip.goetyarkham.on_the_lam.slot": "Slot: Asset",
+  "tooltip.goetyarkham.on_the_lam.effect": "Grants True Invisibility. Dealing or taking damage removes True Invisibility and puts On the Lam on a 10-second cooldown.",
+  "item.goetyarkham.hospital_debts": "Hospital Debts",
+  "tooltip.goetyarkham.hospital_debts.effect": "-60% Maximum Soul Energy"
 }

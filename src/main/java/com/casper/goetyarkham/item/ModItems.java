@@ -143,6 +143,18 @@ public final class ModItems {
     public static final RegistryObject<TheNecronomiconJohnDeeItem> THE_NECRONOMICON_JOHN_DEE =
             ITEMS.register("the_necronomicon_john_dee", TheNecronomiconJohnDeeItem::new);
 
+    public static final RegistryObject<WorkingAHunchItem> WORKING_A_HUNCH =
+            ITEMS.register("working_a_hunch", WorkingAHunchItem::new);
+
+    public static final RegistryObject<SneakAttackItem> SNEAK_ATTACK =
+            ITEMS.register("sneak_attack", SneakAttackItem::new);
+
+    public static final RegistryObject<OnTheLamItem> ON_THE_LAM =
+            ITEMS.register("on_the_lam", OnTheLamItem::new);
+
+    public static final RegistryObject<HospitalDebtsItem> HOSPITAL_DEBTS =
+            ITEMS.register("hospital_debts", HospitalDebtsItem::new);
+
     private ModItems() {
     }
 

@@ -240,5 +240,15 @@
   "tooltip.goetyarkham.daisys_tote_bag.book_bonus": "你每佩戴一个书籍，你获得1点智慧",
   "item.goetyarkham.the_necronomicon_john_dee": "死灵之书 (John Dee)",
   "tooltip.goetyarkham.the_necronomicon_john_dee.slot": "栏位：弱点、书籍",
-  "tooltip.goetyarkham.the_necronomicon_john_dee.effect": "你受到3点理智损伤"
+  "tooltip.goetyarkham.the_necronomicon_john_dee.effect": "你受到3点理智损伤",
+  "item.goetyarkham.working_a_hunch": "专业的直觉",
+  "tooltip.goetyarkham.working_a_hunch.slot": "栏位：资产",
+  "item.goetyarkham.sneak_attack": "偷袭",
+  "tooltip.goetyarkham.sneak_attack.slot": "栏位：资产",
+  "tooltip.goetyarkham.sneak_attack.effect": "攻击满血的目标时造成2倍伤害",
+  "item.goetyarkham.on_the_lam": "在逃中",
+  "tooltip.goetyarkham.on_the_lam.slot": "栏位：资产",
+  "tooltip.goetyarkham.on_the_lam.effect": "获得真实隐身效果。造成伤害或受到伤害后，失去真实隐身，并使在逃中进入10秒冷却。",
+  "item.goetyarkham.hospital_debts": "医院债务",
+  "tooltip.goetyarkham.hospital_debts.effect": "-60%灵魂能量上限"
 }

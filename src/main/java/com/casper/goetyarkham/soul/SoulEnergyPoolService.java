@@ -214,7 +214,8 @@ public final class SoulEnergyPoolService {
                 context,
                 reserve,
                 values.willpowerContribution(),
-                values.directCapacityModifier());
+                values.directCapacityModifier(),
+                values.percentModifier());
         boolean changed = signature != poolData.getLastContainerSignature()
                 || !snapshot.equals(poolData.getLastSnapshot());
 
@@ -250,17 +251,22 @@ public final class SoulEnergyPoolService {
         int directCapacityModifier =
                 com.casper.goetyarkham.effect.DreamsOfRlyehEffectService
                         .soulCapacityModifier(player);
+        int percentModifier =
+                com.casper.goetyarkham.item.HospitalDebtsItem
+                        .soulCapacityPercentModifier(player);
         int maximum = SoulPoolOperations.maximum(
                 context.hasContainer(),
                 physicalMaximum,
                 contribution,
-                directCapacityModifier);
+                directCapacityModifier,
+                percentModifier);
         int virtualCapacity = SoulPoolOperations.virtualCapacity(physicalMaximum, maximum);
         return new PoolValues(
                 maximum,
                 virtualCapacity,
                 contribution,
-                directCapacityModifier);
+                directCapacityModifier,
+                percentModifier);
     }
 
     private static PoolContext collect(ServerPlayer player) {
@@ -329,12 +335,14 @@ public final class SoulEnergyPoolService {
             PoolContext context,
             int virtualReserve,
             int willpowerContribution,
-            int directCapacityModifier) {
+            int directCapacityModifier,
+            int percentModifier) {
         long hash = 1125899906842597L;
         hash = 31L * hash + Boolean.hashCode(context.arcaMode());
         hash = 31L * hash + virtualReserve;
         hash = 31L * hash + willpowerContribution;
         hash = 31L * hash + directCapacityModifier;
+        hash = 31L * hash + percentModifier;
         for (SoulStorageHandle handle : context.handles()) {
             hash = 31L * hash + handle.storageIdentity().hashCode();
             hash = 31L * hash + handle.getCurrentSoul();
@@ -357,7 +365,8 @@ public final class SoulEnergyPoolService {
             int maximum,
             int virtualCapacity,
             int willpowerContribution,
-            int directCapacityModifier) {
+            int directCapacityModifier,
+            int percentModifier) {
     }
 
     private record TotemHandle(String slotId, ItemStack stack)
