@@ -66,6 +66,7 @@ public final class CurioSlotDefinitionsSelfTest {
         verifyBookItemTag();
         verifyResourceItemTag();
         verifyAssetItemTag();
+        verifyNewAssetRegistrations();
         verifyBeltItemTag();
         verifyBossOrEliteTag();
         verifyItemResources();
@@ -484,7 +485,10 @@ public final class CurioSlotDefinitionsSelfTest {
                         "goetyarkham:hyperawareness",
                         "goetyarkham:working_a_hunch",
                         "goetyarkham:sneak_attack",
-                        "goetyarkham:on_the_lam"),
+                        "goetyarkham:on_the_lam",
+                        "goetyarkham:emergency_cache",
+                        "goetyarkham:ive_had_worse",
+                        "goetyarkham:hot_streak"),
                 entries,
                 "asset item tag entries");
         for (String slotId : CurioSlotIds.ALL) {
@@ -519,6 +523,15 @@ public final class CurioSlotDefinitionsSelfTest {
                 assertResourceValueAbsent(
                         "data/curios/tags/items/" + slotId + ".json",
                         "goetyarkham:on_the_lam");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:emergency_cache");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:ive_had_worse");
+                assertResourceValueAbsent(
+                        "data/curios/tags/items/" + slotId + ".json",
+                        "goetyarkham:hot_streak");
             }
         }
         assertResourceValueAbsent(
@@ -578,6 +591,20 @@ public final class CurioSlotDefinitionsSelfTest {
         assertResourceValueAbsent(
                 "data/curios/tags/items/token.json",
                 "goetyarkham:on_the_lam");
+    }
+
+    private static void verifyNewAssetRegistrations() {
+        try {
+            Class<?> modItems = Class.forName(
+                    "com.casper.goetyarkham.item.ModItems",
+                    false,
+                    CurioSlotDefinitionsSelfTest.class.getClassLoader());
+            modItems.getDeclaredField("EMERGENCY_CACHE");
+            modItems.getDeclaredField("IVE_HAD_WORSE");
+            modItems.getDeclaredField("HOT_STREAK");
+        } catch (ClassNotFoundException | NoSuchFieldException exception) {
+            throw new AssertionError("New asset item registration declaration missing", exception);
+        }
     }
 
     /**
@@ -1054,6 +1081,33 @@ public final class CurioSlotDefinitionsSelfTest {
                 "Hospital Debts model texture");
         assertResourceExists(
                 "/assets/goetyarkham/textures/item/hospital_debts.png");
+
+        verifyGeneratedItemModel(
+                "emergency_cache",
+                "goetyarkham:item/emergency_cache",
+                "/assets/goetyarkham/textures/item/emergency_cache.png");
+        verifyGeneratedItemModel(
+                "ive_had_worse",
+                "goetyarkham:item/Ive_had_worse",
+                "/assets/goetyarkham/textures/item/Ive_had_worse.png");
+        verifyGeneratedItemModel(
+                "hot_streak",
+                "goetyarkham:item/hot_streak",
+                "/assets/goetyarkham/textures/item/hot_streak.png");
+    }
+
+    private static void verifyGeneratedItemModel(
+            String modelName, String texture, String textureResource)
+            throws IOException {
+        JsonObject model = readJson(
+                "/assets/goetyarkham/models/item/" + modelName + ".json");
+        assertEquals("minecraft:item/generated",
+                model.get("parent").getAsString(),
+                modelName + " model parent");
+        assertEquals(texture,
+                model.getAsJsonObject("textures").get("layer0").getAsString(),
+                modelName + " model texture");
+        assertResourceExists(textureResource);
     }
 
     private static void verifySharedTooltipFormatting() {
@@ -1090,6 +1144,28 @@ public final class CurioSlotDefinitionsSelfTest {
     private static void verifyLanguage(String language, Map<String, String> expectedNames)
             throws IOException {
         JsonObject translations = readJson("/assets/goetyarkham/lang/" + language + ".json");
+        boolean english = "en_us".equals(language);
+        assertEquals(english ? "Emergency Cache" : "应急物品",
+                translations.get("item.goetyarkham.emergency_cache").getAsString(),
+                language + " Emergency Cache name");
+        assertEquals(english ? "“I’ve had worse...”" : "“我见过更糟的...”",
+                translations.get("item.goetyarkham.ive_had_worse").getAsString(),
+                language + " I've Had Worse name");
+        assertEquals(english ? "Hot Streak" : "百战百胜",
+                translations.get("item.goetyarkham.hot_streak").getAsString(),
+                language + " Hot Streak name");
+        assertEquals(english ? "+3 Asset Slots" : "你获得额外3个资产栏位",
+                translations.get("tooltip.goetyarkham.emergency_cache.asset_slots")
+                        .getAsString(),
+                language + " Emergency Cache tooltip");
+        assertEquals(english ? "+10 Asset Slots" : "你获得额外10个资产栏位",
+                translations.get("tooltip.goetyarkham.hot_streak.asset_slots")
+                        .getAsString(),
+                language + " Hot Streak tooltip");
+        assertFalse(!translations.has(CurioTooltipHelper.WHEN_WORN_TRANSLATION_KEY),
+                language + " shared when-worn tooltip key");
+        assertFalse(!translations.has(CurioTooltipHelper.ATTRIBUTE_BONUS_TRANSLATION_KEY),
+                language + " shared attribute tooltip key");
         assertFalse(translations.has("tooltip.goetyarkham.grotesque_statue.souls"),
                 language + " must not duplicate Goety's soul tooltip translation");
         expectedNames.forEach((slotId, expectedName) -> assertEquals(

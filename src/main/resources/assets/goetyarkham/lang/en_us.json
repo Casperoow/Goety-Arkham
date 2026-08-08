@@ -250,5 +250,10 @@
   "tooltip.goetyarkham.on_the_lam.slot": "Slot: Asset",
   "tooltip.goetyarkham.on_the_lam.effect": "Grants True Invisibility. Dealing or taking damage removes True Invisibility and puts On the Lam on a 10-second cooldown.",
   "item.goetyarkham.hospital_debts": "Hospital Debts",
-  "tooltip.goetyarkham.hospital_debts.effect": "-60% Maximum Soul Energy"
+  "tooltip.goetyarkham.hospital_debts.effect": "-60% Maximum Soul Energy",
+  "item.goetyarkham.emergency_cache": "Emergency Cache",
+  "tooltip.goetyarkham.emergency_cache.asset_slots": "+3 Asset Slots",
+  "item.goetyarkham.ive_had_worse": "“I’ve had worse...”",
+  "item.goetyarkham.hot_streak": "Hot Streak",
+  "tooltip.goetyarkham.hot_streak.asset_slots": "+10 Asset Slots"
 }

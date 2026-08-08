@@ -4,6 +4,7 @@ import com.casper.goetyarkham.GoetyArkham;
 import com.casper.goetyarkham.command.CuriosCommand;
 import com.casper.goetyarkham.item.ArcaneInitiatesTokenService;
 import com.casper.goetyarkham.item.ArcaneStudiesService;
+import com.casper.goetyarkham.item.AssetSlotBonusService;
 import com.casper.goetyarkham.item.BookOfShadowsService;
 import com.casper.goetyarkham.item.CharismaService;
 import com.casper.goetyarkham.item.DaisysToteBagService;
@@ -71,6 +72,8 @@ public final class CuriosForgeEvents {
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_CHARISMA_RECONCILE =
             ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> PENDING_ASSET_SLOT_BONUS_RECONCILE =
+            ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_PHYSICAL_TRAINING_RECONCILE =
             ConcurrentHashMap.newKeySet();
     private static final Set<UUID> PENDING_HARD_KNOCKS_RECONCILE =
@@ -126,6 +129,7 @@ public final class CuriosForgeEvents {
             handleRolandTransition(player, event);
             handleRelicHunterTransition(player, event);
             handleCharismaTransition(player, event);
+            handleAssetSlotBonusTransition(player, event);
             handlePhysicalTrainingTransition(player, event);
             handleHardKnocksTransition(player, event);
             handleDigDeepTransition(player, event);
@@ -200,6 +204,9 @@ public final class CuriosForgeEvents {
         if (PENDING_CHARISMA_RECONCILE.remove(uuid)) {
             CharismaService.reconcileRestore(player);
         }
+        if (PENDING_ASSET_SLOT_BONUS_RECONCILE.remove(uuid)) {
+            AssetSlotBonusService.reconcileRestore(player);
+        }
         if (PENDING_PHYSICAL_TRAINING_RECONCILE.remove(uuid)) {
             PhysicalTrainingService.reconcileRestore(player);
         }
@@ -253,6 +260,7 @@ public final class CuriosForgeEvents {
             PENDING_ROLAND_RECONCILE.remove(uuid);
             PENDING_RELIC_HUNTER_RECONCILE.remove(uuid);
             PENDING_CHARISMA_RECONCILE.remove(uuid);
+            PENDING_ASSET_SLOT_BONUS_RECONCILE.remove(uuid);
             PENDING_PHYSICAL_TRAINING_RECONCILE.remove(uuid);
             PENDING_HARD_KNOCKS_RECONCILE.remove(uuid);
             PENDING_DIG_DEEP_RECONCILE.remove(uuid);
@@ -306,6 +314,7 @@ public final class CuriosForgeEvents {
             PENDING_ROLAND_RECONCILE.add(uuid);
             PENDING_RELIC_HUNTER_RECONCILE.add(uuid);
             PENDING_CHARISMA_RECONCILE.add(uuid);
+            PENDING_ASSET_SLOT_BONUS_RECONCILE.add(uuid);
             PENDING_PHYSICAL_TRAINING_RECONCILE.add(uuid);
             PENDING_HARD_KNOCKS_RECONCILE.add(uuid);
             PENDING_DIG_DEEP_RECONCILE.add(uuid);
@@ -556,6 +565,20 @@ public final class CuriosForgeEvents {
         if (event.getFrom().is(ModItems.CHARISMA.get())
                 || event.getTo().is(ModItems.CHARISMA.get())) {
             CharismaService.reconcile(player);
+        }
+    }
+
+    /** Recomputes both independent self-expanding asset contributions. */
+    private static void handleAssetSlotBonusTransition(
+            ServerPlayer player, CurioChangeEvent event) {
+        if (!CurioSlotIds.ASSET.equals(event.getIdentifier())) {
+            return;
+        }
+        if (event.getFrom().is(ModItems.EMERGENCY_CACHE.get())
+                || event.getTo().is(ModItems.EMERGENCY_CACHE.get())
+                || event.getFrom().is(ModItems.HOT_STREAK.get())
+                || event.getTo().is(ModItems.HOT_STREAK.get())) {
+            AssetSlotBonusService.reconcile(player);
         }
     }
 

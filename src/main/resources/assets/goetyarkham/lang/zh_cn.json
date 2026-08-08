@@ -250,5 +250,10 @@
   "tooltip.goetyarkham.on_the_lam.slot": "栏位：资产",
   "tooltip.goetyarkham.on_the_lam.effect": "获得真实隐身效果。造成伤害或受到伤害后，失去真实隐身，并使在逃中进入10秒冷却。",
   "item.goetyarkham.hospital_debts": "医院债务",
-  "tooltip.goetyarkham.hospital_debts.effect": "-60%灵魂能量上限"
+  "tooltip.goetyarkham.hospital_debts.effect": "-60%灵魂能量上限",
+  "item.goetyarkham.emergency_cache": "应急物品",
+  "tooltip.goetyarkham.emergency_cache.asset_slots": "你获得额外3个资产栏位",
+  "item.goetyarkham.ive_had_worse": "“我见过更糟的...”",
+  "item.goetyarkham.hot_streak": "百战百胜",
+  "tooltip.goetyarkham.hot_streak.asset_slots": "你获得额外10个资产栏位"
 }

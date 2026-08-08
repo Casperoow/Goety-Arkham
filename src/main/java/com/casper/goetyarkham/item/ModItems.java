@@ -122,6 +122,15 @@ public final class ModItems {
     public static final RegistryObject<CharismaItem> CHARISMA =
             ITEMS.register("charisma", CharismaItem::new);
 
+    public static final RegistryObject<EmergencyCacheItem> EMERGENCY_CACHE =
+            ITEMS.register("emergency_cache", EmergencyCacheItem::new);
+
+    public static final RegistryObject<IveHadWorseItem> IVE_HAD_WORSE =
+            ITEMS.register("ive_had_worse", IveHadWorseItem::new);
+
+    public static final RegistryObject<HotStreakItem> HOT_STREAK =
+            ITEMS.register("hot_streak", HotStreakItem::new);
+
     public static final RegistryObject<PhysicalTrainingItem> PHYSICAL_TRAINING =
             ITEMS.register("physical_training", PhysicalTrainingItem::new);
 
